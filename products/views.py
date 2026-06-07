@@ -3,7 +3,7 @@ from .models import Product
 from .serializers import ProductSerializer
 from django.db.models import Q
 
-class ProductListAPIView(generics.ListAPIView):
+class ProductListAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
