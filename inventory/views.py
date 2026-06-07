@@ -1,3 +1,21 @@
-from django.shortcuts import render
+from rest_framework import generics
 
-# Create your views here.
+from .models import InventoryLog
+from .serializers import (
+    InventoryLogSerializer
+)
+
+
+class InventoryLogListAPIView(
+    generics.ListAPIView
+):
+
+    queryset = (
+        InventoryLog.objects
+        .all()
+        .order_by("-created_at")
+    )
+
+    serializer_class = (
+        InventoryLogSerializer
+    )

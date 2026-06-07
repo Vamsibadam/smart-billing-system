@@ -5,6 +5,11 @@ from rest_framework.views import APIView
 from .serializers import BillingSerializer
 from .services import create_bill
 
+from rest_framework import generics
+from .models import Transaction
+from .history_serializers import (
+    TransactionHistorySerializer
+)
 
 class CreateBillAPIView(APIView):
 
@@ -31,3 +36,17 @@ class CreateBillAPIView(APIView):
             },
             status=status.HTTP_201_CREATED
         )
+    
+class TransactionHistoryAPIView(
+    generics.ListAPIView
+):
+
+    queryset = (
+        Transaction.objects
+        .all()
+        .order_by("-created_at")
+    )
+
+    serializer_class = (
+        TransactionHistorySerializer
+    )
