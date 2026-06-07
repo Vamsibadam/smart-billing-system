@@ -24,4 +24,8 @@ urlpatterns = [
         'api/products/',
         include('products.urls')
     ),
+    path(
+    "api/billing/",
+    include("billing.urls")
+),
 ]
