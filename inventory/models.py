@@ -9,6 +9,19 @@ class InventoryLog(models.Model):
         related_name='inventory_logs'
     )
 
+    TRANSACTION_TYPES = (
+    ("STOCK_IN", "Stock In"),
+    ("SALE", "Sale"),
+    )
+
+    transaction_type = models.CharField(
+    max_length=20,
+    choices=TRANSACTION_TYPES,
+    default="SALE"
+    )
+
+    quantity_changed = models.PositiveIntegerField(default=0)
+
     previous_stock = models.PositiveIntegerField()
 
     added_stock = models.PositiveIntegerField()

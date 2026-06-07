@@ -3,7 +3,7 @@ from django.db import transaction
 
 from products.models import Product
 from inventory.models import InventoryLog
-
+from .utils import generate_bill_number
 from .models import (
     Transaction,
     TransactionItem
@@ -33,7 +33,7 @@ def create_bill(
     total_amount = Decimal("0.00")
 
     bill = Transaction.objects.create(
-        bill_number=f"BILL-{Transaction.objects.count() + 1}",
+        bill_number=generate_bill_number(),
         total_amount=0,
         payment_method=payment_method
     )
@@ -72,11 +72,13 @@ def create_bill(
         product.save()
 
         InventoryLog.objects.create(
-            product=product,
-            previous_stock=previous_stock,
-            added_stock=0,
-            new_stock=product.stock
-        )
+        product=product,
+        previous_stock=previous_stock,
+        added_stock=0,
+        new_stock=product.stock,
+        transaction_type="SALE",
+        quantity_changed=quantity
+    )
 
     bill.total_amount = total_amount
     bill.save()

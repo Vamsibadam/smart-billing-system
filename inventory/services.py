@@ -16,7 +16,9 @@ def add_stock(product_id, quantity):
         product=product,
         previous_stock=previous_stock,
         added_stock=quantity,
-        new_stock=product.stock
+        new_stock=product.stock,
+        transaction_type="STOCK_IN",
+        quantity_changed=quantity
     )
 
     return product
