@@ -24,3 +24,38 @@ export const createBill = async (
 
   return response.data;
 };
+
+export const getBillHistory =
+  async (date = "") => {
+
+    let url =
+      "/billing/history/";
+
+    if (date) {
+      url += `?date=${date}`;
+    }
+
+    const response =
+      await api.get(url);
+
+    return response.data;
+};
+
+export const getBillDetail =
+  async (id) => {
+
+    const response =
+      await api.get(
+        `/billing/history/${id}/`
+      );
+
+    return response.data;
+};
+
+export const deleteBill =
+  async (id) => {
+
+    await api.delete(
+      `/billing/history/${id}/delete/`
+    );
+};

@@ -1,7 +1,9 @@
 from django.urls import path
 from .views import (
     CreateBillAPIView,
-    TransactionHistoryAPIView
+    TransactionHistoryAPIView,
+    TransactionDetailAPIView,
+    DeleteBillAPIView,
 )
 
 urlpatterns = [
@@ -13,5 +15,15 @@ urlpatterns = [
     path(
         "history/",
         TransactionHistoryAPIView.as_view()
+    ),
+
+    path(
+    "history/<int:pk>/",
+    TransactionDetailAPIView.as_view()
+    ),
+
+    path(
+        "history/<int:pk>/delete/",
+        DeleteBillAPIView.as_view()
     ),
 ]

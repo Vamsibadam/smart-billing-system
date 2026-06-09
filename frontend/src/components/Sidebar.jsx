@@ -1,42 +1,58 @@
 import { Link, useLocation } from "react-router-dom";
+
+
 import {
-  FaChartBar,
-  FaBox,
-  FaWarehouse,
-  FaCashRegister,
-  FaFileAlt,
-} from "react-icons/fa";
+  LayoutDashboard,
+  Package,
+  Boxes,
+  Receipt,
+  FileText,
+  KeyRound,
+  History
+} from "lucide-react";
 
 function Sidebar() {
   const location = useLocation();
 
   const menuItems = [
-    {
-      name: "Dashboard",
-      path: "/",
-      icon: <FaChartBar />,
-    },
-    {
-      name: "Products",
-      path: "/products",
-      icon: <FaBox />,
-    },
-    {
-      name: "Inventory",
-      path: "/inventory",
-      icon: <FaWarehouse />,
-    },
-    {
-      name: "Billing",
-      path: "/billing",
-      icon: <FaCashRegister />,
-    },
-    {
-      name: "Reports",
-      path: "/reports",
-      icon: <FaFileAlt />,
-    },
-  ];
+
+  {
+    name: "Dashboard",
+    path: "/dashboard",
+    icon: <LayoutDashboard size={20} />,
+  },
+
+  {
+    name: "Products",
+    path: "/products",
+    icon: <Package size={20} />,
+  },
+
+  {
+    name: "Inventory",
+    path: "/inventory",
+    icon: <Boxes size={20} />,
+  },
+
+  {
+    name: "Billing",
+    path: "/billing",
+    icon: <Receipt size={20} />,
+  },
+
+  {
+    name: "Bill History",
+    path: "/bill-history",
+    icon: <History  size={20} />,
+  },
+
+  {
+    name: "Reports",
+    path: "/reports",
+    icon: <FileText size={20} />,
+  },
+
+];
 
   return (
     <div className="w-64 min-h-screen bg-slate-900 text-white">

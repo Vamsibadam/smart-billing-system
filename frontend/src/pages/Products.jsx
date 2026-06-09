@@ -258,6 +258,10 @@ const handleDeleteProduct =
                 key={product.id}
               >
                 <td className="p-3 border-b">
+                  {product.id}
+                </td>
+
+                <td className="p-3 border-b">
                   {product.name}
                 </td>
 

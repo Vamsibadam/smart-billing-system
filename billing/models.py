@@ -8,6 +8,8 @@ class Transaction(models.Model):
         ('cash', 'Cash'),
         ('upi', 'UPI'),
         ('card', 'Card'),
+        ('swiggy', 'Swiggy'),
+        ('zomato', 'Zomato'),
     )
 
     bill_number = models.CharField(

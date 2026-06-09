@@ -383,6 +383,14 @@ return (
                     Card
                   </option>
 
+                  <option value="swiggy">
+                    Swiggy
+                  </option>
+
+                  <option value="zomato">
+                    Zomato
+                  </option>
+
                 </select>
 
               </div>
