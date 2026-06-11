@@ -4,7 +4,9 @@ from .views import (
     SalesTrendAPIView,
     TopProductsAPIView,
     PaymentAnalyticsAPIView,
-    LowStockAPIView
+    LowStockAPIView,
+    SalesHeatmapAPIView,
+    WeeklyHeatmapAPIView
 )
 
 urlpatterns = [
@@ -31,5 +33,10 @@ urlpatterns = [
     path(
     "low-stock/",
     LowStockAPIView.as_view()
+    ),
+    
+    path(
+    "weekly-heatmap/",
+    WeeklyHeatmapAPIView.as_view()
     ),
 ]

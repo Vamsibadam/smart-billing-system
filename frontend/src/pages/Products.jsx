@@ -225,6 +225,9 @@ const handleDeleteProduct =
             "
           >
             <tr>
+              <th className="p-3 text-left">
+                Product ID
+              </th>
 
               <th className="p-3 text-left">
                 Product

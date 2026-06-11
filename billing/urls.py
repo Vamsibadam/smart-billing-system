@@ -4,6 +4,7 @@ from .views import (
     TransactionHistoryAPIView,
     TransactionDetailAPIView,
     DeleteBillAPIView,
+    InvoicePDFAPIView,
 )
 
 urlpatterns = [
@@ -25,5 +26,9 @@ urlpatterns = [
     path(
         "history/<int:pk>/delete/",
         DeleteBillAPIView.as_view()
+    ),
+    path(
+    "history/<int:pk>/pdf/",
+    InvoicePDFAPIView.as_view()
     ),
 ]

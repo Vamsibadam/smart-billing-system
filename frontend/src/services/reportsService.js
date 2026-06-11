@@ -1,41 +1,48 @@
 import api from "../api/axios";
 
-export const getDailyReport =
-  async () => {
+export const getRangeReport =
+  async (
+    startDate,
+    endDate
+  ) => {
+
     const response =
       await api.get(
-        "/reports/daily/"
+        `/reports/range/?start_date=${startDate}&end_date=${endDate}`
       );
 
     return response.data;
 };
 
-export const getWeeklyReport =
-  async () => {
-    const response =
-      await api.get(
-        "/reports/weekly/"
-      );
+export const exportPdf =
+  (
+    startDate,
+    endDate
+  ) => {
 
-    return response.data;
+    window.open(
+      `http://127.0.0.1:8000/api/reports/export/pdf/?start_date=${startDate}&end_date=${endDate}`
+    );
 };
 
-export const getMonthlyReport =
-  async () => {
-    const response =
-      await api.get(
-        "/reports/monthly/"
-      );
+export const exportExcel =
+  (
+    startDate,
+    endDate
+  ) => {
 
-    return response.data;
+    window.open(
+      `http://127.0.0.1:8000/api/reports/export/excel/?start_date=${startDate}&end_date=${endDate}`
+    );
 };
-export const getCustomReport =
-  async (date) => {
 
-    const response =
-      await api.get(
-        `/reports/custom/?date=${date}`
-      );
+export const exportCsv =
+  (
+    startDate,
+    endDate
+  ) => {
 
-    return response.data;
+    window.open(
+      `http://127.0.0.1:8000/api/reports/export/csv/?start_date=${startDate}&end_date=${endDate}`
+    );
 };

@@ -11,6 +11,9 @@ import {
   deleteBill,
 } from "../services/billingService";
 
+import { useNavigate }
+from "react-router-dom";
+
 function BillHistory() {
 
   const [bills, setBills] =
@@ -129,6 +132,11 @@ function BillHistory() {
           search.toLowerCase()
         )
     );
+
+
+const navigate =
+  useNavigate();
+
 
   return (
 
@@ -294,15 +302,15 @@ function BillHistory() {
 
                   <button
                     onClick={() =>
-                      handleView(
-                        bill.id
+                      navigate(
+                        `/invoice/${bill.id}`
                       )
                     }
                     className="
-                    bg-green-600
+                    bg-blue-600
                     text-white
                     px-3
-                    py-1
+                    py-2
                     rounded-lg
                     mr-2
                     "
@@ -320,8 +328,9 @@ function BillHistory() {
                     bg-red-600
                     text-white
                     px-3
-                    py-1
+                    py-2
                     rounded-lg
+                    
                     "
                   >
                     Delete
@@ -464,23 +473,58 @@ function BillHistory() {
               }
             </h3>
 
-            <button
-              onClick={() =>
-                setShowModal(
-                  false
-                )
-              }
-              className="
-              mt-4
-              bg-slate-700
-              text-white
-              px-4
-              py-2
-              rounded-xl
-              "
-            >
-              Close
-            </button>
+            
+            <div className="flex gap-3 mt-6">
+
+              <a
+                href={`http://127.0.0.1:8000/api/billing/history/${selectedBill.id}/pdf/`}
+                target="_blank"
+                rel="noreferrer"
+                className="
+                bg-blue-600
+                text-white
+                px-4
+                py-2
+                rounded-xl
+                "
+              >
+                Download PDF
+              </a>
+
+              <button
+                onClick={() =>
+                  window.open(
+                    `http://127.0.0.1:8000/api/billing/history/${selectedBill.id}/pdf/`,
+                    "_blank"
+                  )
+                }
+                className="
+                bg-green-600
+                text-white
+                px-4
+                py-2
+                rounded-xl
+                "
+              >
+                Print
+              </button>
+
+              <button
+                onClick={() =>
+                  setShowModal(false)
+                }
+                className="
+                bg-slate-700
+                text-white
+                px-4
+                py-2
+                rounded-xl
+                "
+              >
+                Close
+              </button>
+
+            </div>
 
           </div>
 

@@ -34,6 +34,30 @@ function ChangePassword() {
       e.preventDefault();
 
       if (
+        !currentPassword ||
+        !newPassword ||
+        !confirmPassword
+      ) {
+
+        alert(
+          "Please fill all fields"
+        );
+
+        return;
+      }
+
+      if (
+        newPassword.length < 8
+      ) {
+
+        alert(
+          "Password must be at least 8 characters"
+        );
+
+        return;
+      }
+
+      if (
         newPassword !==
         confirmPassword
       ) {
@@ -67,16 +91,21 @@ function ChangePassword() {
         console.error(error);
 
         alert(
+
+          error.response?.data?.error ||
+
           "Failed to update password"
+
         );
 
       } finally {
 
         setLoading(false);
       }
-  };
+    };
 
   return (
+
     <MainLayout>
 
       <div className="max-w-xl mx-auto">
@@ -87,6 +116,8 @@ function ChangePassword() {
           rounded-2xl
           shadow-md
           p-8
+          border
+          border-slate-100
           "
         >
 
@@ -94,6 +125,7 @@ function ChangePassword() {
             className="
             text-3xl
             font-bold
+            text-slate-800
             mb-2
             "
           >
@@ -106,74 +138,129 @@ function ChangePassword() {
             mb-8
             "
           >
-            Update your admin password
+            Update your account password securely
           </p>
 
           <form
             onSubmit={
               handleSubmit
             }
+            className="space-y-5"
           >
 
-            <input
-              type="password"
-              placeholder="Current Password"
-              value={
-                currentPassword
-              }
-              onChange={(e) =>
-                setCurrentPassword(
-                  e.target.value
-                )
-              }
-              className="
-              w-full
-              border
-              rounded-xl
-              p-3
-              mb-4
-              "
-            />
+            <div>
 
-            <input
-              type="password"
-              placeholder="New Password"
-              value={
-                newPassword
-              }
-              onChange={(e) =>
-                setNewPassword(
-                  e.target.value
-                )
-              }
-              className="
-              w-full
-              border
-              rounded-xl
-              p-3
-              mb-4
-              "
-            />
+              <label
+                className="
+                block
+                text-sm
+                font-medium
+                text-slate-700
+                mb-2
+                "
+              >
+                Current Password
+              </label>
 
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              value={
-                confirmPassword
-              }
-              onChange={(e) =>
-                setConfirmPassword(
-                  e.target.value
-                )
-              }
-              className="
-              w-full
-              border
-              rounded-xl
-              p-3
-              mb-6
-              "
-            />
+              <input
+                type="password"
+                value={
+                  currentPassword
+                }
+                onChange={(e) =>
+                  setCurrentPassword(
+                    e.target.value
+                  )
+                }
+                className="
+                w-full
+                border
+                rounded-xl
+                p-3
+                outline-none
+                focus:ring-2
+                focus:ring-blue-500
+                "
+                placeholder="Enter current password"
+              />
+
+            </div>
+
+            <div>
+
+              <label
+                className="
+                block
+                text-sm
+                font-medium
+                text-slate-700
+                mb-2
+                "
+              >
+                New Password
+              </label>
+
+              <input
+                type="password"
+                value={
+                  newPassword
+                }
+                onChange={(e) =>
+                  setNewPassword(
+                    e.target.value
+                  )
+                }
+                className="
+                w-full
+                border
+                rounded-xl
+                p-3
+                outline-none
+                focus:ring-2
+                focus:ring-blue-500
+                "
+                placeholder="Minimum 8 characters"
+              />
+
+            </div>
+
+            <div>
+
+              <label
+                className="
+                block
+                text-sm
+                font-medium
+                text-slate-700
+                mb-2
+                "
+              >
+                Confirm Password
+              </label>
+
+              <input
+                type="password"
+                value={
+                  confirmPassword
+                }
+                onChange={(e) =>
+                  setConfirmPassword(
+                    e.target.value
+                  )
+                }
+                className="
+                w-full
+                border
+                rounded-xl
+                p-3
+                outline-none
+                focus:ring-2
+                focus:ring-blue-500
+                "
+                placeholder="Re-enter new password"
+              />
+
+            </div>
 
             <button
               type="submit"
@@ -182,16 +269,22 @@ function ChangePassword() {
               w-full
               bg-blue-600
               text-white
-              p-3
+              py-3
               rounded-xl
+              font-semibold
               hover:bg-blue-700
+              transition
+              disabled:opacity-50
+              disabled:cursor-not-allowed
               "
             >
+
               {
                 loading
                 ? "Updating..."
                 : "Update Password"
               }
+
             </button>
 
           </form>
@@ -201,6 +294,7 @@ function ChangePassword() {
       </div>
 
     </MainLayout>
+
   );
 }
 

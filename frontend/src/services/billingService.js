@@ -59,3 +59,14 @@ export const deleteBill =
       `/billing/history/${id}/delete/`
     );
 };
+
+export const getBillDetails =
+  async (id) => {
+
+    const response =
+      await api.get(
+        `/billing/history/${id}/`
+      );
+
+    return response.data;
+};

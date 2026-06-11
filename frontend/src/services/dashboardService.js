@@ -39,3 +39,25 @@ export const getLowStockProducts = async () => {
 
   return response.data;
 };
+
+export const getSalesHeatmap =
+  async () => {
+
+    const response =
+      await api.get(
+        "/dashboard/weekly-heatmap/"
+      );
+
+    return response.data;
+};
+
+export const getWeeklyHeatmap =
+  async () => {
+
+    const response =
+      await api.get(
+        "/dashboard/weekly-heatmap/"
+      );
+
+    return response.data;
+};

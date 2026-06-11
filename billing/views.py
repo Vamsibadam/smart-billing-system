@@ -20,6 +20,12 @@ from inventory.models import (
 
 from django.db import transaction
 
+from django.http import FileResponse
+
+from .pdf_generator import (
+    generate_invoice_pdf
+)
+
 class CreateBillAPIView(APIView):
 
     def post(self, request):
@@ -39,6 +45,7 @@ class CreateBillAPIView(APIView):
 
         return Response(
             {
+                "id": bill.id,
                 "bill_number": bill.bill_number,
                 "total_amount": bill.total_amount,
                 "payment_method": bill.payment_method
@@ -159,3 +166,35 @@ class DeleteBillAPIView(
             )
 
         instance.delete()
+
+class InvoicePDFAPIView(
+    generics.RetrieveAPIView
+):
+
+    queryset = (
+        Transaction.objects.all()
+    )
+
+    def get(
+        self,
+        request,
+        *args,
+        **kwargs
+    ):
+
+        transaction = (
+            self.get_object()
+        )
+
+        pdf = (
+            generate_invoice_pdf(
+                transaction
+            )
+        )
+
+        return FileResponse(
+            pdf,
+            as_attachment=True,
+            filename=
+            f"{transaction.bill_number}.pdf"
+        )

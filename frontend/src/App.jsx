@@ -8,6 +8,8 @@ import Reports from "./pages/Reports";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BillHistory from "./pages/BillHistory";
+import StoreSettings from "./pages/StoreSettings";
+import InvoicePreview from "./pages/InvoicePreview";
 
 
 function App() {
@@ -23,6 +25,8 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>}/>
         <Route path="/bill-history" element={<ProtectedRoute><BillHistory /></ProtectedRoute>}/>
+        <Route path="/settings" element={<ProtectedRoute><StoreSettings /></ProtectedRoute>}/>
+        <Route path="/invoice/:id" element={<ProtectedRoute><InvoicePreview /></ProtectedRoute>}/>
       </Routes>
     </BrowserRouter>
   );

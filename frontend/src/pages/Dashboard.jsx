@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-
 import MainLayout from "../layouts/MainLayout";
 import DashboardCards from "../components/DashboardCards";
 import SalesChart from "../components/SalesChart";
 import TopProducts from "../components/TopProducts";
 import PaymentChart from "../components/PaymentChart";
 import LowStockWidget from "../components/LowStockWidget";
+import SalesHeatmap from "../components/SalesHeatmap";
 
 import {
   getDashboardSummary,
@@ -13,7 +13,15 @@ import {
   getTopProducts,
   getPaymentAnalytics,
   getLowStockProducts,
+  getSalesHeatmap
 } from "../services/dashboardService";
+
+import {
+  CircleCheckBig,
+  TrendingUp,
+  Calendar,
+  ReceiptIndianRupee
+} from "lucide-react";
 
 function Dashboard() {
   const [summary, setSummary] = useState({
@@ -27,6 +35,7 @@ function Dashboard() {
   const [topProducts, setTopProducts] = useState([]);
   const [paymentData, setPaymentData] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
+  const [heatmapData, setHeatmapData] = useState([]);
 
   useEffect(() => {
     fetchSummary();
@@ -34,6 +43,7 @@ function Dashboard() {
     fetchTopProducts();
     fetchPaymentAnalytics();
     fetchLowStockProducts();
+    fetchHeatmap();
   }, []);
 
   const fetchSummary = async () => {
@@ -71,78 +81,90 @@ function Dashboard() {
       console.error(error);
     }
   };
-  const fetchLowStockProducts =
-  async () => {
+
+  const fetchLowStockProducts = async () => {
     try {
       const data = await getLowStockProducts();
-        console.log("LOW STOCK DATA:", data);
       setLowStockProducts(data);
     } catch (error) {
       console.error(error);
     }
   };
 
-return (
-  <MainLayout>
+  const fetchHeatmap = async () => {
+    try {
+      const data = await getSalesHeatmap();
+      setHeatmapData(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-    <div className="mb-6">
+  return (
+    <MainLayout>
+      <div className="w-full px-6 py-6 bg-transparent relative z-10">
+        
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <span className="text-[10px] font-black tracking-widest uppercase bg-gradient-to-r from-orange-500 via-amber-500 to-indigo-500 bg-clip-text text-transparent">
+              Enterprise Management Center
+            </span>
+            <h1 className="text-2xl font-black tracking-tight text-slate-800 mt-0.5">
+              Business Dashboard
+            </h1>
+          </div>
 
-      <h1 className="text-4xl font-bold text-slate-800">
-        Dashboard
-      </h1>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200/60 shadow-3xs rounded-xl self-start sm:self-center">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              System Synchronized
+            </span>
+          </div>
+        </div>
 
-      <p className="text-slate-500 mt-2">
-        Sales analytics and business overview
-      </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <DashboardCards
+            icon={<CircleCheckBig size={18} />}
+            title="Today's Sales"
+            value={`₹${Number(summary.today_sales).toLocaleString("en-IN")}`}
+          />
 
-    </div>
+          <DashboardCards
+            icon={<TrendingUp size={18} />}
+            title="Weekly Sales"
+            value={`₹${Number(summary.weekly_sales).toLocaleString("en-IN")}`}
+          />
 
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <DashboardCards
+            icon={<Calendar size={18} />}
+            title="Monthly Sales"
+            value={`₹${Number(summary.monthly_sales).toLocaleString("en-IN")}`}
+          />
 
-      <DashboardCards
-        title="Today's Sales"
-        value={`₹ ${summary.today_sales}`}
-      />
+          <DashboardCards
+            icon={<ReceiptIndianRupee size={18} />}
+            title="Transactions"
+            value={Number(summary.total_transactions).toLocaleString("en-IN")}
+          />
+        </div>
 
-      <DashboardCards
-        title="Weekly Sales"
-        value={`₹ ${summary.weekly_sales}`}
-      />
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mt-5">
+          <PaymentChart data={paymentData} />
+          <SalesHeatmap data={heatmapData} />
+        </div>
 
-      <DashboardCards
-        title="Monthly Sales"
-        value={`₹ ${summary.monthly_sales}`}
-      />
+        <div className="mt-5">
+          <LowStockWidget products={lowStockProducts} />
+        </div>
 
-      <DashboardCards
-        title="Transactions"
-        value={summary.total_transactions}
-      />
-
-    </div>
-
-    <div className="mt-8 bg-white rounded-2xl shadow-md p-6">
-      <SalesChart data={salesData} />
-    </div>
-
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-
-      <TopProducts
-        products={topProducts}
-      />
-
-      <PaymentChart
-        data={paymentData}
-      />
-
-      <LowStockWidget
-        products={lowStockProducts}
-      />
-
-    </div>
-
-  </MainLayout>
-);
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mt-5">
+          <SalesChart data={salesData} />
+          <TopProducts products={topProducts} />
+        </div>
+        
+      </div>
+    </MainLayout>
+  );
 }
 
 export default Dashboard;

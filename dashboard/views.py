@@ -1,6 +1,9 @@
 from datetime import timedelta
+from django.db.models.functions import (
+    ExtractHour,
+    ExtractWeekDay
+)
 
-from django.db.models import Sum
 from django.utils import timezone
 
 from rest_framework.response import Response
@@ -15,6 +18,7 @@ from billing.models import TransactionItem
 
 from django.db.models import Count
 from products.models import Product
+from django.db.models.functions import ExtractHour
 
 class DashboardSummaryAPIView(APIView):
 
@@ -73,8 +77,26 @@ class SalesTrendAPIView(APIView):
             .order_by("day")
         )
 
-        return Response(sales_data)
-    
+        formatted = []
+
+        for item in sales_data:
+
+            formatted.append({
+
+                "day":
+                item["day"].strftime(
+                    "%a"
+                ),
+
+                "sales":
+                item["sales"]
+
+            })
+
+        return Response(
+            formatted
+        )
+            
 class TopProductsAPIView(APIView):
 
     def get(self, request):
@@ -83,24 +105,59 @@ class TopProductsAPIView(APIView):
             TransactionItem.objects
             .values("product__name")
             .annotate(
-                quantity_sold=Sum("quantity")
+                sales=Sum("quantity")
             )
-            .order_by("-quantity_sold")[:10]
+            .order_by("-sales")[:10]
         )
 
-        return Response(products)
+        max_sales = (
+            products[0]["sales"]
+            if products
+            else 1
+        )
+
+        result = []
+
+        for item in products:
+
+            result.append({
+                "name":
+                item["product__name"],
+
+                "sales":
+                item["sales"],
+
+                "percentage":
+                round(
+                    (
+                        item["sales"]
+                        / max_sales
+                    ) * 100
+                )
+            })
+
+        return Response(result)
     
 class PaymentAnalyticsAPIView(APIView):
 
     def get(self, request):
 
+        today = timezone.now().date()
+
         payment_data = (
             Transaction.objects
+            .filter(
+                created_at__date=today
+            )
             .values("payment_method")
-            .annotate(count=Count("id"))
+            .annotate(
+                amount=Sum("total_amount")
+            )
         )
 
-        return Response(payment_data)
+        return Response(
+            payment_data
+        )
     
 class LowStockAPIView(APIView):
 
@@ -116,3 +173,78 @@ class LowStockAPIView(APIView):
         )
 
         return Response(low_stock_products)
+    
+class SalesHeatmapAPIView(APIView):
+
+    def get(self, request):
+
+        today = timezone.now().date()
+
+        data = (
+            Transaction.objects
+            .filter(
+                created_at__date=today
+            )
+            .annotate(
+                hour=ExtractHour(
+                    "created_at"
+                )
+            )
+            .values("hour")
+            .annotate(
+                sales=Sum(
+                    "total_amount"
+                )
+            )
+            .order_by("hour")
+        )
+
+        return Response(data)
+    
+class WeeklyHeatmapAPIView(APIView):
+
+    def get(self, request):
+
+        today = timezone.now()
+
+        week_start = (
+            today.date()
+            - timedelta(days=30)
+        )
+
+        heatmap = (
+            Transaction.objects
+            .filter(
+                created_at__date__gte=
+                week_start
+            )
+            .annotate(
+                weekday=
+                ExtractWeekDay(
+                    "created_at"
+                ),
+
+                hour=
+                ExtractHour(
+                    "created_at"
+                )
+            )
+            .values(
+                "weekday",
+                "hour"
+            )
+            .annotate(
+                sales=
+                Sum(
+                    "total_amount"
+                )
+            )
+            .order_by(
+                "weekday",
+                "hour"
+            )
+        )
+
+        return Response(
+            heatmap
+        )

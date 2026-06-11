@@ -1,23 +1,17 @@
 from django.urls import path
 from .views import (
-    export_sales_csv,
-    export_sales_excel,
     DailyReportAPIView,
-WeeklyReportAPIView,
-MonthlyReportAPIView,
-CustomDateReportAPIView,
+    WeeklyReportAPIView,
+    MonthlyReportAPIView,
+    CustomDateReportAPIView,
+    RangeReportAPIView,
+    ExportCSVAPIView,
+    ExportExcelAPIView,
+    ExportPDFAPIView
 )
 
 urlpatterns = [
-    path(
-        "sales/csv/",
-        export_sales_csv
-    ),
 
-    path(
-        "sales/excel/",
-        export_sales_excel
-    ),
 
     path(
     "daily/",
@@ -37,4 +31,23 @@ urlpatterns = [
         "custom/",
         CustomDateReportAPIView.as_view()
     ),
+
+    path(
+        "range/",
+        RangeReportAPIView.as_view()
+    ),
+    path(
+    "export/csv/",
+    ExportCSVAPIView.as_view()
+),
+
+    path(
+        "export/excel/",
+        ExportExcelAPIView.as_view()
+    ),
+
+    path(
+    "export/pdf/",
+    ExportPDFAPIView.as_view()
+),
 ]
