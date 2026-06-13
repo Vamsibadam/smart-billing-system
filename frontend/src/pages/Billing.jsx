@@ -9,7 +9,10 @@ import {
   useNavigate
 } from "react-router-dom";
 import {
-  Search
+  Search,
+  ChevronUp,
+  ChevronDown,
+  Keyboard
   
 } from "lucide-react";
 
@@ -25,6 +28,9 @@ const [products, setProducts] =
 
 const [cart, setCart] =
   useState([]);
+
+const [showShortcuts, setShowShortcuts] =
+  useState(false);
 
 const [
   selectedProductIndex,
@@ -802,13 +808,47 @@ selectedCartIndex
 
 <div className="w-full min-h-screen bg-gradient-to-tr from-indigo-200/70 via-slate-50 to-orange-200/40 p-6 rounded-[24px]">
 
-  <div className="mb-6 relative z-10">
+  <div className="mb-6 relative z-10 flex justify-between items-start">
     <h1 className="text-3xl font-black tracking-tight text-slate-800">
       Billing
     </h1>
-    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">
-      Create and manage sales transactions
-    </p>
+    
+      <button
+    onClick={() =>
+      setShowShortcuts(
+        !showShortcuts
+      )
+    }
+    className="
+    bg-white
+    border
+    border-slate-200
+    px-4
+    py-2
+    rounded-xl
+    text-sm
+    font-semibold
+    shadow-sm
+    hover:bg-slate-50
+    transition
+    "
+  >
+
+    <div className="flex items-center gap-2">
+  <Keyboard size={18} />
+  Shortcuts
+
+  {
+    showShortcuts
+    ?
+    <ChevronUp size={16}/>
+    :
+    <ChevronDown size={16}/>
+  }
+
+</div>
+
+  </button>
   </div>
 
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-full overflow-hidden pb-6 relative z-10 items-start">
@@ -1612,6 +1652,78 @@ selectedCartIndex
         </div>
 
       )}
+
+{
+showShortcuts && (
+
+<div
+className="
+absolute
+right-8
+top-20
+z-50
+w-80
+bg-white
+rounded-2xl
+shadow-xl
+border
+border-slate-200
+p-4
+"
+>
+
+<h3 className="
+font-bold
+text-slate-800
+mb-3
+">
+Keyboard Shortcuts
+</h3>
+
+
+<div className="
+space-y-2
+text-sm
+">
+
+<div className="flex justify-between">
+<span>↑ ↓</span>
+<span>Navigate Products</span>
+</div>
+
+<div className="flex justify-between">
+<span>Enter</span>
+<span>Add Product</span>
+</div>
+
+<div className="flex justify-between">
+<span>Ctrl + H</span>
+<span>Hold Bill</span>
+</div>
+
+<div className="flex justify-between">
+<span>Ctrl + B</span>
+<span>Held Bills</span>
+</div>
+
+<div className="flex justify-between">
+<span>Ctrl + Enter</span>
+<span>Generate Bill</span>
+</div>
+
+
+
+<div className="flex justify-between">
+<span>Backspace</span>
+<span>Remove Product</span>
+</div>
+
+</div>
+
+</div>
+
+)
+}
 
 {showHeldBills && (
   <div
