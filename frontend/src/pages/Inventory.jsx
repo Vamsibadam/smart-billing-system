@@ -141,66 +141,6 @@ function Inventory() {
 
       </div>
 
-      {/* Current Inventory */}
-
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-
-        <h2 className="text-2xl font-semibold mb-4">
-          Current Inventory
-        </h2>
-
-        <table className="w-full">
-
-          <thead className="bg-slate-100">
-
-            <tr>
-
-              <th className="p-3 text-left">
-                Product
-              </th>
-
-              <th className="p-3 text-left">
-                Stock
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {inventory.map(item => (
-
-              <tr key={item.id}>
-
-                <td className="p-3 border-b">
-                  {item.name}
-                </td>
-
-                <td className="p-3 border-b">
-
-                  <span
-                    className={
-                      item.stock <= 10
-                      ? "text-red-500 font-bold"
-                      : "font-medium"
-                    }
-                  >
-                    {item.stock}
-                  </span>
-
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
-
-      </div>
-
       {/* Add Stock */}
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
@@ -321,6 +261,69 @@ function Inventory() {
           </button>
 
         </div>
+
+      {/* Current Inventory */}
+
+
+      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+
+        <h2 className="text-2xl font-semibold mb-4">
+          Current Inventory
+        </h2>
+
+        <table className="w-full">
+
+          <thead className="bg-slate-100">
+
+            <tr>
+
+              <th className="p-3 text-left">
+                Product
+              </th>
+
+              <th className="p-3 text-left">
+                Stock
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {inventory.map(item => (
+
+              <tr key={item.id}>
+
+                <td className="p-3 border-b">
+                  {item.name}
+                </td>
+
+                <td className="p-3 border-b">
+
+                  <span
+                    className={
+                      item.stock <= 10
+                      ? "text-red-500 font-bold"
+                      : "font-medium"
+                    }
+                  >
+                    {item.stock}
+                  </span>
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      
 
         {productId && (
 

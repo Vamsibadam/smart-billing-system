@@ -2,7 +2,10 @@ import {
   useEffect,
   useState,
 } from "react";
-
+import {
+  Search
+  
+} from "lucide-react";
 import MainLayout from "../layouts/MainLayout";
 
 import {
@@ -140,399 +143,295 @@ const navigate =
 
   return (
 
-    <MainLayout>
+<MainLayout>
 
-      <div className="mb-6">
+  <div className="mb-6 relative z-10 px-6">
+    <h1 className="text-3xl font-black tracking-tight text-slate-800">
+      Bill History
+    </h1>
+    <p className="text-sm font-semibold text-slate-400 mt-1">
+      View and manage bills
+    </p>
+  </div>
 
-        <h1
-          className="
-          text-4xl
-          font-bold
-          text-slate-800
-          "
-        >
-          Bill History
-        </h1>
+  <div
+    className="
+    bg-white
+    border border-slate-200/80
+    rounded-[28px]
+    p-6
+    shadow-[0_4px_25px_-5px_rgba(0,0,0,0.02)]
+    relative
+    z-10
+    mx-6
+    "
+  >
 
-        <p
-          className="
-          text-slate-500
-          mt-2
-          "
-        >
-          View and manage bills
-        </p>
-
-      </div>
-
-      <div
-        className="
-        bg-white
-        rounded-2xl
-        shadow-md
-        p-6
-        "
-      >
-
-        <div
-          className="
-          flex
-          gap-4
-          mb-6
-          flex-wrap
-          "
-        >
-
-          <input
-            type="text"
-            placeholder="Search Bill..."
-            value={search}
-            onChange={(e) =>
-              setSearch(
-                e.target.value
-              )
-            }
-            className="
-            border
-            rounded-xl
-            p-3
-            flex-1
-            "
-          />
-
-          <input
-            type="date"
-            value={
-              selectedDate
-            }
-            onChange={(e) =>
-              setSelectedDate(
-                e.target.value
-              )
-            }
-            className="
-            border
-            rounded-xl
-            p-3
-            "
-          />
-
-          <button
-            onClick={
-              handleDateFilter
-            }
-            className="
-            bg-blue-600
-            text-white
-            px-5
-            rounded-xl
-            "
-          >
-            Filter
-          </button>
-
+    <div
+      className="
+      flex
+      gap-4
+      mb-6
+      flex-wrap
+      items-center
+      "
+    >
+      <div className="relative flex-1 min-w-[240px]">
+        <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400">
+          <Search size={18} />
         </div>
-
-        <table
+        <input
+          type="text"
+          placeholder="Search Bill..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           className="
           w-full
+          bg-slate-50/60
+          border border-slate-200
+          text-slate-800
+          rounded-xl
+          p-3
+          pl-11
+          text-sm
+          font-medium
+          placeholder:text-slate-400
+          outline-none
+          focus:bg-white
+          focus:border-indigo-400
+          transition-all
           "
-        >
-
-          <thead
-            className="
-            bg-slate-100
-            "
-          >
-
-            <tr>
-
-              <th className="p-3">
-                Bill No
-              </th>
-
-              <th className="p-3">
-                Amount
-              </th>
-
-              <th className="p-3">
-                Payment
-              </th>
-
-              <th className="p-3">
-                Date
-              </th>
-
-              <th className="p-3">
-                Actions
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {filteredBills.map(
-              bill => (
-
-              <tr
-                key={bill.id}
-              >
-
-                <td className="p-3 border-b">
-                  {bill.bill_number}
-                </td>
-
-                <td className="p-3 border-b">
-                  ₹{bill.total_amount}
-                </td>
-
-                <td className="p-3 border-b">
-                  {bill.payment_method}
-                </td>
-
-                <td className="p-3 border-b">
-                  {new Date(
-                    bill.created_at
-                  ).toLocaleString()}
-                </td>
-
-                <td className="p-3 border-b">
-
-                  <button
-                    onClick={() =>
-                      navigate(
-                        `/invoice/${bill.id}`
-                      )
-                    }
-                    className="
-                    bg-blue-600
-                    text-white
-                    px-3
-                    py-2
-                    rounded-lg
-                    mr-2
-                    "
-                  >
-                    View
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      handleDelete(
-                        bill.id
-                      )
-                    }
-                    className="
-                    bg-red-600
-                    text-white
-                    px-3
-                    py-2
-                    rounded-lg
-                    
-                    "
-                  >
-                    Delete
-                  </button>
-
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
-
+        />
       </div>
 
-      {showModal &&
-        selectedBill && (
+      <input
+        type="date"
+        value={selectedDate}
+        onChange={(e) => setSelectedDate(e.target.value)}
+        className="
+        bg-slate-50/60
+        border border-slate-200
+        text-slate-800
+        rounded-xl
+        p-3
+        text-sm
+        font-medium
+        outline-none
+        focus:bg-white
+        focus:border-indigo-400
+        transition-all
+        "
+      />
 
-        <div
-          className="
-          fixed
-          inset-0
-          bg-black/40
-          flex
-          items-center
-          justify-center
-          "
-        >
+      <button
+        onClick={handleDateFilter}
+        className="
+        bg-gradient-to-r from-orange-500 to-indigo-600
+        text-white
+        px-5
+        py-3
+        rounded-xl
+        text-sm
+        font-bold
+        tracking-wide
+        shadow-sm
+        hover:opacity-95
+        transition-all
+        duration-200
+        cursor-pointer
+        "
+      >
+        Filter
+      </button>
+    </div>
 
-          <div
-            className="
-            bg-white
-            rounded-2xl
-            p-6
-            w-[600px]
-            "
-          >
+    <div className="overflow-x-auto max-w-full">
+      <table className="w-full text-sm border-separate border-spacing-y-2">
+        <thead className="text-slate-400 font-bold text-[11px] tracking-wider uppercase">
+          <tr>
+            <th className="pb-1 text-left pl-4 w-52">Bill No</th>
+            <th className="pb-1 text-left w-32">Amount</th>
+            <th className="pb-1 text-left w-32">Payment</th>
+            <th className="pb-1 text-left">Date</th>
+            <th className="pb-1 text-right pr-4 w-40">Actions</th>
+          </tr>
+        </thead>
 
-            <h2
-              className="
-              text-2xl
-              font-bold
-              mb-4
-              "
+        <tbody className="divide-y divide-slate-100">
+          {filteredBills.map(bill => (
+            <tr
+              key={bill.id}
+              className="group hover:bg-slate-50/60 transition-all duration-150"
             >
-              {
-                selectedBill.bill_number
-              }
-            </h2>
+              <td className="py-3 px-4 font-semibold text-slate-700 rounded-l-xl">
+                {bill.bill_number}
+              </td>
 
-            <table
-              className="
-              w-full
-              mb-4
-              "
-            >
+              <td className="py-3 px-2 font-bold text-slate-800">
+                ₹{bill.total_amount}
+              </td>
 
-              <thead>
+              <td className="py-3 px-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md border bg-slate-50 text-slate-500 border-slate-200/60">
+                  {bill.payment_display}
+                </span>
+              </td>
 
-                <tr>
+              <td className="py-3 px-2 font-medium text-slate-400">
+                {new Date(bill.created_at).toLocaleString()}
+              </td>
 
-                  <th>
-                    Product
-                  </th>
+              <td className="py-3 px-3 text-right rounded-r-xl font-semibold">
+                <button
+                  onClick={() => navigate(`/invoice/${bill.id}`)}
+                  className="
+                  text-indigo-600 
+                  bg-indigo-50 
+                  px-3.5 
+                  py-2.5 
+                  rounded-xl 
+                  hover:bg-indigo-200
+                  hover:scale-[1.1]
+                  hover:text-indigo-900
+                  transition-all 
+                  mr-2
+                  cursor-pointer
+                  "
+                >
+                  View
+                </button>
 
-                  <th>
-                    Qty
-                  </th>
+                <button
+                  onClick={() => handleDelete(bill.id)}
+                  className="
+                  text-red-500 
+                  px-3.5 
+                  py-2.5 
+                  rounded-xl
+                  hover:bg-red-100 
+                  transition-all
+                  cursor-pointer
+                  "
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-                  <th>
-                    Price
-                  </th>
+  {showModal && selectedBill && (
+    <div className="fixed inset-0 bg-slate-950/20 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 w-full max-w-xl shadow-xl shadow-slate-950/5">
+        <h2 className="text-xl font-bold tracking-normal text-slate-800 mb-6">
+          {selectedBill.bill_number}
+        </h2>
 
-                  <th>
-                    Total
-                  </th>
+        <div className="overflow-x-auto max-w-full mb-6">
+          <table className="w-full text-sm border-separate border-spacing-y-2">
+            <thead className="text-slate-400 font-bold text-[11px] tracking-wider uppercase">
+              <tr>
+                <th className="pb-2 text-left pl-4">Product</th>
+                <th className="pb-2 text-center w-24">Qty</th>
+                <th className="pb-2 text-center w-28">Price</th>
+                <th className="pb-2 text-right pr-4 w-32">Total</th>
+              </tr>
+            </thead>
 
+            <tbody>
+              {selectedBill.items.map((item, index) => (
+                <tr key={index} className="bg-slate-50/40 border border-slate-100 rounded-xl overflow-hidden shadow-3xs">
+                  <td className="p-3 font-bold text-slate-700 pl-4 rounded-l-xl">
+                    {item.product_name}
+                  </td>
+                  <td className="p-3 font-semibold text-slate-500 text-center">
+                    {item.quantity}
+                  </td>
+                  <td className="p-3 font-bold text-slate-600 text-center">
+                    ₹{item.unit_price}
+                  </td>
+                  <td className="p-3 font-extrabold text-slate-800 text-right pr-4 rounded-r-xl">
+                    ₹{item.subtotal}
+                  </td>
                 </tr>
-
-              </thead>
-
-              <tbody>
-
-                {selectedBill.items.map(
-                  (
-                    item,
-                    index
-                  ) => (
-
-                  <tr
-                    key={index}
-                  >
-
-                    <td>
-                      {
-                        item.product_name
-                      }
-                    </td>
-
-                    <td>
-                      {
-                        item.quantity
-                      }
-                    </td>
-
-                    <td>
-                      ₹
-                      {
-                        item.unit_price
-                      }
-                    </td>
-
-                    <td>
-                      ₹
-                      {
-                        item.subtotal
-                      }
-                    </td>
-
-                  </tr>
-
-                ))}
-
-              </tbody>
-
-            </table>
-
-            <h3
-              className="
-              text-xl
-              font-bold
-              "
-            >
-              Total:
-              ₹
-              {
-                selectedBill.total_amount
-              }
-            </h3>
-
-            
-            <div className="flex gap-3 mt-6">
-
-              <a
-                href={`http://127.0.0.1:8000/api/billing/history/${selectedBill.id}/pdf/`}
-                target="_blank"
-                rel="noreferrer"
-                className="
-                bg-blue-600
-                text-white
-                px-4
-                py-2
-                rounded-xl
-                "
-              >
-                Download PDF
-              </a>
-
-              <button
-                onClick={() =>
-                  window.open(
-                    `http://127.0.0.1:8000/api/billing/history/${selectedBill.id}/pdf/`,
-                    "_blank"
-                  )
-                }
-                className="
-                bg-green-600
-                text-white
-                px-4
-                py-2
-                rounded-xl
-                "
-              >
-                Print
-              </button>
-
-              <button
-                onClick={() =>
-                  setShowModal(false)
-                }
-                className="
-                bg-slate-700
-                text-white
-                px-4
-                py-2
-                rounded-xl
-                "
-              >
-                Close
-              </button>
-
-            </div>
-
-          </div>
-
+              ))}
+            </tbody>
+          </table>
         </div>
 
-      )}
+        <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Grand Total</span>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight">
+            ₹{selectedBill.total_amount}
+          </h3>
+        </div>
 
-    </MainLayout>
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <a
+            href={`http://127.0.0.1:8000/api/billing/history/${selectedBill.id}/pdf/`}
+            target="_blank"
+            rel="noreferrer"
+            className="
+            bg-indigo-600 
+            text-white 
+            px-4 
+            py-2 
+            rounded-xl 
+            text-xs 
+            font-semibold 
+            shadow-sm 
+            hover:opacity-95 
+            transition
+            "
+          >
+            Download PDF
+          </a>
+
+          <button
+            onClick={() => window.open(`http://127.0.0.1:8000/api/billing/history/${selectedBill.id}/pdf/`, "_blank")}
+            className="
+            bg-emerald-600 
+            text-white 
+            px-4 
+            py-2 
+            rounded-xl 
+            text-xs 
+            font-semibold 
+            shadow-sm 
+            hover:opacity-95 
+            transition
+            "
+          >
+            Print
+          </button>
+
+          <button
+            onClick={() => setShowModal(false)}
+            className="
+            px-4 
+            py-2 
+            border 
+            border-slate-200 
+            text-slate-500 
+            font-semibold 
+            rounded-xl 
+            text-xs 
+            hover:bg-slate-50 
+            transition
+            "
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+
+</MainLayout>
+
   );
 }
 

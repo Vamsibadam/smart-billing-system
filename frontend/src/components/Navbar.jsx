@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { LogOut, KeyRound, User, Sparkles } from 'lucide-react';
+import { KeyRound, User, Sparkles } from 'lucide-react';
 
 function Navbar() {
   const navigate = useNavigate();
@@ -40,9 +40,9 @@ function Navbar() {
             <h1 className="text-lg font-bold tracking-tight text-slate-100">
               Smart Billing System
             </h1>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+            {/* <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
               Live Terminal Interface
-            </p>
+            </p> */}
           </div>
         </div>
 
@@ -92,30 +92,7 @@ function Navbar() {
           <div className="h-5 w-px bg-slate-800/60" />
 
           {/* Premium Logout Action Hub */}
-          <button
-            onClick={logout}
-            className="
-            inline-flex
-            items-center
-            justify-center
-            gap-2
-            bg-gradient-to-r from-red-500 to-rose-600
-            text-white
-            px-5
-            py-2.5
-            rounded-2xl
-            text-xs
-            font-bold
-            shadow-sm shadow-red-500/10
-            hover:opacity-95
-            hover:scale-[1.01]
-            transition-all
-            duration-200
-            "
-          >
-            <span>Term Session</span>
-            <LogOut size={14} />
-          </button>
+        
         </div>
       </div>
     </div>

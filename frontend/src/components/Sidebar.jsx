@@ -1,4 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { LogOut} from 'lucide-react';
 import {
   LayoutDashboard,
   Package,
@@ -6,12 +8,21 @@ import {
   Receipt,
   FileText,
   History,
-  Settings
+  Settings,
+  
 } from "lucide-react";
 
 function Sidebar() {
   const location = useLocation();
 
+  const navigate = useNavigate();
+ const logout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+  
+
+ 
   const menuItems = [
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={22} /> },
     { name: "Products", path: "/products", icon: <Package size={22} /> },
@@ -55,7 +66,7 @@ function Sidebar() {
             </div>
             <div>
               <h2 className="text-lg font-black tracking-tight text-slate-100">
-                Smart Billing
+                MENU
               </h2>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
                 Operator Panel
@@ -119,15 +130,36 @@ function Sidebar() {
           </div>
         </div>
 
+
+        
         {/* Lower Session Identity Plate */}
         <div className="p-4 bg-slate-950/50 border border-slate-800/60 rounded-2xl flex items-center justify-between shadow-inner relative z-10">
           <div className="flex flex-col">
-            <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">
-              Secure Terminal
-            </span>
-            <span className="text-xs font-bold text-slate-400 mt-0.5">
-              Node-01
-            </span>
+            
+            <button
+            onClick={logout}
+            className="
+            inline-flex
+            items-center
+            justify-center
+            gap-2
+            bg-gradient-to-r from-red-500 to-rose-600
+            text-white
+            px-5
+            py-2.5
+            rounded-2xl
+            text-xs
+            font-bold
+            shadow-sm shadow-red-500/10
+            hover:opacity-95
+            hover:scale-[1.01]
+            transition-all
+            duration-200
+            "
+          >
+            <span>Term Session</span>
+            <LogOut size={14} />
+          </button>
           </div>
           <span className="h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_8px_#f97316]" />
         </div>

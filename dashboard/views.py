@@ -9,7 +9,8 @@ from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from billing.models import Transaction
+from billing.models import Transaction,Payment
+from collections import defaultdict
 
 from django.db.models.functions import TruncDate
 from django.db.models import Sum
@@ -144,10 +145,15 @@ class PaymentAnalyticsAPIView(APIView):
 
         today = timezone.now().date()
 
-        payment_data = (
+        result = defaultdict(float)
+
+
+        # Old bills
+        old_payments = (
             Transaction.objects
             .filter(
-                created_at__date=today
+                created_at__date=today,
+                payment_method__isnull=False
             )
             .values("payment_method")
             .annotate(
@@ -155,10 +161,54 @@ class PaymentAnalyticsAPIView(APIView):
             )
         )
 
-        return Response(
-            payment_data
+
+        for payment in old_payments:
+
+            result[
+                payment["payment_method"]
+            ] += float(
+                payment["amount"]
+            )
+
+
+        # New split payments
+        new_payments = (
+            Payment.objects
+            .filter(
+                transaction__created_at__date=today
+            )
+            .values("method")
+            .annotate(
+                amount=Sum("amount")
+            )
         )
-    
+
+
+        for payment in new_payments:
+
+            result[
+                payment["method"]
+            ] += float(
+                payment["amount"]
+            )
+
+
+        response = [
+
+            {
+                "payment_method": method,
+                "amount": amount
+            }
+
+            for method, amount
+            in result.items()
+
+        ]
+
+
+        return Response(
+            response
+        )
 class LowStockAPIView(APIView):
 
     def get(self, request):

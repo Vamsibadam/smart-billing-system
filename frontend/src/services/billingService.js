@@ -10,15 +10,14 @@ export const searchProducts = async (query) => {
 
 export const createBill = async (
   items,
-  paymentMethod
+  payments
 ) => {
 
   const response = await api.post(
     "/billing/create/",
     {
       items,
-      payment_method:
-        paymentMethod,
+      payments,
     }
   );
 

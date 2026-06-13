@@ -5,11 +5,11 @@ from products.models import Product
 class Transaction(models.Model):
 
     PAYMENT_CHOICES = (
-        ('cash', 'Cash'),
-        ('upi', 'UPI'),
-        ('card', 'Card'),
-        ('swiggy', 'Swiggy'),
-        ('zomato', 'Zomato'),
+        ("cash", "Cash"),
+        ("upi", "UPI"),
+        ("card", "Card"),
+        ("swiggy", "Swiggy"),
+        ("zomato", "Zomato"),
     )
 
     bill_number = models.CharField(
@@ -22,9 +22,12 @@ class Transaction(models.Model):
         decimal_places=2
     )
 
+    # Keep this for old bills and compatibility
     payment_method = models.CharField(
         max_length=10,
-        choices=PAYMENT_CHOICES
+        choices=PAYMENT_CHOICES,
+        blank=True,
+        null=True
     )
 
     created_at = models.DateTimeField(
@@ -35,12 +38,45 @@ class Transaction(models.Model):
         return self.bill_number
 
 
+class Payment(models.Model):
+
+    PAYMENT_CHOICES = (
+        ("cash", "Cash"),
+        ("upi", "UPI"),
+        ("card", "Card"),
+        ("swiggy", "Swiggy"),
+        ("zomato", "Zomato"),
+    )
+
+    transaction = models.ForeignKey(
+        Transaction,
+        on_delete=models.CASCADE,
+        related_name="payments"
+    )
+
+    method = models.CharField(
+        max_length=10,
+        choices=PAYMENT_CHOICES
+    )
+
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    def __str__(self):
+        return (
+            f"{self.transaction.bill_number} - "
+            f"{self.method} ₹{self.amount}"
+        )
+
+
 class TransactionItem(models.Model):
 
     transaction = models.ForeignKey(
         Transaction,
         on_delete=models.CASCADE,
-        related_name='items'
+        related_name="items"
     )
 
     product = models.ForeignKey(
@@ -61,4 +97,4 @@ class TransactionItem(models.Model):
     )
 
     def __str__(self):
-        return f"{self.product.name}"
+        return self.product.name

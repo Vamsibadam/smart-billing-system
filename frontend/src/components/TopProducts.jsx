@@ -17,7 +17,7 @@ function TopProducts({ products }) {
       className="
       relative
       overflow-hidden
-      bg-gradient-to-tr from-white-100/40 via-slate-50 to-indigo-300/60
+      bg-gradient-to-tr from-gray-100 via-slate-50 to-indigo-300/60
       backdrop-blur-md
       rounded-3xl
       p-6

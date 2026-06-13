@@ -40,7 +40,7 @@ class CreateBillAPIView(APIView):
 
         bill = create_bill(
             serializer.validated_data["items"],
-            serializer.validated_data["payment_method"]
+            serializer.validated_data["payments"]
         )
 
         return Response(
@@ -48,11 +48,17 @@ class CreateBillAPIView(APIView):
                 "id": bill.id,
                 "bill_number": bill.bill_number,
                 "total_amount": bill.total_amount,
-                "payment_method": bill.payment_method
+
+                "payments": [
+                    {
+                        "method": payment.method,
+                        "amount": payment.amount
+                    }
+                    for payment in bill.payments.all()
+                ]
             },
             status=status.HTTP_201_CREATED
         )
-    
 class TransactionHistoryAPIView(
     generics.ListAPIView
 ):
