@@ -812,7 +812,6 @@ selectedCartIndex
     <h1 className="text-3xl font-black tracking-tight text-slate-800">
       Billing
     </h1>
-    ~
       <button
     onClick={() =>
       setShowShortcuts(
