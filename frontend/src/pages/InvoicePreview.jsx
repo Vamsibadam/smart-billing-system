@@ -234,7 +234,7 @@ function InvoicePreview() {
     iframe.style.display = "none";
 
     iframe.src =
-      `http://127.0.0.1:8000/api/billing/history/${bill.id}/pdf/`;
+      `${import.meta.env.VITE_API_URL}/api/billing/history/${bill.id}/pdf/`;
 
     document.body.appendChild(iframe);
 
@@ -261,7 +261,7 @@ function InvoicePreview() {
       </button>
 
       <a
-        href={`http://127.0.0.1:8000/api/billing/history/${bill.id}/pdf/`}
+        href={`${import.meta.env.VITE_API_URL}/api/billing/history/${bill.id}/pdf/`}
         target="_blank"
         rel="noreferrer"
         className="

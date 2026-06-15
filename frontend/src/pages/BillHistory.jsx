@@ -371,7 +371,7 @@ const navigate =
 
         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <a
-            href={`http://127.0.0.1:8000/api/billing/history/${selectedBill.id}/pdf/`}
+            href={`${import.meta.env.VITE_API_URL}/api/billing/history/${selectedBill.id}/pdf/`}
             target="_blank"
             rel="noreferrer"
             className="
@@ -391,7 +391,7 @@ const navigate =
           </a>
 
           <button
-            onClick={() => window.open(`http://127.0.0.1:8000/api/billing/history/${selectedBill.id}/pdf/`, "_blank")}
+            onClick={() => window.open(`${import.meta.env.VITE_API_URL}/api/billing/history/${selectedBill.id}/pdf/`, "_blank")}
             className="
             bg-emerald-600 
             text-white 
