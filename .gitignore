@@ -3,3 +3,11 @@ __pycache__/
 *.pyc
 .env
 db.sqlite3/
+.env.local
+
+data.json
+
+media/
+store_logo/
+
+staticfiles/
