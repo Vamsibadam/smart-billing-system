@@ -1578,7 +1578,7 @@ selectedCartIndex
               ">
 
               <a
-                href={`${import.meta.env.VITE_API_URL}/api/billing/history/${generatedBill.id}/pdf/`}
+                href={`${import.meta.env.VITE_API_URL}/billing/history/${generatedBill.id}/pdf/`}
                 target="_blank"
                 rel="noreferrer"
                 className="
@@ -1596,7 +1596,7 @@ selectedCartIndex
               <button
                 onClick={() =>
                   window.open(
-                    `${import.meta.env.VITE_API_URL}/api/billing/history/${generatedBill.id}/pdf/`,
+                    `${import.meta.env.VITE_API_URL}/billing/history/${generatedBill.id}/pdf/`,
                     "_blank"
                   )
                 }

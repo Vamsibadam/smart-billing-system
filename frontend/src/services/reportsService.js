@@ -21,7 +21,7 @@ export const exportPdf =
   ) => {
 
     window.open(
-      `${import.meta.env.VITE_API_URL}/api/reports/export/pdf/?start_date=${startDate}&end_date=${endDate}`
+      `${import.meta.env.VITE_API_URL}/reports/export/pdf/?start_date=${startDate}&end_date=${endDate}`
     );
 };
 
@@ -32,7 +32,7 @@ export const exportExcel =
   ) => {
 
     window.open(
-      `${import.meta.env.VITE_API_URL}/api/reports/export/excel/?start_date=${startDate}&end_date=${endDate}`
+      `${import.meta.env.VITE_API_URL}/reports/export/excel/?start_date=${startDate}&end_date=${endDate}`
     );
 };
 
@@ -43,6 +43,6 @@ export const exportCsv =
   ) => {
 
     window.open(
-      `${import.meta.env.VITE_API_URL}/api/reports/export/csv/?start_date=${startDate}&end_date=${endDate}`
+      `${import.meta.env.VITE_API_URL}/reports/export/csv/?start_date=${startDate}&end_date=${endDate}`
     );
 };

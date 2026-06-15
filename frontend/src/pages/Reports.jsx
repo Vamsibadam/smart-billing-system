@@ -321,7 +321,7 @@ useEffect(() => {
       {/* Action Trigger Buttons Container */}
       <div className="flex gap-3 flex-wrap pt-2">
         <a
-          href={`${import.meta.env.VITE_API_URL}/api/reports/export/csv/?start_date=${startDate}&end_date=${endDate}`}
+          href={`${import.meta.env.VITE_API_URL}/reports/export/csv/?start_date=${startDate}&end_date=${endDate}`}
           target="_blank"
           rel="noreferrer"
           className="bg-white border border-slate-200 text-slate-600 px-5 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-50 hover:text-slate-800 transition shadow-3xs"
@@ -330,7 +330,7 @@ useEffect(() => {
         </a>
 
         <a
-          href={`${import.meta.env.VITE_API_URL}/api/reports/export/excel/?start_date=${startDate}&end_date=${endDate}`}
+          href={`${import.meta.env.VITE_API_URL}/reports/export/excel/?start_date=${startDate}&end_date=${endDate}`}
           target="_blank"
           rel="noreferrer"
           className="bg-white border border-slate-200 text-slate-600 px-5 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-50 hover:text-slate-800 transition shadow-3xs"
@@ -339,7 +339,7 @@ useEffect(() => {
         </a>
 
         <a
-          href={`${import.meta.env.VITE_API_URL}/api/reports/export/pdf/?start_date=${startDate}&end_date=${endDate}`}
+          href={`${import.meta.env.VITE_API_URL}/reports/export/pdf/?start_date=${startDate}&end_date=${endDate}`}
           target="_blank"
           rel="noreferrer"
           className="bg-gradient-to-r from-red-500 to-rose-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold tracking-wide shadow-sm hover:opacity-95 transition"

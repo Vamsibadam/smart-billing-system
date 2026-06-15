@@ -371,7 +371,7 @@ const navigate =
 
         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <a
-            href={`${import.meta.env.VITE_API_URL}/api/billing/history/${selectedBill.id}/pdf/`}
+            href={`${import.meta.env.VITE_API_URL}/billing/history/${selectedBill.id}/pdf/`}
             target="_blank"
             rel="noreferrer"
             className="
