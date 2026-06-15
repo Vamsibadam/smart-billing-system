@@ -154,10 +154,7 @@ CORS_ALLOWED_ORIGINS = config(
 
 STATIC_URL = "static/"
 
-STATIC_ROOT = (
-    BASE_DIR /
-    "staticfiles"
-)
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -176,17 +173,6 @@ CLOUDINARY_STORAGE = {
     "API_KEY": config("CLOUDINARY_API_KEY"),
     "API_SECRET": config("CLOUDINARY_API_SECRET"),
 }
-STORAGES = {
-    "default": {
-        "BACKEND":
-            "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
-
-    "staticfiles": {
-        "BACKEND":
-            "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
 
 STORAGES = {
     "default": {
@@ -201,7 +187,7 @@ STORAGES = {
 }
 
 
-# Compatibility for cloudinary_storage collectstatic
+# Compatibility for django-cloudinary-storage
 STATICFILES_STORAGE = (
     "django.contrib.staticfiles.storage.StaticFilesStorage"
 )
