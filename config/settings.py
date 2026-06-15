@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     
 
-    'cloudinary_storage',
+    
     'cloudinary',
 
     'django.contrib.staticfiles',
@@ -176,18 +176,12 @@ CLOUDINARY_STORAGE = {
 
 STORAGES = {
     "default": {
-        "BACKEND":
-            "cloudinary_storage.storage.MediaCloudinaryStorage",
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
 
     "staticfiles": {
-        "BACKEND":
-            "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
 
-# Compatibility for django-cloudinary-storage
-STATICFILES_STORAGE = (
-    "django.contrib.staticfiles.storage.StaticFilesStorage"
-)
