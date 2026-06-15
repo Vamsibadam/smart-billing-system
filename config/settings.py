@@ -146,7 +146,7 @@ USE_I18N = True
 USE_TZ = True
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:5173"
+    default="https://smart-billing-system-six.vercel.app/"
 ).split(",")
 
 # Static files (CSS, JavaScript, Images)
