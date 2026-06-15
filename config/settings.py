@@ -187,3 +187,21 @@ STORAGES = {
             "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
+
+STORAGES = {
+    "default": {
+        "BACKEND":
+            "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+
+    "staticfiles": {
+        "BACKEND":
+            "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+
+# Compatibility for cloudinary_storage collectstatic
+STATICFILES_STORAGE = (
+    "django.contrib.staticfiles.storage.StaticFilesStorage"
+)
