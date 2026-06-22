@@ -16,6 +16,7 @@ import {
 
 import { useNavigate }
 from "react-router-dom";
+import Loader from "../components/Loader";
 
 function BillHistory() {
 
@@ -37,29 +38,35 @@ function BillHistory() {
     setShowModal] =
     useState(false);
 
+    const [loading, setLoading] = useState(true);
+
   useEffect(() => {
 
     fetchBills();
 
   }, []);
 
-  const fetchBills =
-    async (date = "") => {
+  const fetchBills = async (date = "") => {
 
-      try {
+  try {
 
-        const data =
-          await getBillHistory(
-            date
-          );
+    setLoading(true);
 
-        setBills(data);
+    const data =
+      await getBillHistory(date);
 
-      } catch (error) {
+    setBills(data);
 
-        console.error(error);
-      }
-  };
+  } catch(error) {
+
+    console.error(error);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
 
   const handleDateFilter =
     () => {
@@ -137,9 +144,16 @@ function BillHistory() {
     );
 
 
-const navigate =
-  useNavigate();
+const navigate = useNavigate();
 
+if (loading) {
+
+  return (
+    <MainLayout>
+      <Loader text="Loading bills..." />
+    </MainLayout>
+  );
+}
 
   return (
 
@@ -391,7 +405,7 @@ const navigate =
           </a>
 
           <button
-            onClick={() => window.open(`${import.meta.env.VITE_API_URL}/api/billing/history/${selectedBill.id}/pdf/`, "_blank")}
+            onClick={() => window.open(`${import.meta.env.VITE_API_URL}/billing/history/${selectedBill.id}/pdf/`, "_blank")}
             className="
             bg-emerald-600 
             text-white 

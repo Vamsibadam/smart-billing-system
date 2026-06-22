@@ -68,9 +68,18 @@ class SalesTrendAPIView(APIView):
 
     def get(self, request):
 
+        today = timezone.now().date()
+
+        week_start = today - timedelta(days=6)
+
         sales_data = (
             Transaction.objects
-            .annotate(day=TruncDate("created_at"))
+            .filter(
+                created_at__date__gte=week_start
+            )
+            .annotate(
+                day=TruncDate("created_at")
+            )
             .values("day")
             .annotate(
                 sales=Sum("total_amount")
@@ -83,21 +92,13 @@ class SalesTrendAPIView(APIView):
         for item in sales_data:
 
             formatted.append({
-
-                "day":
-                item["day"].strftime(
-                    "%a"
-                ),
-
-                "sales":
-                item["sales"]
-
+                "day": item["day"].strftime("%a"),
+                "sales": item["sales"]
             })
 
-        return Response(
-            formatted
-        )
-            
+        return Response(formatted)
+    
+
 class TopProductsAPIView(APIView):
 
     def get(self, request):

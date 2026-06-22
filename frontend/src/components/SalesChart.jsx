@@ -53,7 +53,7 @@ function SalesChart({ data }) {
             margin={{
               top: 10,
               right: 5,
-              left: -20, 
+              left: -10,
               bottom: 0,
             }}
           >
@@ -117,7 +117,7 @@ function SalesChart({ data }) {
               dataKey="sales"
               fill="url(#salesBarGradient)"
               maxBarSize={44} // Bold, premium data blocks
-              radius={[10, 10, 0, 0]} 
+              radius={[10, 10, 0, 0]}
               animationBegin={100}
               animationDuration={1000}
             />

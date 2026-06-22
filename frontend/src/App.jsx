@@ -13,8 +13,12 @@ import InvoicePreview from "./pages/InvoicePreview";
 
 
 function App() {
+  
+  
   return (
+    
     <BrowserRouter>
+  
       <Routes>
         <Route path="/dashboard"element={<ProtectedRoute><Dashboard /></ProtectedRoute>}/>
         <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
@@ -28,6 +32,7 @@ function App() {
         <Route path="/settings" element={<ProtectedRoute><StoreSettings /></ProtectedRoute>}/>
         <Route path="/invoice/:id" element={<ProtectedRoute><InvoicePreview /></ProtectedRoute>}/>
       </Routes>
+   
     </BrowserRouter>
   );
 }

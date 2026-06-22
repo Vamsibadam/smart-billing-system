@@ -6,6 +6,7 @@ import TopProducts from "../components/TopProducts";
 import PaymentChart from "../components/PaymentChart";
 import LowStockWidget from "../components/LowStockWidget";
 import SalesHeatmap from "../components/SalesHeatmap";
+import Loader from "../components/Loader";
 
 import {
   getDashboardSummary,
@@ -36,15 +37,51 @@ function Dashboard() {
   const [paymentData, setPaymentData] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
   const [heatmapData, setHeatmapData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSummary();
-    fetchSalesTrend();
-    fetchTopProducts();
-    fetchPaymentAnalytics();
-    fetchLowStockProducts();
-    fetchHeatmap();
-  }, []);
+  fetchDashboardData();
+}, []);
+
+const fetchDashboardData = async () => {
+
+  try {
+
+    setLoading(true);
+
+    const [
+      summary,
+      sales,
+      products,
+      payments,
+      stock,
+      heatmap
+    ] = await Promise.all([
+      getDashboardSummary(),
+      getSalesTrend(),
+      getTopProducts(),
+      getPaymentAnalytics(),
+      getLowStockProducts(),
+      getSalesHeatmap()
+    ]);
+
+    setSummary(summary);
+    setSalesData(sales);
+    setTopProducts(products);
+    setPaymentData(payments);
+    setLowStockProducts(stock);
+    setHeatmapData(heatmap);
+
+  } catch(error) {
+
+    console.error(error);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
 
   const fetchSummary = async () => {
     try {
@@ -99,6 +136,15 @@ function Dashboard() {
       console.error(error);
     }
   };
+  if (loading) {
+
+  return (
+    <MainLayout>
+      <Loader text="Loading dashboard..." />
+    </MainLayout>
+  );
+
+}
 
   return (
     <MainLayout>
