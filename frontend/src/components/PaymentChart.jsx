@@ -48,8 +48,13 @@ function PaymentChart({ data }) {
       {/* Header Container */}
       <div className="flex items-center justify-between mb-4 relative z-10">
         <div>
-          <span className="text-[10px] font-black tracking-widest uppercase bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            POS Transaction Intelligence
+          
+          <span className="text-[15px] font-black tracking-widest uppercase bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            {new Date().toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
           </span>
           <h4 className="text-lg font-black tracking-tight text-slate-800 mt-0.5">
             Revenue by Channels
