@@ -4,6 +4,7 @@ from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from settings_app.models import StoreSettings
+import requests
 
 def generate_invoice_pdf(transaction):
     buffer = BytesIO()
@@ -102,10 +103,27 @@ def generate_invoice_pdf(transaction):
         header_left.append(Paragraph("Smart Billing Terminal", shop_name_style))
 
     header_right = []
+
     if store and store.logo:
+
         try:
-            header_right.append(Image(store.logo.path, width=64, height=64))
+
+            response = requests.get(store.logo.url)
+
+            if response.status_code == 200:
+
+                image_buffer = BytesIO(response.content)
+
+                header_right.append(
+                    Image(
+                        image_buffer,
+                        width=64,
+                        height=64
+                    )
+                )
+
         except Exception as e:
+
             print("Logo Error:", e)
 
     # Wrap branding elements in a flat split layout table

@@ -1,7 +1,7 @@
 import csv
 from datetime import datetime
 from django.http import HttpResponse
-
+import requests
 
 from openpyxl import Workbook   
 from io import BytesIO
@@ -669,12 +669,24 @@ class ExportPDFAPIView(APIView):
 
         # Right Block: Logo Anchor Placement
         logo_container = []
+
         if store and store.logo:
             try:
-                logo_container.append(Image(store.logo.path, width=64, height=64))
-            except Exception:
-                pass
-        header_data[0][1] = logo_container
+                response = requests.get(store.logo.url, timeout=10)
+
+                if response.status_code == 200:
+                    image_data = BytesIO(response.content)
+
+                    logo_container.append(
+                        Image(
+                            image_data,
+                            width=64,
+                            height=64
+                        )
+                    )
+
+            except Exception as e:
+                print("Logo Error:", e)
 
         # Outer boundary framework grid table to position elements evenly
         header_table = Table(header_data, colWidths=[380, 160])
