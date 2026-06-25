@@ -51,7 +51,7 @@ function SalesHeatmap({ data }) {
           </h4>
         </div>
         <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/90 border border-slate-100 shadow-3xs rounded-xl text-slate-500 text-[10px] font-bold">
-          <span>Matrix Range: 10AM - 12AM</span>
+          <span>Peak-Hours</span>
         </div>
       </div>
 

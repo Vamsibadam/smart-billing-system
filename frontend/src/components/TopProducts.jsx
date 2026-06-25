@@ -47,7 +47,7 @@ function TopProducts({ products }) {
           </div>
         </div>
         <div className="flex items-center px-2.5 py-1 bg-white/90 border border-slate-100 shadow-3xs rounded-xl text-slate-400 text-[10px] font-black tracking-wide uppercase">
-          Today
+          High-Demand
         </div>
       </div>
 

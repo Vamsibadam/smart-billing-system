@@ -778,7 +778,9 @@ class ExportPDFAPIView(APIView):
                 ),
 
                 Paragraph(
-                    transaction.created_at.strftime(
+                    timezone.localtime(
+                        transaction.created_at
+                    ).strftime(
                         "%d-%m-%Y %I:%M %p"
                     ),
                     table_cell_style
@@ -809,8 +811,7 @@ class ExportPDFAPIView(APIView):
         elements.append(Spacer(1, 30))
 
         # --- Document Footer Signature Card ---
-        if store and store.footer_message:
-            elements.append(Paragraph(store.footer_message, ParagraphStyle('FooterMsg', parent=meta_label_style, alignment=1)))
+       
 
         # Build Document
         doc.build(elements)
@@ -819,7 +820,7 @@ class ExportPDFAPIView(APIView):
         buffer.close()
 
         response = HttpResponse(content_type="application/pdf")
-        response["Content-Disposition"] = 'attachment; filename="sales_report.pdf"'
+        response["Content-Disposition"] = (f'attachment; filename="Sales-Report from {start_date} to {end_date}.pdf"')
         response.write(pdf)
 
         return response
