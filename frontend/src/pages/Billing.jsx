@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef} from "react";
+import { useState, useEffect, useRef } from "react";
 import MainLayout from "../layouts/MainLayout";
 import {
   searchProducts,
@@ -13,812 +13,820 @@ import {
   ChevronUp,
   ChevronDown,
   Keyboard
-  
+
 } from "lucide-react";
 
 function Billing() {
-const navigate =
-  useNavigate();
+  const navigate =
+    useNavigate();
 
-const [search, setSearch] =
-  useState("");
+  const [search, setSearch] =
+    useState("");
 
-const [products, setProducts] =
-  useState([]);
+  const [products, setProducts] =
+    useState([]);
 
-const [cart, setCart] =
-  useState([]);
+  const [cart, setCart] =
+    useState([]);
 
-const [showShortcuts, setShowShortcuts] =
-  useState(false);
+  const [showShortcuts, setShowShortcuts] =
+    useState(false);
 
-const [
-  selectedProductIndex,
-  setSelectedProductIndex
-] = useState(0);
+  const [
+    selectedProductIndex,
+    setSelectedProductIndex
+  ] = useState(0);
 
-const [
-  selectedCartIndex,
-  setSelectedCartIndex
-] = useState(0);
+  const [
+    selectedCartIndex,
+    setSelectedCartIndex
+  ] = useState(0);
 
-const handleSearchKeyDown = (e) => {
+  const handleSearchKeyDown = (e) => {
 
-  if (e.key === "ArrowDown") {
+    if (e.key === "ArrowDown") {
 
-    e.preventDefault();
+      e.preventDefault();
 
-    setSelectedProductIndex(
-      prev =>
-        prev < products.length - 1
-          ? prev + 1
-          : 0
-    );
-  }
-
-
-  if (e.key === "ArrowUp") {
-
-    e.preventDefault();
-
-    setSelectedProductIndex(
-      prev =>
-        prev > 0
-          ? prev - 1
-          : products.length - 1
-    );
-  }
-
-
-  if (e.key === "Enter") {
-
-    e.preventDefault();
-
-    if (products.length > 0) {
-
-      addToCart(
-        products[selectedProductIndex]
+      setSelectedProductIndex(
+        prev =>
+          prev < products.length - 1
+            ? prev + 1
+            : 0
       );
     }
-  }
 
-};
 
-const [generatedBill,
-  setGeneratedBill] =
-  useState(null);
+    if (e.key === "ArrowUp") {
 
-const [showBillModal,
-  setShowBillModal] =
-  useState(false);
+      e.preventDefault();
 
-const [cartLoaded,
-  setCartLoaded] =
-  useState(false);
+      setSelectedProductIndex(
+        prev =>
+          prev > 0
+            ? prev - 1
+            : products.length - 1
+      );
+    }
+
+
+    if (e.key === "Enter") {
+
+      e.preventDefault();
+
+      if (products.length > 0) {
+
+        addToCart(
+          products[selectedProductIndex]
+        );
+      }
+    }
+
+  };
+
+  const [generatedBill,
+    setGeneratedBill] =
+    useState(null);
+
+  const [showBillModal,
+    setShowBillModal] =
+    useState(false);
+
+  const [cartLoaded,
+    setCartLoaded] =
+    useState(false);
 
 
   const [showPaymentModal, setShowPaymentModal] =
-  useState(false);
+    useState(false);
 
-const [payments, setPayments] =
-  useState([
-    {
-      method: "upi",
-      amount: ""
-    }
-  ]);
+  const [payments, setPayments] =
+    useState([
+      {
+        method: "upi",
+        amount: ""
+      }
+    ]);
 
-useEffect(() => {
 
-  const savedCart =
-    localStorage.getItem(
-      "billing_cart"
-    );
 
-  if (savedCart) {
+  useEffect(() => {
 
-    try {
-
-      setCart(
-        JSON.parse(
-          savedCart
-        )
-      );
-
-    } catch {
-
-      localStorage.removeItem(
+    const savedCart =
+      localStorage.getItem(
         "billing_cart"
       );
 
-    }
+    if (savedCart) {
 
-  }
+      try {
 
-  setCartLoaded(true);
-
-}, []);
-
-useEffect(() => {
-
-  if (!cartLoaded) {
-    return;
-  }
-
-  localStorage.setItem(
-    "billing_cart",
-    JSON.stringify(
-      cart
-    )
-  );
-
-}, [
-  cart,
-  cartLoaded
-]);
-
-
-
-const searchInputRef =
-  useRef(null);
-
-
-
-useEffect(() => {
-
-  if (
-    search.trim().length > 0
-  ) {
-
-    fetchProducts();
-
-  } else {
-
-    setProducts([]);
-
-  }
-
-}, [search]);
-
-const fetchProducts =
-  async () => {
-
-    try {
-
-      const data =
-        await searchProducts(
-          search
+        setCart(
+          JSON.parse(
+            savedCart
+          )
         );
 
-      setProducts(data);
+      } catch {
 
-    } catch (error) {
+        localStorage.removeItem(
+          "billing_cart"
+        );
 
-      console.error(error);
+      }
 
     }
-};
 
-const addToCart =
-  (product) => {
+    setCartLoaded(true);
 
-    const existing =
-      cart.find(
-        (item) =>
-          item.id ===
-          product.id
-      );
+  }, []);
 
-    if (existing) {
+  useEffect(() => {
+
+    if (!cartLoaded) {
       return;
     }
 
-    setCart([
-
-      ...cart,
-
-      {
-        ...product,
-        quantity: 1,
-      },
-
-    ]);
-    setSearch("");
-    setProducts([]);
-    setSelectedProductIndex(0);
-};
-
-const updateQuantity =
-  (
-    id,
-    quantity
-  ) => {
-
-    const qty =
-      parseInt(quantity);
-
-    if (
-      isNaN(qty) ||
-      qty < 1
-    ) {
-      return;
-    }
-
-    const updated =
-      cart.map(
-        (item) => {
-
-          if (
-            item.id === id
-          ) {
-
-            return {
-
-              ...item,
-
-              quantity:
-                qty,
-
-            };
-
-          }
-
-          return item;
-
-        }
-      );
-
-    setCart(updated);
-};
-
-const removeItem =
-  (id) => {
-
-    setCart(
-
-      cart.filter(
-        (item) =>
-          item.id !== id
+    localStorage.setItem(
+      "billing_cart",
+      JSON.stringify(
+        cart
       )
-
-    );
-    setSelectedCartIndex(0);
-};
-
-const totalAmount =
-  cart.reduce(
-
-    (total, item) =>
-
-      total +
-
-      Number(
-        item.price
-      ) *
-      item.quantity,
-
-    0
-
-  );
-
-const generateBill = () => {
-
-  if (
-    cart.length === 0
-  ) {
-
-    alert(
-      "Cart is empty"
     );
 
-    return;
-  }
-
-  setPayments([
-    {
-      method: "upi",
-      amount: totalAmount
-    }
+  }, [
+    cart,
+    cartLoaded
   ]);
 
-  setShowPaymentModal(
-    true
-  );
-};
-const addPayment = () => {
+
+
+  const searchInputRef =
+    useRef(null);
+
+
+
+  useEffect(() => {
+
+    if (
+      search.trim().length > 0
+    ) {
+
+      fetchProducts();
+
+    } else {
+
+      setProducts([]);
+
+    }
+
+  }, [search]);
+
+  const fetchProducts =
+    async () => {
+
+      try {
+
+        const data =
+          await searchProducts(
+            search
+          );
+
+        setProducts(data);
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+    };
+
+  const addToCart =
+    (product) => {
+
+      const existing =
+        cart.find(
+          (item) =>
+            item.id ===
+            product.id
+        );
+
+      if (existing) {
+        return;
+      }
+
+      setCart([
+
+        ...cart,
+
+        {
+          ...product,
+          quantity: 1,
+        },
+
+      ]);
+      setSearch("");
+      setProducts([]);
+      setSelectedProductIndex(0);
+    };
+
+  const updateQuantity =
+    (
+      id,
+      quantity
+    ) => {
+
+      const qty =
+        parseInt(quantity);
+
+      if (
+        isNaN(qty) ||
+        qty < 1
+      ) {
+        return;
+      }
+
+      const updated =
+        cart.map(
+          (item) => {
+
+            if (
+              item.id === id
+            ) {
+
+              return {
+
+                ...item,
+
+                quantity:
+                  qty,
+
+              };
+
+            }
+
+            return item;
+
+          }
+        );
+
+      setCart(updated);
+    };
+
+  const removeItem =
+    (id) => {
+
+      setCart(
+
+        cart.filter(
+          (item) =>
+            item.id !== id
+        )
+
+      );
+      setSelectedCartIndex(0);
+    };
+
+  const totalAmount =
+    cart.reduce(
+
+      (total, item) =>
+
+        total +
+
+        Number(
+          item.price
+        ) *
+        item.quantity,
+
+      0
+
+    );
+
+  const generateBill = () => {
+
+    if (
+      cart.length === 0
+    ) {
+
+      alert(
+        "Cart is empty"
+      );
+
+      return;
+    }
+
+    setPayments([
+      {
+        method: "upi",
+        amount: totalAmount
+      }
+    ]);
+
+    setShowPaymentModal(
+      true
+    );
+  };
+const addPayment = (method = "upi") => {
+
+  if (payments.some(payment => payment.method === method)) {
+    return;
+  }
 
   setPayments([
     ...payments,
     {
-      method: "upi",
-      amount: ""
+      method,
+      amount:
+        remainingAmount > 0
+          ? remainingAmount.toFixed(2)
+          : ""
     }
   ]);
 };
+  const removePayment = (index) => {
 
-const removePayment = (index) => {
+    const updated =
+      payments.filter(
+        (_, i) =>
+          i !== index
+      );
 
-  const updated =
-    payments.filter(
-      (_, i) =>
-        i !== index
+    setPayments(updated);
+  };
+
+  const updatePayment = (
+    index,
+    field,
+    value
+  ) => {
+
+    const updated =
+      [...payments];
+
+    updated[index][field] =
+      value;
+
+    setPayments(updated);
+  };
+
+  const paidAmount =
+    payments.reduce(
+      (
+        total,
+        payment
+      ) =>
+        total +
+        Number(
+          payment.amount || 0
+        ),
+      0
     );
-
-  setPayments(updated);
-};
-
-const updatePayment = (
-  index,
-  field,
-  value
-) => {
-
-  const updated =
-    [...payments];
-
-  updated[index][field] =
-    value;
-
-  setPayments(updated);
-};
-
-const paidAmount =
-  payments.reduce(
-    (
-      total,
-      payment
-    ) =>
-      total +
-      Number(
-        payment.amount || 0
-      ),
-    0
-  );
 
   const remainingAmount = totalAmount - paidAmount;
 
   const closeButtonRef =
-  useRef(null);
+    useRef(null);
 
   useEffect(() => {
 
-  if (showBillModal) {
+    if (showBillModal) {
 
-    setTimeout(() => {
+      setTimeout(() => {
 
-      closeButtonRef.current?.focus();
+        closeButtonRef.current?.focus();
 
-    }, 100);
+      }, 100);
 
-  }
+    }
 
-}, [showBillModal]);
+  }, [showBillModal]);
 
   const confirmPayment =
-  async () => {
+    async () => {
 
-    if (
-      Math.abs(remainingAmount) > 0.01
-    ) {
+      if (
+        Math.abs(remainingAmount) > 0.01
+      ) {
 
-      alert(
-        "Payment amount must match bill total"
-      );
-
-      return;
-    }
-
-    try {
-
-      const items =
-        cart.map(
-          (item) => ({
-            product_id:
-              item.id,
-            quantity:
-              item.quantity,
-          })
+        alert(
+          "Payment amount must match bill total"
         );
 
-      const response =
-        await createBill(
-          items,
-          payments
+        return;
+      }
+
+      try {
+
+        const items =
+          cart.map(
+            (item) => ({
+              product_id:
+                item.id,
+              quantity:
+                item.quantity,
+            })
+          );
+
+        const response =
+          await createBill(
+            items,
+            payments
+          );
+
+        setGeneratedBill(
+          response
         );
 
-      setGeneratedBill(
-        response
-      );
+        setShowPaymentModal(
+          false
+        );
 
-      setShowPaymentModal(
-        false
-      );
+        setShowBillModal(
+          true
+        );
 
-      setShowBillModal(
-        true
-      );
+        setCart([]);
 
-      setCart([]);
+        localStorage.removeItem(
+          "billing_cart"
+        );
 
-      localStorage.removeItem(
-        "billing_cart"
-      );
+        setPayments([
+          {
+            method: "upi",
+            amount: ""
+          }
+        ]);
 
-      setPayments([
-        {
-          method: "upi",
-          amount: ""
-        }
-      ]);
+      } catch (error) {
 
-    } catch (error) {
+        console.error(error);
 
-      console.error(error);
-
-      alert(
-        "Failed to generate bill"
-      );
-    }
-};
-const confirmButtonRef =
-  useRef(null);
+        alert(
+          "Failed to generate bill"
+        );
+      }
+    };
+  const confirmButtonRef =
+    useRef(null);
 
   useEffect(() => {
 
-  if (showPaymentModal) {
+    if (showPaymentModal) {
 
-    setTimeout(() => {
+      setTimeout(() => {
 
-      confirmButtonRef.current?.focus();
+        confirmButtonRef.current?.focus();
 
-    }, 100);
+      }, 100);
 
-  }
+    }
 
-}, [showPaymentModal]);
+  }, [showPaymentModal]);
 
-const [showHeldBills, setShowHeldBills] =
+  const [showHeldBills, setShowHeldBills] =
     useState(false);
 
-const [heldBills, setHeldBills] =
-  useState([]);
+  const [heldBills, setHeldBills] =
+    useState([]);
 
 
-useEffect(() => {
+  useEffect(() => {
 
-  const handleShortcuts = (e) => {
+    const handleShortcuts = (e) => {
 
-    if (e.ctrlKey && e.key === "Enter") {
+      if (e.ctrlKey && e.key === "Enter") {
 
-      e.preventDefault();
+        e.preventDefault();
 
-      generateBill();
+        generateBill();
 
-    }
-
-
-    if (e.ctrlKey && e.key.toLowerCase() === "h") {
-
-      e.preventDefault();
-
-      holdBill();
-
-    }
+      }
 
 
-    if (e.ctrlKey && e.key.toLowerCase() === "b") {
+      if (e.ctrlKey && e.key.toLowerCase() === "h") {
 
-      e.preventDefault();
+        e.preventDefault();
 
-      setShowHeldBills(true);
+        holdBill();
 
-    }
-
-    if (e.key === "Escape") {
-  setShowHeldBills(false);
-}
-
-  };
+      }
 
 
-  window.addEventListener(
-    "keydown",
-    handleShortcuts
-  );
+      if (e.ctrlKey && e.key.toLowerCase() === "b") {
+
+        e.preventDefault();
+
+        setShowHeldBills(true);
+
+      }
+
+      if (e.key === "Escape") {
+        setShowHeldBills(false);
+      }
+
+    };
 
 
-  return () => {
-
-    window.removeEventListener(
+    window.addEventListener(
       "keydown",
       handleShortcuts
     );
 
-  };
 
-}, [cart, heldBills]);
+    return () => {
+
+      window.removeEventListener(
+        "keydown",
+        handleShortcuts
+      );
+
+    };
+
+  }, [cart, heldBills]);
 
 
 
 
   useEffect(() => {
 
-  const savedBills =
-    localStorage.getItem(
-      "held_bills"
+    const savedBills =
+      localStorage.getItem(
+        "held_bills"
+      );
+
+    if (savedBills) {
+
+      setHeldBills(
+        JSON.parse(savedBills)
+      );
+
+    }
+
+  }, []);
+
+  useEffect(() => {
+
+    localStorage.setItem(
+      "held_bills",
+      JSON.stringify(
+        heldBills
+      )
     );
 
-  if (savedBills) {
+  }, [heldBills]);
+
+  const holdBill = () => {
+
+    if (
+      cart.length === 0
+    ) {
+
+      alert(
+        "Cart is empty"
+      );
+
+      return;
+
+    }
+
+
+    const newHold = {
+
+      id: Date.now(),
+
+      billNumber:
+        heldBills.length + 1,
+
+      items: cart,
+
+      total: totalAmount,
+
+      createdAt:
+        new Date()
+          .toLocaleTimeString(
+            "en-IN",
+            {
+              hour: "2-digit",
+              minute: "2-digit"
+            }
+          )
+
+    };
+
+
+    setHeldBills([
+      ...heldBills,
+      newHold
+    ]);
+
+
+    setCart([]);
+
+    setSearch("");
+
+    setProducts([]);
+
+  };
+  const resumeBill = (
+    id
+  ) => {
+
+    const selectedBill =
+      heldBills.find(
+        bill =>
+          bill.id === id
+      );
+
+
+    if (
+      !selectedBill
+    ) {
+      return;
+    }
+
+
+    setCart(
+      selectedBill.items
+    );
+
 
     setHeldBills(
-      JSON.parse(savedBills)
+
+      heldBills.filter(
+        bill =>
+          bill.id !== id
+      )
+
     );
 
-  }
 
-}, []);
+    setSearch("");
 
-useEffect(() => {
-
-  localStorage.setItem(
-    "held_bills",
-    JSON.stringify(
-      heldBills
-    )
-  );
-
-}, [heldBills]);
-
-const holdBill = () => {
-
-  if (
-    cart.length === 0
-  ) {
-
-    alert(
-      "Cart is empty"
-    );
-
-    return;
-
-  }
-
-
-  const newHold = {
-
-    id: Date.now(),
-
-    billNumber:
-      heldBills.length + 1,
-
-    items: cart,
-
-    total: totalAmount,
-
-    createdAt:
-      new Date()
-        .toLocaleTimeString(
-          "en-IN",
-          {
-            hour: "2-digit",
-            minute: "2-digit"
-          }
-        )
+    setProducts([]);
 
   };
 
+  const deleteHeldBill = (
+    id
+  ) => {
 
-  setHeldBills([
-    ...heldBills,
-    newHold
-  ]);
+    setHeldBills(
+
+      heldBills.filter(
+        bill =>
+          bill.id !== id
+      )
+
+    );
+
+  };
+
+  useEffect(() => {
+
+    const handleCartShortcut = (e) => {
 
 
-  setCart([]);
+      if (
+        cart.length === 0
+      )
+        return;
 
-  setSearch("");
 
-  setProducts([]);
+      // Ignore if typing in search
+      if (
+        document.activeElement.tagName === "INPUT"
+      )
+        return;
 
-};
-const resumeBill = (
-  id
-) => {
 
-  const selectedBill =
-    heldBills.find(
-      bill =>
-        bill.id === id
+      // Move down
+      if (
+        e.key === "ArrowDown"
+      ) {
+
+        e.preventDefault();
+
+        setSelectedCartIndex(
+          prev =>
+            prev < cart.length - 1
+              ? prev + 1
+              : 0
+        );
+
+      }
+
+
+      // Move up
+      if (
+        e.key === "ArrowUp"
+      ) {
+
+        e.preventDefault();
+
+        setSelectedCartIndex(
+          prev =>
+            prev > 0
+              ? prev - 1
+              : cart.length - 1
+        );
+
+      }
+
+
+      // Increase quantity
+      if (
+        e.key === "+"
+      ) {
+
+        e.preventDefault();
+
+        const item =
+          cart[selectedCartIndex];
+
+        updateQuantity(
+          item.id,
+          item.quantity + 1
+        );
+
+      }
+
+
+      // Decrease quantity
+      if (
+        e.key === "-"
+      ) {
+
+        e.preventDefault();
+
+        const item =
+          cart[selectedCartIndex];
+
+
+        if (
+          item.quantity > 1
+        ) {
+
+          updateQuantity(
+            item.id,
+            item.quantity - 1
+          );
+
+        }
+
+      }
+
+
+      // Remove item
+      if (
+        e.key === "Backspace"
+      ) {
+
+        e.preventDefault();
+
+        removeItem(cart[selectedCartIndex].id);
+        setSelectedCartIndex(0);
+      }
+    };
+    window.addEventListener(
+      "keydown",
+      handleCartShortcut
     );
 
 
-  if (
-    !selectedBill
-  ) {
-    return;
-  }
+    return () => {
+
+      window.removeEventListener(
+        "keydown",
+        handleCartShortcut
+      );
+
+    };
 
 
-  setCart(
-    selectedBill.items
-  );
-
-
-  setHeldBills(
-
-    heldBills.filter(
-      bill =>
-        bill.id !== id
-    )
-
-  );
-
-
-  setSearch("");
-
-  setProducts([]);
-
-};
-
-const deleteHeldBill = (
-  id
-) => {
-
-  setHeldBills(
-
-    heldBills.filter(
-      bill =>
-        bill.id !== id
-    )
-
-  );
-
-};
-
-useEffect(() => {
-
-const handleCartShortcut = (e) => {
-
-
-if (
-cart.length === 0
-)
-return;
-
-
-// Ignore if typing in search
-if (
-document.activeElement.tagName === "INPUT"
-)
-return;
-
-
-// Move down
-if (
-e.key === "ArrowDown"
-) {
-
-e.preventDefault();
-
-setSelectedCartIndex(
-prev =>
-prev < cart.length - 1
-? prev + 1
-: 0
-);
-
-}
-
-
-// Move up
-if (
-e.key === "ArrowUp"
-) {
-
-e.preventDefault();
-
-setSelectedCartIndex(
-prev =>
-prev > 0
-? prev - 1
-: cart.length - 1
-);
-
-}
-
-
-// Increase quantity
-if (
-e.key === "+"
-) {
-
-e.preventDefault();
-
-const item =
-cart[selectedCartIndex];
-
-updateQuantity(
-item.id,
-item.quantity + 1
-);
-
-}
-
-
-// Decrease quantity
-if (
-e.key === "-"
-) {
-
-e.preventDefault();
-
-const item =
-cart[selectedCartIndex];
-
-
-if (
-item.quantity > 1
-) {
-
-updateQuantity(
-item.id,
-item.quantity - 1
-);
-
-}
-
-}
-
-
-// Remove item
-if (
-e.key === "Backspace"
-) {
-
-e.preventDefault();
-
-removeItem(cart[selectedCartIndex].id);
-setSelectedCartIndex(0);
-}
-};
-window.addEventListener(
-"keydown",
-handleCartShortcut
-);
-
-
-return () => {
-
-window.removeEventListener(
-"keydown",
-handleCartShortcut
-);
-
-};
-
-
-}, [
-cart,
-selectedCartIndex
-]);
+  }, [
+    cart,
+    selectedCartIndex
+  ]);
 
 
   return (
     <MainLayout>
 
-<div className="w-full min-h-screen bg-gradient-to-tr from-indigo-200/70 via-slate-50 to-orange-200/40 p-6 rounded-[24px]">
+      <div className="w-full min-h-screen bg-gradient-to-tr from-indigo-200/70 via-slate-50 to-orange-200/40 p-6 rounded-[24px]">
 
-  <div className="mb-6 relative z-10 flex justify-between items-start">
-    <h1 className="text-3xl font-black tracking-tight text-slate-800">
-      Billing
-    </h1>
-      <button
-    onClick={() =>
-      setShowShortcuts(
-        !showShortcuts
-      )
-    }
-    className="
+        <div className="mb-6 relative z-10 flex justify-between items-start">
+          <h1 className="text-3xl font-black tracking-tight text-slate-800">
+            Billing
+          </h1>
+          <button
+            onClick={() =>
+              setShowShortcuts(
+                !showShortcuts
+              )
+            }
+            className="
     bg-white
     border
     border-slate-200
@@ -831,48 +839,48 @@ selectedCartIndex
     hover:bg-slate-50
     transition
     "
-  >
+          >
 
-    <div className="flex items-center gap-2">
-  <Keyboard size={18} />
-  Shortcuts
+            <div className="flex items-center gap-2">
+              <Keyboard size={18} />
+              Shortcuts
 
-  {
-    showShortcuts
-    ?
-    <ChevronUp size={16}/>
-    :
-    <ChevronDown size={16}/>
-  }
+              {
+                showShortcuts
+                  ?
+                  <ChevronUp size={16} />
+                  :
+                  <ChevronDown size={16} />
+              }
 
-</div>
+            </div>
 
-  </button>
-  </div>
+          </button>
+        </div>
 
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-full overflow-hidden pb-6 relative z-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-full overflow-hidden pb-6 relative z-10 items-start">
 
-    {/* Left Column: Product Search Box */}
-    <div className="lg:col-span-1">
-      <div className="bg-slate-900 backdrop-blur-md border border-slate-800 rounded-[24px] p-6 shadow-sm">
+          {/* Left Column: Product Search Box */}
+          <div className="lg:col-span-1">
+            <div className="bg-slate-900 backdrop-blur-md border border-slate-800 rounded-[24px] p-6 shadow-sm">
 
-        <h2 className="text-lg font-black tracking-tight text-white mb-4">
-          Product Search
-        </h2>
-        
-        <div className="relative w-full">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-            <Search size={18} />
-          </div>
-        
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search Product..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            className="
+              <h2 className="text-lg font-black tracking-tight text-white mb-4">
+                Product Search
+              </h2>
+
+              <div className="relative w-full">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                  <Search size={18} />
+                </div>
+
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search Product..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  className="
             w-full
             bg-white/20
             border border-slate-800
@@ -888,15 +896,15 @@ selectedCartIndex
             focus:border-indigo-500
             transition-all
             "
-          />
-        </div>
+                />
+              </div>
 
-        <div className="mt-4 max-h-[300px] overflow-y-auto pr-1 space-y-1.5 scrollbar-none">
-          {products.map((product,index) => (
-            <div
-              key={product.id}
-              onClick={() => addToCart(product)}
-              className={`
+              <div className="mt-4 max-h-[300px] overflow-y-auto pr-1 space-y-1.5 scrollbar-none">
+                {products.map((product, index) => (
+                  <div
+                    key={product.id}
+                    onClick={() => addToCart(product)}
+                    className={`
               flex
               justify-between
               items-center
@@ -906,31 +914,30 @@ selectedCartIndex
               transition-all
               duration-200
               group
-              ${
-                index === selectedProductIndex
-                  ? "bg-slate-600 border border-indigo-400 shadow-lg"
-                  : "bg-slate-800/40 border border-slate-800/60 hover:bg-slate-800 hover:border-slate-700 rounded-xl"
-              }
+              ${index === selectedProductIndex
+                        ? "bg-slate-600 border border-indigo-400 shadow-lg"
+                        : "bg-slate-800/40 border border-slate-800/60 hover:bg-slate-800 hover:border-slate-700 rounded-xl"
+                      }
               `}
-            >
-              <span className="text-sm font-semibold text-slate-300 group-hover:text-white transition-colors">
-                {product.name}
-              </span>
+                  >
+                    <span className="text-sm font-semibold text-slate-300 group-hover:text-white transition-colors">
+                      {product.name}
+                    </span>
 
-              <strong className="text-sm font-bold text-slate-200 group-hover:text-orange-400 transition-colors">
-                ₹{product.price}
-              </strong>
+                    <strong className="text-sm font-bold text-slate-200 group-hover:text-orange-400 transition-colors">
+                      ₹{product.price}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+
             </div>
-          ))}
-        </div>
+          </div>
 
-      </div>
-    </div>
-
-    {/* Right Column: Cart Table Box */}
-    <div className="lg:col-span-2">
-      <div
-        className="
+          {/* Right Column: Cart Table Box */}
+          <div className="lg:col-span-2">
+            <div
+              className="
         bg-gradient-to-br
         from-orange-300/30
         via-white
@@ -942,34 +949,34 @@ selectedCartIndex
         p-6
         shadow-sm
         "
-      >
+            >
 
-        <h2 className="text-xl font-bold tracking-normal text-slate-800 mb-4">
-          Cart
-        </h2>
+              <h2 className="text-xl font-bold tracking-normal text-slate-800 mb-4">
+                Cart
+              </h2>
 
-        {cart.length === 0 ? (
-          <div className="text-sm font-bold text-slate-400 py-12 text-center bg-white/40 border border-dashed border-slate-200 rounded-xl uppercase tracking-wider">
-            No Items Added
-          </div>
-        ) : (
-          <div className="overflow-x-auto max-w-full">
-            <table className="w-full text-sm">
-              <thead className="text-slate-400 font-black text-[13px] tracking-wider uppercase">
-                <tr>
-                  <th className="pb-3 text-left pl-2">Product</th>
-                  <th className="pb-3 text-center w-24">Qty</th>
-                  <th className="pb-3 text-center w-24">Price</th>
-                  <th className="pb-3 text-center w-24">Total</th>
-                  <th className="pb-3 text-center w-24">Action</th>
-                </tr>
-              </thead>
+              {cart.length === 0 ? (
+                <div className="text-sm font-bold text-slate-400 py-12 text-center bg-white/40 border border-dashed border-slate-200 rounded-xl uppercase tracking-wider">
+                  No Items Added
+                </div>
+              ) : (
+                <div className="overflow-x-auto max-w-full">
+                  <table className="w-full text-sm">
+                    <thead className="text-slate-400 font-black text-[13px] tracking-wider uppercase">
+                      <tr>
+                        <th className="pb-3 text-left pl-2">Product</th>
+                        <th className="pb-3 text-center w-24">Qty</th>
+                        <th className="pb-3 text-center w-24">Price</th>
+                        <th className="pb-3 text-center w-24">Total</th>
+                        <th className="pb-3 text-center w-24">Action</th>
+                      </tr>
+                    </thead>
 
-              <tbody>
-                {cart.map((item) => (
-                  <tr
-                    key={item.id}
-                    className={`
+                    <tbody>
+                      {cart.map((item) => (
+                        <tr
+                          key={item.id}
+                          className={`
                     transition-all
                     duration-150
                     
@@ -977,19 +984,19 @@ selectedCartIndex
                     hover:bg-white
                     
                     `}
-                  >
-                    <td className="p-3.5 font-bold text-slate-700 rounded-l-xl">
-                      {item.name}
-                    </td>
+                        >
+                          <td className="p-3.5 font-bold text-slate-700 rounded-l-xl">
+                            {item.name}
+                          </td>
 
-                    <td className="p-3 text-center">
-                      <input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onFocus={(e) => e.target.select()}
-                        onChange={(e) => updateQuantity(item.id, e.target.value)}
-                        className="
+                          <td className="p-3 text-center">
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onFocus={(e) => e.target.select()}
+                              onChange={(e) => updateQuantity(item.id, e.target.value)}
+                              className="
                         w-16
                         bg-slate-50
                         border border-slate-200
@@ -1004,21 +1011,21 @@ selectedCartIndex
                         focus:border-indigo-400
                         transition-all
                         "
-                      />
-                    </td>
+                            />
+                          </td>
 
-                    <td className="p-3 text-center font-bold text-slate-400">
-                      ₹{item.price}
-                    </td>
+                          <td className="p-3 text-center font-bold text-slate-400">
+                            ₹{item.price}
+                          </td>
 
-                    <td className="p-3 text-center font-black text-slate-800">
-                      ₹{(Number(item.price) * item.quantity).toFixed(2)}
-                    </td>
+                          <td className="p-3 text-center font-black text-slate-800">
+                            ₹{(Number(item.price) * item.quantity).toFixed(2)}
+                          </td>
 
-                    <td className="p-3 text-center rounded-r-xl">
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="
+                          <td className="p-3 text-center rounded-r-xl">
+                            <button
+                              onClick={() => removeItem(item.id)}
+                              className="
                         text-xs
                         text-red-500
                         font-black
@@ -1028,33 +1035,33 @@ selectedCartIndex
                         rounded-lg
                         transition-all
                         "
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-        <div className="mt-6 border-t border-slate-200/50 pt-5">
-          <div className="flex justify-between items-end">
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Grand Total</p>
-              <h2 className="text-3xl font-black text-slate-800 tracking-tight mt-0.5">
-                ₹{totalAmount.toFixed(2)}
-              </h2>
-            </div>
+              <div className="mt-6 border-t border-slate-200/50 pt-5">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Grand Total</p>
+                    <h2 className="text-3xl font-black text-slate-800 tracking-tight mt-0.5">
+                      ₹{totalAmount.toFixed(2)}
+                    </h2>
+                  </div>
 
-            
-          </div>
 
-          <div className="mt-5 flex gap-3 items-center">
-          <button
-            onClick={generateBill}
-            className="
+                </div>
+
+                <div className="mt-5 flex gap-3 items-center">
+                  <button
+                    onClick={generateBill}
+                    className="
             flex-1 
             bg-gradient-to-r from-orange-500 to-indigo-600 
             text-white 
@@ -1070,14 +1077,14 @@ selectedCartIndex
             duration-200
             cursor-pointer
             "
-          >
-            Generate Bill
-          </button>
+                  >
+                    Generate Bill
+                  </button>
 
-          {/* FIXED: Adjusted to px-5 py-3.5 on a fixed-scale frame to look clean and tightly bound beside the gradient action */}
-          <button
-            onClick={holdBill}
-            className="
+                  {/* FIXED: Adjusted to px-5 py-3.5 on a fixed-scale frame to look clean and tightly bound beside the gradient action */}
+                  <button
+                    onClick={holdBill}
+                    className="
             flex-initial
             bg-slate-500
             text-white
@@ -1094,12 +1101,12 @@ selectedCartIndex
             duration-200
             cursor-pointer
             "
-          >
-            Hold Bill
-          </button>
-          <button
-            onClick={() => setShowHeldBills(true)}
-            className="
+                  >
+                    Hold Bill
+                  </button>
+                  <button
+                    onClick={() => setShowHeldBills(true)}
+                    className="
             flex-initial
             bg-slate-500
             text-white
@@ -1116,547 +1123,421 @@ selectedCartIndex
             duration-200
             cursor-pointer
             "
-          >
-            View Held Bills
-          </button>
-        </div>
-          
-        </div>
-        
+                  >
+                    View Held Bills
+                  </button>
+                </div>
 
+              </div>
+
+
+            </div>
+          </div>
+
+        </div>
       </div>
+     {showPaymentModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/20 backdrop-blur-xs animate-fade-in">
+    <div className="w-full max-w-2xl bg-white border border-slate-200/80 rounded-[32px] shadow-2xl p-8 flex flex-col justify-between">
+      
+      {/* Header Block */}
+      <div>
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h2 className="text-2xl font-black tracking-tight text-slate-800">
+              Choose Payment Method
+            </h2>
+            <p className="text-xs font-semibold text-slate-400 mt-1">
+              Select one or more channels to break down and settle this bill.
+            </p>
+          </div>
+          {/* Main Balance Display Badge */}
+          <div className="text-right">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              Total Bill
+            </span>
+            <span className="text-2xl font-black text-slate-950 block mt-0.5">
+              ₹{totalAmount}
+            </span>
+          </div>
+        </div>
+
+        {/* Brand Method Grid (Massive, Tactical Grid Buttons) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+          {[
+            { id: 'upi', label: '⚡ UPI ', color: 'peer-checked:border-indigo-600 peer-checked:bg-indigo-50/40 text-indigo-600' },
+            { id: 'cash', label: '💵 Cash ', color: 'peer-checked:border-slate-800 peer-checked:bg-slate-50 text-slate-800' },
+            { id: 'card', label: '💳 Swipe Card', color: 'peer-checked:border-indigo-600 peer-checked:bg-indigo-50/40 text-indigo-600' },
+            { id: 'swiggy', label: '🧡 Swiggy Order', color: 'peer-checked:border-orange-500 peer-checked:bg-orange-50/40 text-orange-500' },
+            { id: 'zomato', label: '❤️ Zomato Order', color: 'peer-checked:border-red-500 peer-checked:bg-red-50/40 text-red-500' },
+          ].map((item) => {
+            // Evaluates if this method is currently added inside your payments state array
+            const isActive = payments.some(p => p.method === item.id);
+            
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  // Direct toggle logic: adds row if missing, removes if already active
+                  if (isActive) {
+                    const idx = payments.findIndex(p => p.method === item.id);
+                    if (payments.length > 1) removePayment(idx);
+                  } else {
+                    addPayment(item.id);
+                  }
+                }}
+                className={`
+                  w-full
+                  h-20
+                  flex
+                  flex-col
+                  items-center
+                  justify-center
+                  gap-1.5
+                  border-2
+                  rounded-2xl
+                  font-black
+                  text-sm
+                  transition-all
+                  active:scale-[0.97]
+                  cursor-pointer
+                  ${isActive 
+                    ? `border-indigo-600 bg-indigo-50/30 text-indigo-700 shadow-xs` 
+                    : `border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50`
+                  }
+                `}
+              >
+                <span className="text-base">{item.label.split(' ')[0]}</span>
+                <span className="text-xs tracking-tight">{item.label.split(' ').slice(1).join(' ')}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Contextual Input Fields Stack */}
+        <div className="space-y-2.5 max-h-[180px] overflow-y-auto pr-1">
+          {payments.map((payment, index) => (
+            <div 
+              key={index}
+              className="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-2xl p-4 transition-all"
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                <span className="text-sm font-black text-slate-700 uppercase tracking-wider">
+                  {payment.method} Split
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="relative flex items-center">
+                  <span className="absolute left-3.5 text-xs font-black text-slate-400">₹</span>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={payment.amount}
+                    onChange={(e) => updatePayment(index, "amount", e.target.value)}
+                    className="
+                    w-40
+                    bg-white
+                    border border-slate-200
+                    text-slate-900
+                    rounded-xl
+                    p-3
+                    pl-7
+                    text-sm
+                    font-black
+                    outline-none
+                    text-right
+                    focus:border-indigo-500
+                    focus:ring-2
+                    focus:ring-indigo-100
+                    transition-all
+                    "
+                  />
+                </div>
+
+                {payments.length > 1 && (
+                  <button
+                    onClick={() => removePayment(index)}
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer & Balancing Computations Block */}
+      <div className="mt-6">
+        {/* Dynamic Status Bar Card */}
+        <div className={`p-4 rounded-2xl border flex justify-between items-center transition-all ${
+          Math.abs(remainingAmount) <= 0.01 
+            ? "bg-emerald-50/50 border-emerald-200/60 text-emerald-900" 
+            : "bg-red-50/50 border-red-200/60 text-red-900"
+        }`}>
+          <div>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              Remaining Balance Status
+            </span>
+            <span className="text-xs font-bold text-slate-600 block mt-0.5">
+              Collected Paid Total: <strong className="text-slate-800">₹{paidAmount}</strong>
+            </span>
+          </div>
+          <span className={`text-xl font-black ${
+            Math.abs(remainingAmount) <= 0.01 ? "text-emerald-600" : "text-red-500"
+          }`}>
+            {Math.abs(remainingAmount) <= 0.01 ? "✓ Fully Balanced" : `₹${remainingAmount}`}
+          </span>
+        </div>
+
+        {/* Main Action Large Button Bar */}
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={() => setShowPaymentModal(false)}
+            className="
+            flex-1
+            bg-white
+            border-2
+            border-slate-200
+            text-slate-500
+            p-4
+            rounded-2xl
+            text-sm
+            font-black
+            tracking-wide
+            hover:bg-slate-50
+            hover:border-slate-300
+            active:scale-95
+            transition-all
+            cursor-pointer
+            "
+          >
+            Cancel Order
+          </button>
+
+          <button
+            ref={confirmButtonRef}
+            onClick={confirmPayment}
+            disabled={Math.abs(remainingAmount) > 0.01}
+            className={`
+              flex-1
+              p-4
+              rounded-2xl
+              text-sm
+              font-black
+              tracking-wide
+              shadow-md
+              transition-all
+              ${Math.abs(remainingAmount) <= 0.01
+                ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white hover:opacity-95 active:scale-95 cursor-pointer"
+                : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+              }
+            `}
+          >
+            Confirm Bill
+          </button>
+        </div>
+      </div>
+
     </div>
+  </div>
+)}
 
-  </div> 
-</div>
-{showPaymentModal && (
-
-  <div
-    className="
+      {showBillModal && generatedBill && (
+        <div
+          className="
     fixed
     inset-0
-    bg-black/40
-    backdrop-blur-sm
+    bg-slate-950/20
+    backdrop-blur-xs
     flex
     items-center
     justify-center
     z-50
+    p-4
     "
-  >
-
-    <div
-      className="
-      bg-white
-      w-full
-      max-w-lg
-      rounded-2xl
-      shadow-2xl
-      p-6
-      animate-fadeIn
-      "
-    >
-
-      <h2
-        className="
-        text-2xl
-        font-bold
-        text-slate-800
-        mb-2
-        "
-      >
-        Complete Payment
-      </h2>
-
-
-      <p
-        className="
-        text-slate-500
-        mb-6
-        "
-      >
-        Total Amount
-      </p>
-
-
-      <h1
-        className="
-        text-4xl
-        font-bold
-        text-blue-600
-        mb-6
-        "
-      >
-        ₹ {totalAmount}
-      </h1>
-
-
-      <div className="space-y-3">
-
-        {payments.map(
-          (payment, index) => (
-
+        >
+          {/* Glassmorphic Modal Box */}
           <div
-            key={index}
             className="
-            flex
-            gap-2
-            "
+      bg-white
+      border border-slate-200/80
+      rounded-[24px]
+      shadow-xl
+      w-full
+      max-w-xl
+      p-8
+      relative
+      overflow-hidden
+      "
           >
-
-            <select
-
-              value={payment.method}
-
-              onChange={(e) =>
-                updatePayment(
-                  index,
-                  "method",
-                  e.target.value
-                )
-              }
-
-              className="
-              flex-1
-              border
-              rounded-xl
-              p-3
-              "
-            >
-
-              <option value="upi">
-                UPI
-              </option>
-              <option value="cash">
-                Cash
-              </option>
-
-
-              <option value="card">
-                Card
-              </option>
-
-              <option value="swiggy">
-                Swiggy
-              </option>
-
-              <option value="zomato">
-                Zomato
-              </option>
-
-            </select>
-
-
-            <input
-
-              type="number"
-
-              placeholder="Amount"
-
-              value={payment.amount}
-
-              onChange={(e) =>
-                updatePayment(
-                  index,
-                  "amount",
-                  e.target.value
-                )
-              }
-
-              className="
-              w-32
-              border
-              rounded-xl
-              p-3
-              "
-            />
-
-
-            {payments.length > 1 && (
-
-              <button
-
-                onClick={() =>
-                  removePayment(index)
-                }
-
-                className="
-                px-3
-                rounded-xl
-                bg-red-100
-                text-red-600
-                hover:bg-red-200
-                "
-              >
-                ✕
-              </button>
-
-            )}
-
-          </div>
-
-        ))}
-
-      </div>
-
-
-      <button
-
-        onClick={addPayment}
-
-        className="
-        mt-4
-        text-blue-600
-        font-semibold
-        hover:text-blue-800
-        "
-      >
-        + Add Payment Method
-      </button>
-
-
-      <div
-        className="
-        mt-6
-        p-4
-        rounded-xl
-        bg-slate-50
-        space-y-2
-        "
-      >
-
-        <div className="flex justify-between">
-
-          <span>
-            Paid
-          </span>
-
-          <span>
-            ₹ {paidAmount}
-          </span>
-
-        </div>
-
-
-        <div
-          className="
-          flex
-          justify-between
-          font-bold
-          "
-        >
-
-          <span>
-            Remaining
-          </span>
-
-
-          <span
-            className={
-              Math.abs(remainingAmount) <= 0.01
-              ? "text-green-600"
-              : "text-red-600"
-            }
-          >
-
-            ₹ {remainingAmount}
-
-          </span>
-
-        </div>
-
-      </div>
-
-
-      <div
-        className="
-        flex
-        gap-3
-        mt-6
-        "
-      >
-
-        <button
-
-          onClick={() =>
-            setShowPaymentModal(false)
-          }
-
-          className="
-          flex-1
-          p-3
-          rounded-xl
-          bg-slate-200
-          hover:bg-slate-300
-          "
-        >
-          Cancel
-        </button>
-
-
-        <button
-
-          ref={confirmButtonRef}
-          onClick={confirmPayment}
-          className="
-          flex-1
-          p-3
-          rounded-xl
-          bg-blue-600
-          text-white
-          hover:bg-blue-700
-          "
-        >
-          Confirm Bill
-        </button>
-
-
-      </div>
-
-    </div>
-
-  </div>
-
-)}
-
-      {showBillModal &&
-      generatedBill && (
-
-        <div className="
-        fixed
-        inset-0
-        bg-black/50
-        flex
-        items-center
-        justify-center
-        z-50
-        ">
-
-          <div className="
-          bg-white
-          rounded-2xl
-          shadow-xl
-          p-8
-          w-[500px]
-          ">
-
-            <h2 className="
-            text-2xl
-            font-bold
-            mb-4
-            ">
+            {/* Structural Headers Style Override (Less Intense Bold) */}
+            <h2 className="text-2xl font-bold tracking-normal text-slate-800 mb-6">
               Bill Generated Successfully
             </h2>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Core Invoice Summary Row */}
+              <div className="bg-slate-50/60 border border-slate-200/60 rounded-xl p-4 space-y-2 text-sm">
+                <p className="flex justify-between items-center">
+                  <span className="font-bold text-slate-400 uppercase tracking-wider text-xs">Bill Number:</span>
+                  <span className="font-bold text-slate-700">{generatedBill.bill_number}</span>
+                </p>
+                <p className="flex justify-between items-center">
+                  <span className="font-bold text-slate-400 uppercase tracking-wider text-xs">Total Amount:</span>
+                  <span className="font-black text-slate-800">₹{generatedBill.total_amount}</span>
+                </p>
+              </div>
 
-              <p>
-                <strong>
-                  Bill Number:
-                </strong>{" "}
-                {
-                  generatedBill.bill_number
-                }
-              </p>
+              {/* Payment Metadata Segment Tree */}
+              <div className="border-t border-slate-200/60 pt-5">
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 pl-0.5">
+                  Payment Details
+                </h3>
 
-              <p>
-                <strong>
-                  Total Amount:
-                </strong>{" "}
-                ₹{
-                  generatedBill.total_amount
-                }
-              </p>
+                <div className="space-y-3 max-h-40 overflow-y-auto pr-1 scrollbar-none">
+                  {generatedBill?.payments?.map((payment, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center text-sm"
+                    >
+                      <span className="capitalize font-semibold text-slate-500">
+                        {payment.method}
+                      </span>
+                      <span className="font-bold text-slate-800">
+                        ₹ {payment.amount}
+                      </span>
+                    </div>
+                  ))}
+                </div>
 
-              <div
-  className="
-  mt-4
-  border-t
-  pt-4
-  "
->
-
-  <h3
-    className="
-    font-semibold
-    text-lg
-    mb-3
-    "
-  >
-    Payment Details
-  </h3>
-
-
-  {generatedBill?.payments?.map(
-    (
-      payment,
-      index
-    ) => (
-
-      <div
-        key={index}
-        className="
-        flex
-        justify-between
-        mb-2
-        text-slate-700
-        "
-      >
-
-        <span className="capitalize">
-
-          {payment.method}
-
-        </span>
-
-
-        <span
-          className="
-          font-semibold
-          "
-        >
-
-          ₹ {payment.amount}
-
-        </span>
-
-
-      </div>
-
-    )
-  )}
-
-
-  <div
-    className="
-    border-t
-    mt-3
-    pt-3
-    flex
-    justify-between
-    font-bold
-    text-lg
-    "
-  >
-
-    <span>
-      Total Paid
-    </span>
-
-
-    <span>
-      ₹ {generatedBill.total_amount}
-    </span>
-
-  </div>
-
-</div>
-
+                {/* Aggregate Paid Summary Banner */}
+                <div className="border-t border-slate-200/60 mt-4 pt-4 flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Total Paid
+                  </span>
+                  <span className="text-lg font-black text-indigo-600">
+                    ₹ {generatedBill.total_amount}
+                  </span>
+                </div>
+              </div>
             </div>
+
+            {/* Embedded Navigation Direct Shortcut Action */}
             <button
-                onClick={() =>
-                  navigate(
-                    `/invoice/${generatedBill.id}`
-                  )
-                }
-                className="
-                flex-l
-                bg-purple-600
-                text-white
-                mt-2
-                py-1.5
-                px-2
-                rounded-xl
-                "
-              >
-                View Invoice
-              </button>
+              onClick={() => navigate(`/invoice/${generatedBill.id}`)}
+              className="
+        w-full
+        bg-white
+        border border-slate-200
+        text-slate-600
+        mt-5
+        py-2.5
+        px-4
+        rounded-xl
+        text-s
+        font-bold
+        tracking-wide
+        shadow-3xs
+        hover:bg-slate-50
+        hover:text-slate-800
+        transition-all
+        cursor-pointer
+        "
+            >
+              View Invoice
+            </button>
 
-            <div className="
-              flex
-              gap-3
-              mt-8
-              ">
-
+            {/* Master Action Grid Hub Buttons Suite */}
+            <div className="flex gap-3 mt-6 pt-5 border-t border-slate-100">
               <a
                 href={`${import.meta.env.VITE_API_URL}/billing/history/${generatedBill.id}/pdf/`}
                 target="_blank"
                 rel="noreferrer"
                 className="
-                flex-1
-                text-center
-                bg-blue-600
-                text-white
-                py-3
-                rounded-xl
-                "
+          flex-1
+          text-center
+          bg-white
+          border border-slate-200
+          text-slate-600
+          py-3
+          rounded-xl
+          text-xs
+          font-bold
+          tracking-wide
+          shadow-3xs
+          hover:bg-slate-50
+          hover:text-slate-800
+          transition-all
+          "
               >
                 Download PDF
               </a>
 
               <button
-                onClick={() =>
-                  window.open(
-                    `${import.meta.env.VITE_API_URL}/billing/history/${generatedBill.id}/pdf/`,
-                    "_blank"
-                  )
-                }
+                onClick={() => window.open(`${import.meta.env.VITE_API_URL}/billing/history/${generatedBill.id}/pdf/`, "_blank")}
                 className="
-                flex-1
-                bg-green-600
-                text-white
-                py-3
-                rounded-xl
-                "
+          flex-1
+          bg-gradient-to-r from-orange-500 to-indigo-600
+          text-white
+          py-3
+          rounded-xl
+          text-xs
+          font-bold
+          tracking-wide
+          shadow-sm
+          hover:opacity-95
+          transition-all
+          cursor-pointer
+          "
               >
                 Print
               </button>
 
               <button
-              ref={closeButtonRef}
-            onClick={() => {
-
-              setShowBillModal(
-                false
-              );
-
-              setGeneratedBill(
-                null
-              );
-
-              setSearch("");
-
-              setProducts([]);
-              setTimeout(() => {
-
-              searchInputRef.current?.focus();
-
-            }, 100);
-
-            }}
-            className="
-            flex-1
-            bg-slate-700
-            text-white
-            py-3
-            rounded-xl
-            "
-          >
-            Close
-          </button>
-
+                ref={closeButtonRef}
+                onClick={() => {
+                  setShowBillModal(false);
+                  setGeneratedBill(null);
+                  setSearch("");
+                  setProducts([]);
+                  setTimeout(() => {
+                    searchInputRef.current?.focus();
+                  }, 100);
+                }}
+                className="
+          flex-1
+          bg-slate-800
+          text-white
+          py-3
+          rounded-xl
+          text-xs
+          font-bold
+          tracking-wide
+          shadow-sm
+          hover:bg-slate-900
+          transition-all
+          cursor-pointer
+          "
+              >
+                Close
+              </button>
             </div>
 
           </div>
-
         </div>
-
       )}
 
-{
-showShortcuts && (
 
-<div
-className="
+      {
+        showShortcuts && (
+
+          <div
+            className="
 absolute
 right-8
 top-20
@@ -1669,64 +1550,64 @@ border
 border-slate-200
 p-4
 "
->
+          >
 
-<h3 className="
+            <h3 className="
 font-bold
 text-slate-800
 mb-3
 ">
-Keyboard Shortcuts
-</h3>
+              Keyboard Shortcuts
+            </h3>
 
 
-<div className="
+            <div className="
 space-y-2
 text-sm
 ">
 
-<div className="flex justify-between">
-<span>↑ ↓</span>
-<span>Navigate Products</span>
-</div>
+              <div className="flex justify-between">
+                <span>↑ ↓</span>
+                <span>Navigate Products</span>
+              </div>
 
-<div className="flex justify-between">
-<span>Enter</span>
-<span>Add Product</span>
-</div>
+              <div className="flex justify-between">
+                <span>Enter</span>
+                <span>Add Product</span>
+              </div>
 
-<div className="flex justify-between">
-<span>Ctrl + H</span>
-<span>Hold Bill</span>
-</div>
+              <div className="flex justify-between">
+                <span>Ctrl + H</span>
+                <span>Hold Bill</span>
+              </div>
 
-<div className="flex justify-between">
-<span>Ctrl + B</span>
-<span>Held Bills</span>
-</div>
+              <div className="flex justify-between">
+                <span>Ctrl + B</span>
+                <span>Held Bills</span>
+              </div>
 
-<div className="flex justify-between">
-<span>Ctrl + Enter</span>
-<span>Generate Bill</span>
-</div>
+              <div className="flex justify-between">
+                <span>Ctrl + Enter</span>
+                <span>Generate Bill</span>
+              </div>
 
 
 
-<div className="flex justify-between">
-<span>Backspace</span>
-<span>Remove Product</span>
-</div>
+              <div className="flex justify-between">
+                <span>Backspace</span>
+                <span>Remove Product</span>
+              </div>
 
-</div>
+            </div>
 
-</div>
+          </div>
 
-)
-}
+        )
+      }
 
-{showHeldBills && (
-  <div
-    className="
+      {showHeldBills && (
+        <div
+          className="
     fixed
     inset-0
     bg-slate-950/20
@@ -1737,9 +1618,9 @@ text-sm
     z-50
     p-4
     "
-  >
-    <div
-      className="
+        >
+          <div
+            className="
       bg-white
       border border-slate-200/80
       rounded-[24px]
@@ -1748,16 +1629,16 @@ text-sm
       max-w-2xl
       p-8      
       "
-    >
-      {/* Modal Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold tracking-normal text-slate-800">
-          Held Bills
-        </h2>
+          >
+            {/* Modal Header */}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold tracking-normal text-slate-800">
+                Held Bills
+              </h2>
 
-        <button
-          onClick={() => setShowHeldBills(false)}
-          className="
+              <button
+                onClick={() => setShowHeldBills(false)}
+                className="
           text-slate-400
           hover:text-red-500
           text-lg
@@ -1765,22 +1646,22 @@ text-sm
           transition-colors
           cursor-pointer
           "
-        >
-          ✕
-        </button>
-      </div>
+              >
+                ✕
+              </button>
+            </div>
 
-      {/* Held Bills Content Body */}
-      {heldBills.length === 0 ? (
-        <div className="text-center py-16 text-base font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
-          No held bills
-        </div>
-      ) : (
-        <div className="space-y-3.5 max-h-[450px] overflow-y-auto pr-1 scrollbar-none">
-          {heldBills.map((bill) => (
-            <div
-              key={bill.id}
-              className="
+            {/* Held Bills Content Body */}
+            {heldBills.length === 0 ? (
+              <div className="text-center py-16 text-base font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                No held bills
+              </div>
+            ) : (
+              <div className="space-y-3.5 max-h-[450px] overflow-y-auto pr-1 scrollbar-none">
+                {heldBills.map((bill) => (
+                  <div
+                    key={bill.id}
+                    className="
               bg-slate-50/40
               border border-slate-200/60
               rounded-2xl
@@ -1793,25 +1674,25 @@ text-sm
               duration-150
               shadow-sm
               "
-            >
-              <div>
-                <h3 className="text-base font-bold text-slate-700">
-                  Hold #{bill.billNumber}
-                </h3>
-                <p className="text-sm font-semibold text-slate-400 mt-1.5">
-                  <span className="font-extrabold text-slate-700 text-base">₹ {bill.total}</span>
-                  {" • "}{bill.items.length} items{" • "}{bill.createdAt}
-                </p>
-              </div>
+                  >
+                    <div>
+                      <h3 className="text-base font-bold text-slate-700">
+                        Hold #{bill.billNumber}
+                      </h3>
+                      <p className="text-sm font-semibold text-slate-400 mt-1.5">
+                        <span className="font-extrabold text-slate-700 text-base">₹ {bill.total}</span>
+                        {" • "}{bill.items.length} items{" • "}{bill.createdAt}
+                      </p>
+                    </div>
 
-              {/* Action Trigger Buttons Container */}
-              <div className="flex gap-2.5 text-sm font-bold">
-                <button
-                  onClick={() => {
-                    resumeBill(bill.id);
-                    setShowHeldBills(false);
-                  }}
-                  className="
+                    {/* Action Trigger Buttons Container */}
+                    <div className="flex gap-2.5 text-sm font-bold">
+                      <button
+                        onClick={() => {
+                          resumeBill(bill.id);
+                          setShowHeldBills(false);
+                        }}
+                        className="
                   text-indigo-600 
                   px-4 
                   py-2 /* Increased vertical button padding for a solid layout presence */
@@ -1821,13 +1702,13 @@ text-sm
                   transition-all 
                   cursor-pointer
                   "
-                >
-                  Resume
-                </button>
+                      >
+                        Resume
+                      </button>
 
-                <button
-                  onClick={() => deleteHeldBill(bill.id)}
-                  className="
+                      <button
+                        onClick={() => deleteHeldBill(bill.id)}
+                        className="
                   text-red-500 
                   px-4 
                   py-2 /* Increased vertical button padding for a solid layout presence */
@@ -1837,17 +1718,17 @@ text-sm
                   transition-all 
                   cursor-pointer
                   "
-                >
-                  Delete
-                </button>
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          ))}
+            )}
+          </div>
         </div>
       )}
-    </div>
-  </div>
-)}
 
 
     </MainLayout>
