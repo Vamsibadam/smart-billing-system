@@ -9,6 +9,7 @@ import {
   FileText,
   History,
   Settings,
+  UtensilsCrossed 
   
 } from "lucide-react";
 
@@ -25,10 +26,11 @@ function Sidebar() {
  
   const menuItems = [
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={22} /> },
-    { name: "Products", path: "/products", icon: <Package size={22} /> },
-    { name: "Inventory", path: "/inventory", icon: <Boxes size={22} /> },
     { name: "Billing", path: "/billing", icon: <Receipt size={22} /> },
     { name: "Bill History", path: "/bill-history", icon: <History size={22} /> },
+    { name: "Products", path: "/products", icon: <Package size={22} /> },
+    { name: "Ingredients", path: "/ingredients", icon: <UtensilsCrossed  size={22} /> },
+    { name: "Inventory", path: "/inventory", icon: <Boxes size={22} /> },
     { name: "Reports", path: "/reports", icon: <FileText size={22} /> },
     { name: "Store Settings", path: "/settings", icon: <Settings size={22} /> },
   ];

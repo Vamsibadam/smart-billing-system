@@ -1,6 +1,14 @@
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
-function LowStockWidget({ products }) {
+const unitMap = {
+  g: "g",
+  kg: "kg",
+  ml: "ml",
+  l: "L",
+  pcs: "pcs",
+};
+
+function LowStockWidget({ ingredients = []}) {
   return (
     <div
       className="
@@ -23,38 +31,47 @@ function LowStockWidget({ products }) {
 
       <div className="flex items-center justify-between mb-5 relative z-10">
         <div className="flex items-center gap-2.5">
-          <div className={`p-2 rounded-xl shadow-3xs border ${products.length === 0 ? "bg-emerald-500/10 border-emerald-500/20" : "bg-orange-500/10 border-orange-500/20"}`}>
-            {products.length === 0 ? (
+          <div
+            className={`p-2 rounded-xl shadow-3xs border ${
+              ingredients.length === 0
+                ? "bg-emerald-500/10 border-emerald-500/20"
+                : "bg-orange-500/10 border-orange-500/20"
+            }`}
+          >
+            {ingredients.length === 0 ? (
               <CheckCircle2 size={16} className="text-emerald-600" />
             ) : (
               <AlertTriangle size={16} className="text-orange-600" />
             )}
           </div>
+
           <div>
             <span className="text-[10px] font-black tracking-widest uppercase bg-gradient-to-r from-orange-600 via-amber-600 to-indigo-600 bg-clip-text text-transparent">
               Inventory Monitoring
             </span>
+
             <h4 className="text-lg font-black tracking-tight text-slate-800 mt-0.5">
               Low Stock Alerts
             </h4>
           </div>
         </div>
+
         <div className="flex items-center px-2.5 py-1 bg-white/90 border border-slate-100 shadow-3xs rounded-xl text-slate-400 text-[10px] font-black tracking-wide uppercase">
           Critical
         </div>
       </div>
 
       <div className="space-y-2 relative z-10">
-        {products.length === 0 ? (
+        {ingredients.length === 0 ? (
           <div className="flex items-center justify-center p-8 bg-white/45 backdrop-blur-xs border border-white/60 rounded-2xl shadow-3xs">
             <p className="text-xs font-black tracking-tight text-emerald-600 uppercase tracking-wider text-center">
-              All products sufficiently stocked
+              All ingredients sufficiently stocked
             </p>
           </div>
         ) : (
-          products.map((product) => (
+          ingredients.map((ingredient) => (
             <div
-              key={product.id}
+              key={ingredient.id}
               className="
               flex
               items-center
@@ -76,19 +93,21 @@ function LowStockWidget({ products }) {
             >
               <div>
                 <p className="text-xs font-black tracking-tight text-slate-700 group-hover:text-slate-900 transition-colors">
-                  {product.name}
+                  {ingredient.name}
                 </p>
+
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-                  SKU Area
+                  {unitMap[ingredient.unit]}
                 </p>
               </div>
 
-              <div className="text-right flex items-center gap-2 bg-orange-50 px-3 py-1.5 border border-orange-100/60 rounded-xl">
-                <span className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">
-                  Left:
+              <div className="text-right flex flex-col items-end bg-orange-50 px-3 py-2 border border-orange-100/60 rounded-xl">
+                <span className="text-xs font-black text-orange-600">
+                  {ingredient.stock} {unitMap[ingredient.unit]}
                 </span>
-                <span className="text-xs font-black tracking-tight text-orange-600">
-                  {product.stock}
+
+                <span className="text-[10px] text-slate-500">
+                  Min: {ingredient.minimum_stock}
                 </span>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import RecipeModal from "../components/RecipeModal";
 
 import MainLayout from "../layouts/MainLayout";
 
@@ -8,6 +9,8 @@ import {
   updateProduct,
   deleteProduct,
 } from "../services/productService";
+import ComboModal from "../components/ComboModal";
+import Notification from "../components/Notification";
 
 function Products() {
 
@@ -17,11 +20,13 @@ function Products() {
   const [search, setSearch] =
     useState("");
 
-  const [showEditModal, setShowEditModal] =
-  useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  const [selectedProduct, setSelectedProduct] =
-  useState(null);
+  const [selectedProduct, setSelectedProduct] =useState(null);
+
+  const [showRecipeModal,setShowRecipeModal] = useState(false);
+
+const [showComboModal, setShowComboModal] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -58,8 +63,8 @@ const [message, setMessage] = useState("");
     useState({
         name: "",
         price: "",
-        stock: "",
         status: "active",
+        product_type: "PRODUCT",
     });
 
     const handleCreateProduct =
@@ -76,7 +81,6 @@ const [message, setMessage] = useState("");
       setNewProduct({
         name: "",
         price: "",
-        stock: "",
         status: "active",
       });
 
@@ -158,6 +162,26 @@ const handleDeleteProduct =
     }
 };
 
+const [notification, setNotification] = useState({
+  show: false,
+  type: "success",
+  message: "",
+});
+
+useEffect(() => {
+  if (!notification.show) return;
+
+  const timer = setTimeout(() => {
+    setNotification((prev) => ({
+      ...prev,
+      show: false,
+    }));
+  }, 3000);
+
+  return () => clearTimeout(timer);
+}, [notification.show]);
+
+
   return (
     <MainLayout>
       {message && (
@@ -191,6 +215,7 @@ const handleDeleteProduct =
         Manage inventory listings, base pricing structures, and stock availability metrics.
       </p>
     </div>
+   
 
     <button
       onClick={() => setShowAddModal(true)}
@@ -262,85 +287,135 @@ const handleDeleteProduct =
             <th className="pb-3 text-left pl-5 w-32">Product ID</th>
             <th className="pb-3 text-left">Product</th>
             <th className="pb-3 text-left w-36">Price</th>
-            <th className="pb-3 text-left w-32">Stock</th>
             <th className="pb-3 text-left w-36">Status</th>
             <th className="pb-3 text-center w-44">Actions</th>
           </tr>
         </thead>
 
         <tbody>
-          {filteredProducts.map((product) => (
-            <tr 
-              key={product.id} 
-              className="bg-white border border-slate-100 shadow-3xs rounded-2xl overflow-hidden group hover:bg-slate-50/60 transition-all duration-200"
-            >
-              {/* Increased internal cell padding values (p-5) and bumped font-sizes to text-base */}
-              <td className="p-5 font-mono text-xs font-bold text-slate-400 pl-5 rounded-l-2xl">
-                {product.id}
-              </td>
-              
-              <td className="p-5 font-bold text-slate-700 text-base">
-                {product.name}
-              </td>
-              
-              <td className="p-5 font-black text-slate-800 text-base">
-                ₹{Number(product.price).toLocaleString("en-IN")}
-              </td>
-              
-              <td className="p-5 font-bold text-slate-500 text-base">
-                {product.stock} <span className="text-xs text-slate-400 font-medium ml-0.5">units</span>
-              </td>
-              
-              <td className="p-5">
-                <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl border ${
-                  product.status === 'active' 
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200/40 shadow-3xs' 
-                    : 'bg-slate-50 text-slate-500 border-slate-200/60'
-                }`}>
-                  {product.status}
-                </span>
-              </td>
+  {filteredProducts.map((product) => (
+    <tr 
+      key={product.id} 
+      className="bg-white border border-slate-100 shadow-3xs rounded-2xl overflow-hidden group hover:bg-slate-50/60 transition-all duration-200"
+    >
+      <td className="p-5 font-mono text-xs font-bold text-slate-400 pl-5 rounded-l-2xl">
+        {product.id}
+      </td>
+      
+      <td className="p-5 font-bold text-slate-700 text-base">
+        {product.name}
+      </td>
+      
+      <td className="p-5 font-black text-slate-800 text-base">
+        ₹{Number(product.price).toLocaleString("en-IN")}
+      </td>
+      
+      <td className="p-5">
+        <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl border ${
+          product.status === 'active' 
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-200/40 shadow-3xs' 
+            : 'bg-slate-50 text-slate-500 border-slate-200/60'
+        }`}>
+          {product.status}
+        </span>
+      </td>
 
-              {/* Action Buttons with subtle, beautiful background pill shapes on hover */}
-              <td className="p-4 text-center rounded-r-2xl font-semibold text-m">
-                <button
-                  onClick={() => handleEditClick(product)}
-                  className="
-                  text-indigo-700 
-                  bg-indigo-50
-                  px-3.5 
-                  py-2 
-                  rounded-xl 
-                  hover:bg-indigo-200 
-                  hover:text-indigo-900 
-                  hover:scale-[1.15]
-                  transition-all 
-                  duration-300 
-                  mr-2
-                  "
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteProduct(product.id)}
-                  className="
-                  text-red-500 
-                  px-3.5 
-                  py-2 
-                  rounded-xl 
-                  hover:bg-red-100 
-                  hover:text-red-600 
-                  active:scale-95
-                  transition-all 
-                  duration-200
-                  "
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
+      {/* FIXED: Formatted into a clean, aligned actions deck */}
+      <td className="p-5 rounded-r-2xl text-right">
+        <div className="flex items-center justify-end gap-2">
+          
+          {product.product_type === "PRODUCT" && (
+            <button
+              onClick={() => {
+                setSelectedProduct(product);
+                setShowRecipeModal(true);
+              }}
+              className="
+                text-emerald-700
+                bg-emerald-50
+                px-4
+                py-2
+                rounded-xl
+                text-sm
+                font-bold
+                hover:bg-emerald-100
+                transition-all
+                duration-200
+                cursor-pointer
+              "
+            >
+              Recipe
+            </button>
+          )}
+
+          {product.product_type === "COMBO" && (
+            <button
+              onClick={() => {
+                setSelectedProduct(product);
+                setShowComboModal(true);
+              }}
+              className="
+                text-orange-700
+                bg-orange-50
+                px-4
+                py-2
+                rounded-xl
+                text-sm
+                font-bold
+                hover:bg-orange-100
+                transition-all
+                duration-200
+                cursor-pointer
+              "
+            >
+              Combo
+            </button>
+          )}
+
+          <button
+            onClick={() => handleEditClick(product)}
+            className="
+              text-indigo-700 
+              bg-indigo-50
+              px-4 
+              py-2 
+              rounded-xl 
+              text-sm
+              font-bold
+              hover:bg-indigo-100 
+              transition-all 
+              duration-200 
+              cursor-pointer
+            "
+          >
+            Edit
+          </button>
+
+          <button
+            onClick={() => handleDeleteProduct(product.id)}
+            className="
+              text-red-600 
+              bg-red-50
+              px-4 
+              py-2 
+              rounded-xl 
+              text-sm
+              font-bold
+              hover:bg-red-100 
+              transition-all 
+              duration-200
+              cursor-pointer
+            "
+          >
+            Delete
+          </button>
+          
+        </div>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
       </table>
     </div>
   </div>
@@ -440,6 +515,20 @@ const handleDeleteProduct =
         "
       />
 
+      <select
+      value={newProduct.product_type}
+      onChange={(e) =>
+        setNewProduct({
+          ...newProduct,
+          product_type: e.target.value,
+        })
+      }
+      className="w-full border rounded-xl p-3 mb-6"
+    >
+      <option value="PRODUCT">Regular Product</option>
+      <option value="COMBO">Combo Product</option>
+    </select>
+
 
       <div
         className="
@@ -487,138 +576,190 @@ const handleDeleteProduct =
 
 )}
 {showEditModal && selectedProduct && (
-
   <div
     className="
     fixed
     inset-0
-    bg-black/50
+    bg-slate-950/40
+    backdrop-blur-sm
     flex
     items-center
     justify-center
     z-50
+    p-4
     "
   >
-
+    {/* Upgraded to a clean horizontal rectangle frame layout */}
     <div
       className="
       bg-white
-      rounded-2xl
-      p-8
-      w-[450px]
-      shadow-xl
+      w-full
+      max-w-4xl
+      rounded-3xl
+      shadow-2xl
+      border
+      border-slate-200
+      overflow-hidden
+       animate-in fade-in zoom-in-95 duration-150
       "
     >
+      {/* Header Section */}
+      <div className="px-8 py-6 border-b border-slate-100">
+        <h2 className="text-2xl font-black text-slate-800">
+          Edit Product
+        </h2>
+        <p className="text-slate-500 mt-1 text-sm">
+          Update core product listing information
+        </p>
+      </div>
 
-      <h2
-        className="
-        text-2xl
-        font-bold
-        mb-6
-        "
-      >
-        Edit Product
-      </h2>
+      {/* Body Section: Multi-column Horizontal Grid layout */}
+      <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-5">
+        
+        <div>
+          <label className="text-sm font-semibold text-slate-600 mb-2 block">
+            Product Name
+          </label>
+          <input
+            type="text"
+            placeholder="Product Name"
+            value={selectedProduct.name}
+            onChange={(e) =>
+              setSelectedProduct({
+                ...selectedProduct,
+                name: e.target.value,
+              })
+            }
+            className="w-full bg-slate-50/60 border border-slate-200 rounded-xl p-3 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-800"
+          />
+        </div>
 
-      <input
-        type="text"
-        value={selectedProduct.name}
-        onChange={(e) =>
-          setSelectedProduct({
-            ...selectedProduct,
-            name: e.target.value,
-          })
-        }
-        className="
-        w-full
-        border
-        rounded-xl
-        p-3
-        mb-4
-        "
-      />
+        <div>
+          <label className="text-sm font-semibold text-slate-600 mb-2 block">
+            Price (₹)
+          </label>
+          <input
+            type="number"
+            placeholder="0.00"
+            value={selectedProduct.price}
+            onChange={(e) =>
+              setSelectedProduct({
+                ...selectedProduct,
+                price: e.target.value,
+              })
+            }
+            className="w-full bg-slate-50/60 border border-slate-200 rounded-xl p-3 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-800"
+          />
+        </div>
 
-      <input
-        type="number"
-        value={selectedProduct.price}
-        onChange={(e) =>
-          setSelectedProduct({
-            ...selectedProduct,
-            price: e.target.value,
-          })
-        }
-        className="
-        w-full
-        border
-        rounded-xl
-        p-3
-        mb-4
-        "
-      />
+        <div>
+          <label className="text-sm font-semibold text-slate-600 mb-2 block">
+            Current Stock
+          </label>
+          <input
+            type="number"
+            placeholder="0"
+            value={selectedProduct.stock}
+            onChange={(e) =>
+              setSelectedProduct({
+                ...selectedProduct,
+                stock: e.target.value,
+              })
+            }
+            className="w-full bg-slate-50/60 border border-slate-200 rounded-xl p-3 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-800"
+          />
+        </div>
 
-      <input
-        type="number"
-        value={selectedProduct.stock}
-        onChange={(e) =>
-          setSelectedProduct({
-            ...selectedProduct,
-            stock: e.target.value,
-          })
-        }
-        className="
-        w-full
-        border
-        rounded-xl
-        p-3
-        mb-6
-        "
-      />
+      </div>
 
-      <div
-        className="
-        flex
-        gap-3
-        "
-      >
-
-        <button
-          onClick={handleUpdateProduct}
-          className="
-          flex-1
-          bg-indigo-600
-          text-white
-          py-3
-          rounded-xl
-          hover:bg-indigo-700
-          "
-        >
-          Update Product
-        </button>
-
+      {/* Footer Section: Right-Aligned Action Bar */}
+      <div className="flex justify-end gap-4 p-6 border-t border-slate-100 bg-slate-50/50">
         <button
           onClick={() => {
             setShowEditModal(false);
             setSelectedProduct(null);
           }}
           className="
-          flex-1
-          bg-slate-500
-          text-white
+          px-6
           py-3
+          border
+          border-slate-300
           rounded-xl
-          hover:bg-slate-600
+          font-bold
+          text-slate-600
+          hover:bg-slate-100
+          bg-white
+          transition-all
+          cursor-pointer
+          text-sm
           "
         >
           Cancel
         </button>
 
+        <button
+          onClick={handleUpdateProduct}
+          className="
+          px-8
+          py-3
+          bg-gradient-to-r
+          from-orange-500
+          to-indigo-600
+          rounded-xl
+          text-white
+          font-bold
+          hover:opacity-95
+          transition-all
+          cursor-pointer
+          text-sm
+          shadow-sm
+          "
+        >
+          Update Product
+        </button>
       </div>
 
     </div>
-
   </div>
-
 )}
+
+{showRecipeModal && (
+<RecipeModal
+  product={selectedProduct}
+  onSaved={() => {
+    setNotification({
+      show: true,
+      type: "success",
+      message: "Recipe saved successfully.",
+    });
+  }}
+  onClose={() => {
+    setShowRecipeModal(false);
+    setSelectedProduct(null);
+  }}
+/>
+)}
+
+{showComboModal && (
+  <ComboModal
+    product={selectedProduct}
+    onClose={() => {
+      setShowComboModal(false);
+      setSelectedProduct(null);
+    }}
+  />
+)}
+<Notification
+  show={notification.show}
+  type={notification.type}
+  message={notification.message}
+  onClose={() =>
+    setNotification((prev) => ({
+      ...prev,
+      show: false,
+    }))
+  }
+/>
 
     </MainLayout>
   );

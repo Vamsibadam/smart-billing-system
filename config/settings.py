@@ -51,12 +51,9 @@ INSTALLED_APPS = [
     'cloudinary',
 
     'django.contrib.staticfiles',
-    
-
-
-
     'accounts',
     'products',
+    'ingredients',
     'inventory',
     'billing',
     'dashboard',

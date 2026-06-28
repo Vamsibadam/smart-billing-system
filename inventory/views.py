@@ -21,7 +21,7 @@ class InventoryListAPIView(APIView):
             data.append({
                 "id": product.id,
                 "name": product.name,
-                "stock": product.stock,
+                
             })
 
         return Response(data)
@@ -45,11 +45,7 @@ class AddStockAPIView(APIView):
             id=product_id
         )
 
-        previous_stock = product.stock
-
-        product.stock += quantity
-
-        new_stock = product.stock
+      
 
         product.save()
 
@@ -57,9 +53,9 @@ class AddStockAPIView(APIView):
             product=product,
             transaction_type="STOCK_IN",
             quantity_changed=quantity,
-            previous_stock=previous_stock,
+            
             added_stock=quantity,
-            new_stock=new_stock,
+            
         )
 
         return Response({

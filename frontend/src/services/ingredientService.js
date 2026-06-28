@@ -1,0 +1,49 @@
+import api from "../api/axios";
+
+export const getIngredients = async () => {
+  const response = await api.get("/ingredients/");
+  return response.data;
+};
+
+export const createIngredient = async (data) => {
+  const response = await api.post(
+    "/ingredients/",
+    data
+  );
+
+  return response.data;
+};
+
+export const updateIngredient = async (
+  id,
+  data
+) => {
+  const response = await api.put(
+    `/ingredients/${id}/`,
+    data
+  );
+
+  return response.data;
+};
+
+export const deleteIngredient = async (
+  id
+) => {
+  await api.delete(
+    `/ingredients/${id}/`
+  );
+};
+
+export const adjustIngredientStock = async (
+  id,
+  data
+) => {
+
+  const response = await api.post(
+    `/ingredients/${id}/adjust-stock/`,
+    data
+  );
+
+  return response.data;
+
+};

@@ -1,13 +1,20 @@
 from rest_framework import serializers
 
-
 class BillingItemSerializer(serializers.Serializer):
 
     product_id = serializers.IntegerField()
 
     quantity = serializers.IntegerField()
 
+    ingredient_overrides = serializers.ListField(
 
+        child=serializers.DictField(),
+
+        required=False,
+
+        default=[]
+
+    )
 class PaymentSerializer(serializers.Serializer):
 
     method = serializers.CharField()

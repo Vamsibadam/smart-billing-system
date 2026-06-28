@@ -60,6 +60,10 @@ urlpatterns = [
         "settings_app.urls"
     )
     ),
+    path(
+    "api/ingredients/",
+    include("ingredients.urls")
+),
 ]
 urlpatterns += static(
     settings.MEDIA_URL,

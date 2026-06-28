@@ -10,6 +10,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import BillHistory from "./pages/BillHistory";
 import StoreSettings from "./pages/StoreSettings";
 import InvoicePreview from "./pages/InvoicePreview";
+import Ingredients from "./pages/Ingredients";
 
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
         <Route path="/bill-history" element={<ProtectedRoute><BillHistory /></ProtectedRoute>}/>
         <Route path="/settings" element={<ProtectedRoute><StoreSettings /></ProtectedRoute>}/>
         <Route path="/invoice/:id" element={<ProtectedRoute><InvoicePreview /></ProtectedRoute>}/>
+        <Route path="/ingredients" element={<ProtectedRoute><Ingredients /></ProtectedRoute>}/>
       </Routes>
    
     </BrowserRouter>

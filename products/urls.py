@@ -2,7 +2,10 @@ from django.urls import path
 from .views import (
     ProductListAPIView,
     ProductSearchAPIView,
-    ProductDetailAPIView
+    ProductDetailAPIView,
+    ProductRecipeAPIView,
+    ProductComboAPIView,
+    ProductCustomizationAPIView
 )
 
 urlpatterns = [
@@ -12,4 +15,17 @@ urlpatterns = [
     "<int:pk>/",
     ProductDetailAPIView.as_view()
 ),
+path(
+    "<int:product_id>/recipe/",
+    ProductRecipeAPIView.as_view()
+),
+path(
+    "<int:product_id>/combo/",
+    ProductComboAPIView.as_view()
+),
+path(
+    "<int:product_id>/customization/",
+    ProductCustomizationAPIView.as_view()
+),
+
 ]

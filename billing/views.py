@@ -38,27 +38,48 @@ class CreateBillAPIView(APIView):
             raise_exception=True
         )
 
-        bill = create_bill(
-            serializer.validated_data["items"],
-            serializer.validated_data["payments"]
-        )
+        try:
 
-        return Response(
-            {
-                "id": bill.id,
-                "bill_number": bill.bill_number,
-                "total_amount": bill.total_amount,
+            bill = create_bill(
+                serializer.validated_data["items"],
+                serializer.validated_data["payments"]
+            )
 
-                "payments": [
-                    {
-                        "method": payment.method,
-                        "amount": payment.amount
-                    }
-                    for payment in bill.payments.all()
-                ]
-            },
-            status=status.HTTP_201_CREATED
-        )
+            return Response(
+                {
+                    "id": bill.id,
+                    "bill_number": bill.bill_number,
+                    "total_amount": bill.total_amount,
+                    "payments": [
+                        {
+                            "method": payment.method,
+                            "amount": payment.amount
+                        }
+                        for payment in bill.payments.all()
+                    ]
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        except ValueError as e:
+
+            return Response(
+                {
+                    "error": str(e)
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        except Exception as e:
+
+            return Response(
+                {
+                    "error": "Unable to create bill.",
+                    "details": str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
 class TransactionHistoryAPIView(
     generics.ListAPIView
 ):
@@ -143,11 +164,7 @@ class DeleteBillAPIView(
 
             product = item.product
 
-            previous_stock = product.stock
-
-            product.stock += (
-                item.quantity
-            )
+            
 
             product.save()
 
@@ -155,14 +172,12 @@ class DeleteBillAPIView(
 
                 product=product,
 
-                previous_stock=
-                previous_stock,
+               
 
                 added_stock=
                 item.quantity,
 
-                new_stock=
-                product.stock,
+                
 
                 transaction_type=
                 "STOCK_IN",

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Transaction, TransactionItem
+from .models import Transaction, TransactionItem,TransactionItemIngredient
 
 
 @admin.register(Transaction)
@@ -19,4 +19,18 @@ class TransactionItemAdmin(admin.ModelAdmin):
         'product',
         'quantity',
         'subtotal'
+    )
+
+@admin.register(TransactionItemIngredient)
+class TransactionItemIngredientAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "transaction_item",
+        "ingredient",
+        "quantity_used",
+    )
+
+    search_fields = (
+        "transaction_item__transaction__bill_number",
+        "ingredient__name",
     )
