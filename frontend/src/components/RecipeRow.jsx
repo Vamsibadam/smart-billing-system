@@ -1,6 +1,6 @@
 import AlternativeSelector from "./AlternativeSelector";
 import { useMemo, useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
+
 
 function RecipeRow({
   item,
@@ -42,7 +42,7 @@ function RecipeRow({
     setShowSearch(false);
   };
 
-  return createPortal(
+  return (
     <div 
       ref={containerRef} 
       className="
@@ -213,7 +213,7 @@ function RecipeRow({
           />
         </div>
       )}
-    </div>,document.body
+    </div>
   );
 }
 
