@@ -58,7 +58,6 @@ def consume_recipe(product, quantity,transaction_item=None,ingredient_overrides=
         ingredient.stock -= required_quantity
 
         ingredient.save()
-        update_product_availability()
 
         IngredientStockLog.objects.create(
 
@@ -109,6 +108,7 @@ def consume_inventory(
             transaction_item,
             ingredient_overrides
         )
+        update_product_availability()
 
         return
 
@@ -130,6 +130,7 @@ def consume_inventory(
             transaction_item,
             ingredient_overrides
         )
+    update_product_availability()
 
 @transaction.atomic
 def restore_inventory(transaction_item):

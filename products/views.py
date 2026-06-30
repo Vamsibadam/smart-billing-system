@@ -4,6 +4,7 @@ from .serializers import ProductSerializer,ComboItemSerializer,ComboSaveSerializ
 from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from .utils import update_product_availability
 
 from django.db import transaction
 from .serializers import (
@@ -98,6 +99,7 @@ class ProductRecipeAPIView(APIView):
                             id=alternative_id
                         )
                     )
+        update_product_availability()
         return Response(
             {
                 "message":
@@ -115,6 +117,8 @@ class ProductRecipeAPIView(APIView):
         RecipeIngredient.objects.filter(
             product=product
         ).delete()
+
+        update_product_availability()
 
         return Response(
             {
@@ -137,6 +141,7 @@ class ProductComboAPIView(APIView):
             combo.combo_items.all(),
             many=True
         )
+        update_product_availability()
 
         return Response(serializer.data)
 
@@ -170,6 +175,8 @@ class ProductComboAPIView(APIView):
                 quantity=item["quantity"]
             )
 
+        update_product_availability()
+
         return Response({
             "message": "Combo saved successfully."
         })
@@ -185,6 +192,8 @@ class ProductComboAPIView(APIView):
         ComboItem.objects.filter(
             combo=combo
         ).delete()
+
+        update_product_availability()
 
         return Response({
             "message": "Combo deleted."
