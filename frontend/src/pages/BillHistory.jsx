@@ -17,6 +17,7 @@ import {
 import { useNavigate }
 from "react-router-dom";
 import Loader from "../components/Loader";
+import { createPortal } from "react-dom";
 
 function BillHistory() {
 
@@ -45,6 +46,9 @@ function BillHistory() {
     fetchBills();
 
   }, []);
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [billToDelete, setBillToDelete] = useState(null);
 
   const fetchBills = async (date = "") => {
 
@@ -100,39 +104,19 @@ function BillHistory() {
       }
   };
 
-  const handleDelete =
-    async (id) => {
+  const handleDelete = async () => {
+  try {
+    await deleteBill(billToDelete.id);
 
-      const confirmDelete =
-        window.confirm(
-          "Delete this bill?"
-        );
+    fetchBills();
 
-      if (
-        !confirmDelete
-      ) return;
+    setShowDeleteModal(false);
+    setBillToDelete(null);
 
-      try {
-
-        await deleteBill(
-          id
-        );
-
-        alert(
-          "Bill deleted"
-        );
-
-        fetchBills();
-
-      } catch (error) {
-
-        console.error(error);
-
-        alert(
-          "Failed to delete bill"
-        );
-      }
-  };
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const filteredBills =
     bills.filter(bill =>
@@ -316,7 +300,8 @@ if (loading) {
                 </button>
 
                 <button
-                  onClick={() => handleDelete(bill.id)}
+                  onClick={() => {setBillToDelete(bill);
+                                  setShowDeleteModal(true);}}
                   className="
                   text-red-500 
                   px-3.5 
@@ -443,6 +428,83 @@ if (loading) {
       </div>
     </div>
   )}
+  {showDeleteModal && billToDelete && createPortal(
+  <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-950/30 backdrop-blur-sm p-4">
+
+    <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl p-7">
+
+      <div className="flex justify-center mb-5">
+        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+          <span className="text-3xl">🗑️</span>
+        </div>
+      </div>
+
+      <h2 className="text-xl font-black text-center text-slate-800">
+        Delete Bill?
+      </h2>
+
+      <p className="mt-3 text-sm text-center text-slate-500 leading-relaxed">
+        Are you sure you want to delete
+        <br />
+        <span className="font-bold text-slate-800">
+          {billToDelete.bill_number}
+        </span>
+        ?
+      </p>
+
+      <div className="mt-2 text-center text-xs text-red-500 font-semibold">
+        Inventory will be restored automatically.
+      </div>
+
+      <div className="flex gap-3 mt-8">
+
+        <button
+          onClick={()=>{
+            setShowDeleteModal(false);
+            setBillToDelete(null);
+          }}
+          className="
+          flex-1
+          py-3
+          rounded-xl
+          border
+          border-slate-200
+          bg-white
+          text-slate-600
+          font-bold
+          hover:bg-slate-50
+          transition
+          cursor-pointer
+          "
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleDelete}
+          className="
+          flex-1
+          py-3
+          rounded-xl
+          bg-gradient-to-r
+          from-red-500
+          to-red-600
+          text-white
+          font-bold
+          hover:opacity-95
+          transition
+          cursor-pointer
+          "
+        >
+          Delete Bill
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>,document.body
+)}
 
 </MainLayout>
 

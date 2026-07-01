@@ -14,9 +14,7 @@ from .history_serializers import (
 
 from rest_framework import generics
 
-from inventory.models import (
-    InventoryLog
-)
+
 
 from django.db import transaction
 
@@ -25,6 +23,7 @@ from django.http import FileResponse
 from .pdf_generator import (
     generate_invoice_pdf
 )
+from ingredients.services import restore_bill
 
 class CreateBillAPIView(APIView):
 
@@ -153,38 +152,9 @@ class DeleteBillAPIView(
     )
 
     @transaction.atomic
-    def perform_destroy(
-        self,
-        instance
-    ):
+    def perform_destroy(self, instance):
 
-        items = instance.items.all()
-
-        for item in items:
-
-            product = item.product
-
-            
-
-            product.save()
-
-            InventoryLog.objects.create(
-
-                product=product,
-
-               
-
-                added_stock=
-                item.quantity,
-
-                
-
-                transaction_type=
-                "STOCK_IN",
-
-                quantity_changed=
-                item.quantity
-            )
+        restore_bill(instance)
 
         instance.delete()
 
