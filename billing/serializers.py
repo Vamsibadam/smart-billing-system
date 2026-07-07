@@ -6,6 +6,16 @@ class BillingItemSerializer(serializers.Serializer):
 
     quantity = serializers.IntegerField()
 
+    combo_overrides = serializers.ListField(
+
+        child=serializers.DictField(),
+
+        required=False,
+
+        default=[]
+
+    )
+
     ingredient_overrides = serializers.ListField(
 
         child=serializers.DictField(),
@@ -15,6 +25,8 @@ class BillingItemSerializer(serializers.Serializer):
         default=[]
 
     )
+
+
 class PaymentSerializer(serializers.Serializer):
 
     method = serializers.CharField()

@@ -94,11 +94,15 @@ def consume_inventory(
     product,
     quantity,
     transaction_item,
-    ingredient_overrides=None
+    ingredient_overrides=None,
+    combo_overrides=None
 ):
 
     if ingredient_overrides is None:
         ingredient_overrides = []
+
+    if combo_overrides is None:
+        combo_overrides = []
 
     if product.product_type == Product.TYPE_PRODUCT:
 
@@ -122,13 +126,27 @@ def consume_inventory(
             f"{product.name} has no combo items configured."
         )
 
+    override_map = {
+        item["combo_item_id"]: item["product_id"]
+        for item in combo_overrides
+    }
+
     for combo_item in combo_items:
 
+        selected_product = combo_item.product
+
+        if combo_item.id in override_map:
+
+            selected_product = Product.objects.get(
+                id=override_map[combo_item.id]
+            )
+
         consume_inventory(
-            combo_item.product,
+            selected_product,
             quantity * combo_item.quantity,
             transaction_item,
-            ingredient_overrides
+            ingredient_overrides,
+            combo_overrides
         )
     update_product_availability()
 

@@ -48,7 +48,7 @@ def create_bill(items, payments):
             unit_price=product.price,
             subtotal=subtotal
         )
-
+        
         if product.product_type == Product.TYPE_PRODUCT:
 
             consume_inventory(
@@ -60,15 +60,20 @@ def create_bill(items, payments):
                     []
                 )
             )
-
         else:
-
             consume_inventory(
                 product,
                 quantity,
-                transaction_item
+                transaction_item,
+                item.get(
+                    "ingredient_overrides",
+                    []
+                ),
+                item.get(
+                    "combo_overrides",
+                    []
+                )
             )
-
     # Validate payment total
     payment_total = sum(
         Decimal(str(payment["amount"]))

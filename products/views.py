@@ -1,6 +1,6 @@
 from rest_framework import generics
 from .models import Product, RecipeIngredient,RecipeIngredientAlternative,ComboItem
-from .serializers import ProductSerializer,ComboItemSerializer,ComboSaveSerializer
+from .serializers import ProductSerializer,ComboItemSerializer,ComboSaveSerializer,ComboItemAlternative
 from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -167,13 +167,25 @@ class ProductComboAPIView(APIView):
 
         for item in serializer.validated_data["items"]:
 
-            ComboItem.objects.create(
+            combo_item = ComboItem.objects.create(
                 combo=combo,
                 product=Product.objects.get(
                     id=item["product"]
                 ),
                 quantity=item["quantity"]
             )
+
+            for alternative_id in item["alternatives"]:
+
+                if alternative_id == combo_item.product.id:
+                    continue
+
+                ComboItemAlternative.objects.create(
+                    combo_item=combo_item,
+                    product=Product.objects.get(
+                        id=alternative_id
+                    )
+                )
 
         update_product_availability()
 
@@ -234,9 +246,23 @@ class ProductCustomizationAPIView(APIView):
             )
 
             data.append({
+
+                "combo_item_id": combo_item.id,
+
                 "product_id": combo_item.product.id,
+
                 "product_name": combo_item.product.name,
+
+                "alternatives":[
+                    {
+                        "id":alt.product.id,
+                        "name":alt.product.name
+                    }
+                    for alt in combo_item.alternatives.all()
+                ],
+
                 "recipe": serializer.data
+
             })
 
         return Response(data)

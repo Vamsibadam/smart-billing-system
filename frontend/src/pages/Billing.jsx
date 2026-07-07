@@ -18,7 +18,8 @@ import {
 import { getRecipe, getCustomization } from "../services/recipeService";
 import IngredientCustomizationModal from "../components/IngredientCustomizationModal";
 import Notification from "../components/Notification";
-
+import ComboCustomizationModal from "../components/ComboCustomizationModal";
+// import { getCustomization } from "../services/productService";
 
 
 function Billing() {
@@ -50,23 +51,26 @@ function Billing() {
   const [showCustomize, setShowCustomize] = useState(false);
 
   const [selectedCartItem, setSelectedCartItem] = useState(null);
+  const [showComboCustomize, setShowComboCustomize] = useState(false);
 
-  const saveCustomization = (overrides) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === selectedCartItem.id
-          ? {
+  const [comboCartItem, setComboCartItem] = useState(null);
+
+ const saveCustomization = (overrides) => {
+  setCart((prev) =>
+    prev.map((item) =>
+      item.id === selectedCartItem.id
+        ? {
             ...item,
             recipe: selectedCartItem.recipe,
+            combo_overrides: selectedCartItem.combo_overrides || [],
             ingredient_overrides: overrides,
           }
-          : item
-      )
-    );
-
-    setShowCustomize(false);
-    setSelectedCartItem(null);
-  };
+        : item
+    )
+  );
+  setShowCustomize(false);
+  setSelectedCartItem(null);
+};
 
   const handleSearchKeyDown = (e) => {
 
@@ -254,6 +258,7 @@ function Billing() {
         ...product,
         quantity: 1,
         recipe: recipe,
+        combo_overrides:[],
         ingredient_overrides: [],
       };
       setCart(prev => [
@@ -458,8 +463,9 @@ function Billing() {
           cart.map(item => ({
             product_id: item.id,
             quantity: item.quantity,
+            combo_overrides: item.combo_overrides || [],
             ingredient_overrides:
-              item.ingredient_overrides
+              item.ingredient_overrides || [],
           }))
 
         const response =
@@ -1080,9 +1086,14 @@ function Billing() {
                           <td className="p-3 text-center">
                             <button
                               onClick={() => {
-
-                                setSelectedCartItem(item);
-                                setShowCustomize(true);
+                                if (item.product_type === "COMBO") {
+                                    setComboCartItem(item);
+                                    setShowComboCustomize(true);
+                                }
+                                else{
+                                    setSelectedCartItem(item);
+                                    setShowCustomize(true);
+                                }
                               }}
                               className="
                               inline-flex
@@ -1819,6 +1830,47 @@ text-sm
           </div>
         </div>,document.body
       )}
+      {showComboCustomize &&
+        comboCartItem && (
+        <ComboCustomizationModal
+            product={comboCartItem}
+            comboItems={comboCartItem.recipe}
+            onClose={()=>{
+                setShowComboCustomize(false);
+            }}
+            onContinue={async (selectedProducts) => {
+                  try {
+                    const recipeGroups = await Promise.all(
+                      selectedProducts.map(async (item) => {
+                        const recipe = await getCustomization(
+                          item.product_id
+                        );
+                        return recipe[0];
+                      })
+                    );
+                    const updatedCart = cart.map((cartItem) =>
+                      cartItem.id === comboCartItem.id
+                        ? {
+                            ...cartItem,
+                            recipe: recipeGroups,
+                            combo_overrides: selectedProducts,
+                          }
+                        : cartItem
+                    );
+                    setCart(updatedCart);
+                    const updatedItem = updatedCart.find(
+                      (i) => i.id === comboCartItem.id
+                    );
+                    setSelectedCartItem(updatedItem);
+                    setShowComboCustomize(false);
+                    setShowCustomize(true);
+                  } catch (error) {
+                    console.error(error);
+                  }
+                }}
+                        />
+                        )
+                        }
 
       {showCustomize && (
         <IngredientCustomizationModal

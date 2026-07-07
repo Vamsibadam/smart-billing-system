@@ -150,3 +150,28 @@ class ComboItem(models.Model):
 
     def __str__(self):
         return f"{self.combo.name} → {self.product.name}"
+    
+class ComboItemAlternative(models.Model):
+
+    combo_item = models.ForeignKey(
+        ComboItem,
+        related_name="alternatives",
+        on_delete=models.CASCADE
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        unique_together = (
+            "combo_item",
+            "product"
+        )
+
+    def __str__(self):
+        return (
+            f"{self.combo_item.product.name} -> "
+            f"{self.product.name}"
+        )

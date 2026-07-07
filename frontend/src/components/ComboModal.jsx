@@ -114,6 +114,7 @@ function ComboModal({
       const payload = combo.map((item) => ({
         product: Number(item.product),
         quantity: Number(item.quantity),
+        alternatives: item.alternative_ids || [],
       }));
 
       await saveCombo(product.id, payload);
@@ -130,6 +131,23 @@ function ComboModal({
       setSaving(false);
     }
   };
+  const updateAlternatives = (
+      id,
+      alternativeIds
+    ) => {
+
+      setCombo(prev =>
+        prev.map(item =>
+          item.id === id
+            ? {
+                ...item,
+                alternative_ids: alternativeIds
+              }
+            : item
+        )
+      );
+
+    };
 
   return createPortal(
    <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
@@ -180,6 +198,7 @@ function ComboModal({
                 selectedProducts={combo.map((i) => Number(i.product))}
                 onChange={updateCombo}
                 onDelete={deleteItem}
+                onAlternativeChange={updateAlternatives}
               />
             </div>
           ))}
