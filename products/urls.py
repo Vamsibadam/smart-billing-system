@@ -5,7 +5,9 @@ from .views import (
     ProductDetailAPIView,
     ProductRecipeAPIView,
     ProductComboAPIView,
-    ProductCustomizationAPIView
+    ProductCustomizationAPIView,
+    ProductCategoryListAPIView,
+    ProductCategoryDetailAPIView
 )
 
 urlpatterns = [
@@ -26,6 +28,15 @@ path(
 path(
     "<int:product_id>/customization/",
     ProductCustomizationAPIView.as_view()
+),
+path(
+    "categories/",
+    ProductCategoryListAPIView.as_view()
+),
+
+path(
+    "categories/<int:pk>/",
+    ProductCategoryDetailAPIView.as_view()
 ),
 
 ]

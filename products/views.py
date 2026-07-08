@@ -13,6 +13,8 @@ from .serializers import (
     
 )
 from ingredients.models import Ingredient
+from .models import ProductCategory
+from .serializers import ProductCategorySerializer
 
 
 class ProductListAPIView(generics.ListCreateAPIView):
@@ -266,3 +268,20 @@ class ProductCustomizationAPIView(APIView):
             })
 
         return Response(data)
+    
+class ProductCategoryListAPIView(
+    generics.ListCreateAPIView
+):
+
+    queryset = ProductCategory.objects.all().order_by("name")
+
+    serializer_class = ProductCategorySerializer
+
+
+class ProductCategoryDetailAPIView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+
+    queryset = ProductCategory.objects.all()
+
+    serializer_class = ProductCategorySerializer

@@ -1,13 +1,24 @@
 from rest_framework import serializers
 from .models import Product,RecipeIngredient,RecipeIngredientAlternative,ComboItem,ComboItemAlternative
+from .models import ProductCategory
+
+class ProductCategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductCategory
+        fields = "__all__"
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    
+
+    category_name = serializers.CharField(
+        source="category.name",
+        read_only=True
+    )
+
     class Meta:
         model = Product
         exclude = ["stock"]
-   
 
 class RecipeIngredientAlternativeSerializer(
     serializers.ModelSerializer

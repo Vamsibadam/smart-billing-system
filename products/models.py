@@ -2,6 +2,16 @@ from django.db import models
 from ingredients.models import Ingredient
 
 
+class ProductCategory(models.Model):
+
+    name = models.CharField(
+        max_length=100,
+        unique=True
+    )
+
+    def __str__(self):
+        return self.name
+    
 class Product(models.Model):
 
     TYPE_PRODUCT = "PRODUCT"
@@ -53,6 +63,13 @@ class Product(models.Model):
 
     available = models.BooleanField(
         default=True
+    )
+    category = models.ForeignKey(
+        ProductCategory,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="products"
     )
 
     def __str__(self):
@@ -175,3 +192,4 @@ class ComboItemAlternative(models.Model):
             f"{self.combo_item.product.name} -> "
             f"{self.product.name}"
         )
+    

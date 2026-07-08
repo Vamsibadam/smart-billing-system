@@ -3,6 +3,7 @@ import MainLayout from "../layouts/MainLayout";
 import {
   searchProducts,
   createBill,
+  getProducts,
 } from "../services/billingService";
 import { createPortal } from "react-dom";
 import {
@@ -19,24 +20,26 @@ import { getRecipe, getCustomization } from "../services/recipeService";
 import IngredientCustomizationModal from "../components/IngredientCustomizationModal";
 import Notification from "../components/Notification";
 import ComboCustomizationModal from "../components/ComboCustomizationModal";
-// import { getCustomization } from "../services/productService";
+import BillingTouch from "../components/billing/BillingTouch";
+import { getCategories } from "../services/categoryService";
+import CartPanel from "../components/billing/CartPanel";
+import QuantityDialog from "../components/billing/QuantityDialog";
+import TouchCartDrawer from "../components/billing/TouchCartDrawer";
+import FloatingCheckoutButton from "../components/billing/FloatingCheckoutButton";
 
 
 function Billing() {
   const navigate =
     useNavigate();
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
-  const [products, setProducts] =
-    useState([]);
+  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
 
-  const [cart, setCart] =
-    useState([]);
+  const [cart, setCart] =  useState([]);
 
-  const [showShortcuts, setShowShortcuts] =
-    useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const [
     selectedProductIndex,
@@ -51,9 +54,34 @@ function Billing() {
   const [showCustomize, setShowCustomize] = useState(false);
 
   const [selectedCartItem, setSelectedCartItem] = useState(null);
+  const [showQuantityDialog, setShowQuantityDialog] = useState(false);
+
+const [selectedQuantityItem, setSelectedQuantityItem] = useState(null);
   const [showComboCustomize, setShowComboCustomize] = useState(false);
 
   const [comboCartItem, setComboCartItem] = useState(null);
+
+  const [layout, setLayout] = useState(() => {
+  return localStorage.getItem("billing_layout") || "classic";
+});
+useEffect(() => {
+  localStorage.setItem("billing_layout", layout);
+}, [layout]);
+
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [showTouchCart, setShowTouchCart] = useState(false);
+  const [selectedPaymentIndex, setSelectedPaymentIndex] = useState(0);
+  
+
+  const fetchCategories = async () => {
+  try {
+    const data = await getCategories();
+    setCategories(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
  const saveCustomization = (overrides) => {
   setCart((prev) =>
@@ -125,21 +153,10 @@ function Billing() {
 
   };
 
-  const [generatedBill,
-    setGeneratedBill] =
-    useState(null);
-
-  const [showBillModal,
-    setShowBillModal] =
-    useState(false);
-
-  const [cartLoaded,
-    setCartLoaded] =
-    useState(false);
-
-
-  const [showPaymentModal, setShowPaymentModal] =
-    useState(false);
+  const [generatedBill,setGeneratedBill] = useState(null);
+  const [showBillModal,setShowBillModal] = useState(false);
+  const [cartLoaded,setCartLoaded] =useState(false);
+  const [showPaymentModal, setShowPaymentModal] =useState(false);
 
   const [payments, setPayments] =
     useState([
@@ -204,77 +221,123 @@ function Billing() {
     cartLoaded
   ]);
 
-
-
-  const searchInputRef =
-    useRef(null);
-
-
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
 
-    if (search.trim().length > 0) {
+  if (layout !== "classic") {
+    return;
+  }
 
-      fetchProducts();
+  if (search.trim().length > 0) {
 
-    } else {
+    fetchProducts();
 
-      setProducts([]);
-      setSelectedProductIndex(0);
+  } else {
 
+    setProducts([]);
+
+    setSelectedProductIndex(0);
+
+  }
+
+}, [search, layout]);
+
+  const fetchAllProducts = async () => {
+    try {
+      const data = await getProducts();
+      setAllProducts(data);
+    } catch (error) {
+      console.error(error);
     }
-
-  }, [search]);
+  };
 
   const fetchProducts = async () => {
-
     try {
-
       const data = await searchProducts(search);
-
       setProducts(data);
       setSelectedProductIndex(0);
-
     } catch (error) {
-
       console.error(error);
-
     }
-
   };
+    useEffect(() => {
+
+    fetchCategories();
+    fetchAllProducts();
+
+  }, []);
+
+const touchProducts = allProducts.filter((product) => {
+
+  const matchesCategory =
+    selectedCategory === null ||
+    product.category === selectedCategory;
+
+  const matchesSearch =
+    product.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+  return (
+    matchesCategory &&
+    matchesSearch
+  );
+
+});
 
   const addToCart = async (product) => {
 
-    const existing = cart.find(
-      item => item.id === product.id
+  const existing = cart.find(
+    (item) => item.id === product.id
+  );
+
+  if (existing) {
+
+    setCart((prev) =>
+      prev.map((item) =>
+        item.id === product.id
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+            }
+          : item
+      )
     );
 
-    if (existing) return;
+    return;
+  }
 
-    try {
+  try {
 
-      const recipe = await getCustomization(product.id);
-      const cartItem = {
-        ...product,
-        quantity: 1,
-        recipe: recipe,
-        combo_overrides:[],
-        ingredient_overrides: [],
-      };
-      setCart(prev => [
-        ...prev,
-        cartItem
-      ]);
+    const recipe = await getCustomization(product.id);
 
-    } catch (err) {
-      console.error(err);
-    }
-    setSearch("");
-    setProducts([]);
-    setSelectedProductIndex(0);
+    const cartItem = {
+      ...product,
+      quantity: 1,
+      recipe,
+      ingredient_overrides: [],
+      combo_overrides: [],
+    };
 
-    searchInputRef.current?.focus();
-  };
+    setCart((prev) => [
+      ...prev,
+      cartItem,
+    ]);
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
+
+  setSearch("");
+  setProducts([]);
+  setSelectedProductIndex(0);
+
+  searchInputRef.current?.focus();
+
+};
   const updateQuantity =
     (
       id,
@@ -313,17 +376,93 @@ function Billing() {
 
   const removeItem =
     (id) => {
-
       setCart(
-
         cart.filter(
           (item) =>
             item.id !== id
         )
-
       );
       setSelectedCartIndex(0);
     };
+    const increaseQuantity = () => {
+
+  setCart((prev) =>
+    prev.map((item) =>
+      item.id === selectedQuantityItem.id
+        ? {
+            ...item,
+            quantity: item.quantity + 1,
+          }
+        : item
+    )
+  );
+
+  setSelectedQuantityItem((prev) => ({
+    ...prev,
+    quantity: prev.quantity + 1,
+  }));
+
+};
+
+const decreaseQuantity = () => {
+
+  if (selectedQuantityItem.quantity === 1) {
+    return;
+  }
+
+  setCart((prev) =>
+    prev.map((item) =>
+      item.id === selectedQuantityItem.id
+        ? {
+            ...item,
+            quantity: item.quantity - 1,
+          }
+        : item
+    )
+  );
+
+  setSelectedQuantityItem((prev) => ({
+    ...prev,
+    quantity: prev.quantity - 1,
+  }));
+
+};
+
+const removeFromDialog = () => {
+
+  removeItem(selectedQuantityItem.id);
+
+  setShowQuantityDialog(false);
+
+  setSelectedQuantityItem(null);
+
+};  
+const updateQuantityFromDialog = (newQuantity) => {
+
+  if (
+    !newQuantity ||
+    newQuantity < 1
+  ) {
+    return;
+  }
+
+  setCart((prev) =>
+    prev.map((item) =>
+      item.id === selectedQuantityItem.id
+        ? {
+            ...item,
+            quantity: Number(newQuantity),
+          }
+        : item
+    )
+  );
+
+  setSelectedQuantityItem((prev) => ({
+    ...prev,
+    quantity: Number(newQuantity),
+  }));
+
+};
 
   const totalAmount =
     cart.reduce(
@@ -391,6 +530,7 @@ function Billing() {
       );
 
     setPayments(updated);
+    setSelectedPaymentIndex(0);
   };
 
   const updatePayment = (
@@ -873,6 +1013,32 @@ function Billing() {
           <h1 className="text-3xl font-black tracking-tight text-slate-800">
             Billing
           </h1>
+            <div className="flex items-center gap-3">
+
+            <button
+              onClick={() =>
+                setLayout(
+                  layout === "classic"
+                    ? "touch"
+                    : "classic"
+                )
+              }
+              className="
+              bg-gradient-to-r
+              from-orange-500
+              to-indigo-600
+              text-white
+              px-5
+              py-2.5
+              rounded-xl
+              font-bold
+              cursor-pointer
+              "
+            >
+              {layout === "classic"
+                ? "Touch POS"
+                : "Classic POS"}
+            </button>
           <button
             onClick={() =>
               setShowShortcuts(
@@ -910,331 +1076,121 @@ function Billing() {
 
           </button>
         </div>
-
+        </div>
+              
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-full overflow-hidden pb-6 relative z-10 items-start">
 
-          {/* Left Column: Product Search Box */}
-          <div className="lg:col-span-1">
-            <div className="bg-slate-900 backdrop-blur-md border border-slate-800 rounded-[24px] p-6 shadow-sm">
+{/* Left Column Section: Dynamically stretches to full screen size if it is in touch mode */}
+<div className={layout === "classic" ? "lg:col-span-1" : "lg:col-span-3"}>
+  {layout === "classic" ? (
+    <div className="bg-slate-900 backdrop-blur-md border border-slate-800 rounded-[24px] p-6 shadow-sm">
+      <h2 className="text-lg font-black tracking-tight text-white mb-4">
+        Product Search
+      </h2>
 
-              <h2 className="text-lg font-black tracking-tight text-white mb-4">
-                Product Search
-              </h2>
+      <div className="relative w-full">
+        <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+          <Search size={18} />
+        </div>
 
-              <div className="relative w-full">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                  <Search size={18} />
-                </div>
+        <input
+          ref={searchInputRef}
+          type="text"
+          placeholder="Search Product..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          className="w-full bg-white/20 border border-slate-800 text-white rounded-xl p-3.5 pl-11 text-sm font-semibold placeholder:text-slate-500 outline-none focus:bg-white/15 focus:border-indigo-500 transition-all"
+        />
+      </div>
 
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search Product..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                  className="
-            w-full
-            bg-white/20
-            border border-slate-800
-            text-white
-            rounded-xl
-            p-3.5
-            pl-11
-            text-sm
-            font-semibold
-            placeholder:text-slate-500
-            outline-none
-            focus:bg-white/15
-            focus:border-indigo-500
-            transition-all
-            "
-                />
-              </div>
+      <div className="mt-4 max-h-[300px] overflow-y-auto pr-1 space-y-1.5 scrollbar-none">
+        {products.map((product, index) => (
+          <div
+            key={product.id}
+            onClick={() => {
+              if (!product.available) {
+                setNotification({
+                  show: true,
+                  type: "error",
+                  message: `${product.name} is out of stock.`,
+                });
+                return;
+              }
+              addToCart(product);
+            }}
+            className={`flex justify-between items-center p-3 rounded-xl cursor-pointer transition-all duration-200 group border ${
+              index === selectedProductIndex
+                ? "bg-slate-600 border-indigo-400 shadow-lg"
+                : "bg-slate-800/40 border-slate-800/60 hover:bg-slate-800 hover:border-slate-700"
+            }`}
+          >
+            <span className="text-sm font-semibold text-slate-300 group-hover:text-white">
+              {product.name}
+            </span>
 
-              <div className="mt-4 max-h-[300px] overflow-y-auto pr-1 space-y-1.5 scrollbar-none">
-                {products.map((product, index) => (
-                  <div
-                    key={product.id}
-                    onClick={() => {
-                      if (!product.available) {
-                        setNotification({
-                          show: true,
-                          type: "error",
-                          message: `${product.name} is out of stock.`
-                        });
-                        return;
-                      }
-                      addToCart(product);
-                    }}
-                    className={`
-              flex
-              justify-between
-              items-center
-              p-3
-              rounded-xl
-              cursor-pointer
-              transition-all
-              duration-200
-              group
-              ${index === selectedProductIndex
-                        ? "bg-slate-600 border border-indigo-400 shadow-lg"
-                        : "bg-slate-800/40 border border-slate-800/60 hover:bg-slate-800 hover:border-slate-700 rounded-xl"
-                      }
-              `}
-                  >
-                    <span className="text-sm font-semibold text-slate-300 group-hover:text-white transition-colors">
-                      {product.name}
-                    </span>
-                    {!product.available && (
-                      <span className="text-[10px] text-red-400 font-bold">
-                        OUT OF STOCK
-                      </span>
-                    )}
+            {!product.available && (
+              <span className="text-[10px] text-red-400 font-bold">
+                OUT OF STOCK
+              </span>
+            )}
 
-                    <strong className="text-sm font-bold text-slate-200 group-hover:text-orange-400 transition-colors">
-                      ₹{product.price}
-                    </strong>
-                  </div>
-                ))}
-              </div>
-
-            </div>
+            <strong className="text-sm font-bold text-slate-200 group-hover:text-orange-400">
+              ₹{product.price}
+            </strong>
           </div>
+        ))}
+      </div>
+    </div>
+  ) : (
+    <BillingTouch
+      search={search}
+      setSearch={setSearch}
+      categories={categories}
+      selectedCategory={selectedCategory}
+      setSelectedCategory={setSelectedCategory}
+      filteredProducts={touchProducts}
+      addToCart={addToCart}
+      showCheckout={() => setShowTouchCart(true)}
+      openQuantityDialog={(item) => {
+        setSelectedQuantityItem(item);
+        setShowQuantityDialog(true);
+      }}
+      cartProps={{
+        cart,
+        totalAmount,
+        updateQuantity,
+        removeItem,
+        generateBill,
+        holdBill,
+        setShowHeldBills,
+        setSelectedCartItem,
+        setShowCustomize,
+        setComboCartItem,
+        setShowComboCustomize,
+      }}
+    />
+  )}
+</div>
 
-          {/* Right Column: Cart Table Box */}
-          <div className="lg:col-span-2">
-            <div
-              className="
-        bg-gradient-to-br
-        from-orange-300/30
-        via-white
-        to-indigo-300/30
-        backdrop-blur-md
-        border
-        border-white
-        rounded-[24px]
-        p-6
-        shadow-sm
-        "
-            >
-
-              <h2 className="text-xl font-bold tracking-normal text-slate-800 mb-4">
-                Cart
-              </h2>
-
-              {cart.length === 0 ? (
-                <div className="text-sm font-bold text-slate-400 py-12 text-center bg-white/40 border border-dashed border-slate-200 rounded-xl uppercase tracking-wider">
-                  No Items Added
-                </div>
-              ) : (
-                <div className="overflow-x-auto max-w-full">
-                  <table className="w-full text-sm">
-                    <thead className="text-slate-400 font-black text-[13px] tracking-wider uppercase">
-                      <tr>
-                        <th className="pb-3 text-left pl-2">Product</th>
-                        <th className="pb-3 text-center w-24">Qty</th>
-                        <th className="pb-3 text-center w-28">Options</th>
-                        <th className="pb-3 text-center w-24">Price</th>
-                        <th className="pb-3 text-center w-24">Total</th>
-                        <th className="pb-3 text-center w-24">Action</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {cart.map((item) => (
-                        <tr
-                          key={item.id}
-                          className={`
-                    transition-all
-                    duration-150
-                    
-                    bg-white/60 border-slate-500 rounded-l-xl
-                    hover:bg-white
-                    
-                    `}
-                        >
-                          <td className="p-3.5 font-bold text-slate-700 rounded-l-xl">
-                            {item.name}
-                          </td>
-                          <td className="p-3 text-center">
-                            <input
-                              type="number"
-                              min="1"
-                              value={item.quantity}
-                              onFocus={(e) => e.target.select()}
-                              onChange={(e) => updateQuantity(item.id, e.target.value)}
-                              className="
-                        w-16
-                        bg-slate-50
-                        border border-slate-200
-                        rounded-lg
-                        p-1.5
-                        text-center
-                        text-xs
-                        font-black
-                        text-slate-800
-                        outline-none
-                        focus:bg-white
-                        focus:border-indigo-400
-                        transition-all
-                        "
-                            />
-                          </td>
-
-                          {/* FIXED: Dedicated column with a clean, high-visibility button */}
-                          <td className="p-3 text-center">
-                            <button
-                              onClick={() => {
-                                if (item.product_type === "COMBO") {
-                                    setComboCartItem(item);
-                                    setShowComboCustomize(true);
-                                }
-                                else{
-                                    setSelectedCartItem(item);
-                                    setShowCustomize(true);
-                                }
-                              }}
-                              className="
-                              inline-flex
-                              items-center
-                              justify-center
-                              bg-indigo-50
-                              text-indigo-600
-                              hover:bg-indigo-100
-                              px-3
-                              py-1.5
-                              rounded-lg
-                              text-xs
-                              font-bold
-                              transition-all
-                              cursor-pointer
-                              "
-                            >
-                              Customize
-                            </button>
-                          </td>
-
-
-
-                          <td className="p-3 text-center font-bold text-slate-400">
-                            ₹{item.price}
-                          </td>
-
-                          <td className="p-3 text-center font-black text-slate-800">
-                            ₹{(Number(item.price) * item.quantity).toFixed(2)}
-                          </td>
-
-                          <td className="p-3 text-center rounded-r-xl">
-                            <button
-                              onClick={() => removeItem(item.id)}
-                              className="
-                        text-xs
-                        text-red-500
-                        font-black
-                        hover:text-red-600
-                        px-2
-                        py-1
-                        rounded-lg
-                        transition-all
-                        "
-                            >
-                              Remove
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              <div className="mt-6 border-t border-slate-200/50 pt-5">
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Grand Total</p>
-                    <h2 className="text-3xl font-black text-slate-800 tracking-tight mt-0.5">
-                      ₹{totalAmount.toFixed(2)}
-                    </h2>
-                  </div>
-
-
-                </div>
-
-                <div className="mt-5 flex gap-3 items-center">
-                  <button
-                    onClick={generateBill}
-                    className="
-            flex-1 
-            bg-gradient-to-r from-orange-500 to-indigo-600 
-            text-white 
-            py-3.5 
-            rounded-xl 
-            text-sm 
-            font-bold 
-            tracking-wide 
-            shadow-sm 
-            hover:opacity-95 
-            hover:scale-[1.002] 
-            transition-all 
-            duration-200
-            cursor-pointer
-            "
-                  >
-                    Generate Bill
-                  </button>
-
-                  <button
-                    onClick={holdBill}
-                    className="
-            flex-initial
-            bg-slate-500
-            text-white
-            px-5
-            py-3.5
-            rounded-xl
-            text-sm 
-            font-bold 
-            tracking-wide 
-            shadow-sm 
-            hover:bg-slate-700
-            hover:scale-[1.05] 
-            transition-all 
-            duration-200
-            cursor-pointer
-            "
-                  >
-                    Hold Bill
-                  </button>
-                  <button
-                    onClick={() => setShowHeldBills(true)}
-                    className="
-            flex-initial
-            bg-slate-500
-            text-white
-            px-5
-            py-3.5
-            rounded-xl
-            text-sm 
-            font-bold 
-            tracking-wide 
-            shadow-sm 
-            hover:bg-slate-700
-            hover:scale-[1.05] 
-            transition-all 
-            duration-200
-            cursor-pointer
-            "
-                  >
-                    View Held Bills
-                  </button>
-                </div>
-
-              </div>
-
-
-            </div>
-          </div>
+{/* Right Column Section: Only displays during classic view to match your precise requirements */}
+{layout === "classic" && (
+  <div className="lg:col-span-2">
+    <CartPanel
+      cart={cart}
+      totalAmount={totalAmount}
+      updateQuantity={updateQuantity}
+      removeItem={removeItem}
+      generateBill={generateBill}
+      holdBill={holdBill}
+      setShowHeldBills={setShowHeldBills}
+      setSelectedCartItem={setSelectedCartItem}
+      setShowCustomize={setShowCustomize}
+      setComboCartItem={setComboCartItem}
+      setShowComboCustomize={setShowComboCustomize}
+    />
+  </div>
+)}
 
         </div>
       </div>
@@ -1282,13 +1238,16 @@ function Billing() {
                       key={item.id}
                       type="button"
                       onClick={() => {
-                        // Direct toggle logic: adds row if missing, removes if already active
-                        if (isActive) {
-                          const idx = payments.findIndex(p => p.method === item.id);
-                          if (payments.length > 1) removePayment(idx);
-                        } else {
-                          addPayment(item.id);
-                        }
+
+                        const updated = [...payments];
+
+                        updated[selectedPaymentIndex] = {
+                          ...updated[selectedPaymentIndex],
+                          method: item.id,
+                        };
+
+                        setPayments(updated);
+
                       }}
                       className={`
                   w-full
@@ -1317,18 +1276,60 @@ function Billing() {
                   );
                 })}
               </div>
-
+              <div className="flex justify-end mb-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPayments((prev) => [
+                      ...prev,
+                      {
+                        method: "cash",
+                        amount: "",
+                      },
+                    ])
+                  }
+                  className="
+                  px-4
+                  py-2
+                  rounded-xl
+                  bg-indigo-50
+                  text-indigo-600
+                  text-xs
+                  font-bold
+                  hover:bg-indigo-100
+                  transition-all
+                  cursor-pointer
+                  "
+                >
+                  + Split Payment
+                </button>
+              </div>
               {/* Contextual Input Fields Stack */}
               <div className="space-y-2.5 max-h-[180px] overflow-y-auto pr-1">
                 {payments.map((payment, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-2xl p-4 transition-all"
+                    onClick={() => setSelectedPaymentIndex(index)}
+                    className={`
+                    flex
+                    items-center
+                    justify-between
+                    rounded-2xl
+                    p-4
+                    border
+                    transition-all
+                    cursor-pointer
+                    ${
+                      selectedPaymentIndex === index
+                        ? "border-indigo-500 bg-indigo-50"
+                        : "border-slate-200 bg-slate-50"
+                    }
+                  `}
                   >
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
                       <span className="text-sm font-black text-slate-700 uppercase tracking-wider">
-                        {payment.method} Split
+                        {payment.method} 
                       </span>
                     </div>
 
@@ -1895,6 +1896,50 @@ text-sm
           })
         }
       />
+      <QuantityDialog
+      product={selectedQuantityItem}
+      quantity={selectedQuantityItem?.quantity || 0}
+      onIncrease={increaseQuantity}
+      onDecrease={decreaseQuantity}
+      onRemove={removeFromDialog}
+      onUpdate={updateQuantityFromDialog}
+      onClose={() => {
+        setShowQuantityDialog(false);
+        setSelectedQuantityItem(null);
+      }}
+    />
+    <TouchCartDrawer
+      open={showTouchCart}
+      onClose={() => setShowTouchCart(false)}
+    >
+
+      <CartPanel
+        cart={cart}
+        totalAmount={totalAmount}
+        updateQuantity={updateQuantity}
+        removeItem={removeItem}
+        generateBill={() => {
+          setShowTouchCart(false);
+          generateBill();
+        }}
+        holdBill={holdBill}
+        setShowHeldBills={setShowHeldBills}
+        setSelectedCartItem={setSelectedCartItem}
+        setShowCustomize={setShowCustomize}
+        setComboCartItem={setComboCartItem}
+        setShowComboCustomize={setShowComboCustomize}
+      />
+
+    </TouchCartDrawer>
+    {layout === "touch" && (
+
+    <FloatingCheckoutButton
+      visible={cart.length > 0}
+      total={totalAmount}
+      onClick={() => setShowTouchCart(true)}
+    />
+
+  )}
     </MainLayout>
   );
 }

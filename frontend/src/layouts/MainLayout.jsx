@@ -4,11 +4,7 @@ import Navbar from "../components/Navbar";
 
 function MainLayout({ children }) {
   return (
-    /* 
-      FIXED: Changed w-screen to w-full and added overflow-x-hidden.
-      This forces the layout to clamp perfectly to the width of the display window 
-      and stops any side-to-side movement immediately.
-    */
+    
     <div className="h-screen w-full bg-slate-100 overflow-hidden flex antialiased">
       {/* Master Flex Layer Container */}
       <div className="flex w-full h-full max-w-full overflow-hidden relative">

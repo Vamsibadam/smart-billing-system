@@ -11,14 +11,17 @@ import {
 } from "../services/productService";
 import ComboModal from "../components/ComboModal";
 import Notification from "../components/Notification";
+import {
+  getCategories,
+  createCategory,
+  deleteCategory,
+} from "../services/categoryService";
 
 function Products() {
 
-  const [products, setProducts] =
-    useState([]);
+  const [products, setProducts] = useState([]);
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -28,10 +31,73 @@ function Products() {
 
 const [showComboModal, setShowComboModal] = useState(false);
 
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [categoryName, setCategoryName] = useState("");
+
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+const fetchCategories = async () => {
+  try {
+    const data = await getCategories();
+    setCategories(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
+const handleCreateCategory = async () => {
+  if (!categoryName.trim()) return;
 
+  try {
+    await createCategory({
+      name: categoryName,
+    });
+
+    setCategoryName("");
+
+    fetchCategories();
+
+    setNotification({
+      show: true,
+      type: "success",
+      message: "Category added successfully.",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    setNotification({
+      show: true,
+      type: "error",
+      message: "Unable to create category.",
+    });
+  }
+};
+const handleDeleteCategory = async (id) => {
+  try {
+    await deleteCategory(id);
+
+    fetchCategories();
+
+    setNotification({
+      show: true,
+      type: "success",
+      message: "Category deleted successfully.",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    setNotification({
+      show: true,
+      type: "error",
+      message: "Unable to delete category.",
+    });
+  }
+};
   const fetchProducts = async () => {
     try {
 
@@ -54,7 +120,7 @@ const [showComboModal, setShowComboModal] = useState(false);
         )
     );
 
-const [message, setMessage] = useState("");
+
 
     const [showAddModal, setShowAddModal] =
         useState(false);
@@ -65,6 +131,7 @@ const [message, setMessage] = useState("");
         price: "",
         status: "active",
         product_type: "PRODUCT",
+        category: "",
     });
 
     const handleCreateProduct =
@@ -75,7 +142,11 @@ const [message, setMessage] = useState("");
       await createProduct(
         newProduct
       );
-      setMessage("Product added successfully!");
+      setNotification({
+        show: true,
+        type: "success",
+        message: "Product added successfully.",
+      });
       setShowAddModal(false);
 
       setNewProduct({
@@ -94,11 +165,15 @@ const [message, setMessage] = useState("");
     error.response?.data
   );
 
-  alert(
-    JSON.stringify(
-      error.response?.data
-    )
-  );
+  setNotification({
+  show: true,
+  type: "error",
+  message:
+    error.response?.data?.name?.[0] ||
+    error.response?.data?.price?.[0] ||
+    error.response?.data?.category?.[0] ||
+    "Unable to create product.",
+});
 }
 };
 
@@ -121,6 +196,11 @@ const handleUpdateProduct =
       );
 
       fetchProducts();
+      setNotification({
+        show: true,
+        type: "success",
+        message: "Product updated successfully.",
+      });
 
       setShowEditModal(false);
 
@@ -128,9 +208,15 @@ const handleUpdateProduct =
 
       console.error(error);
 
-      alert(
-        "Failed to update product"
-      );
+      setNotification({
+        show: true,
+        type: "error",
+        message:
+          error.response?.data?.name?.[0] ||
+          error.response?.data?.price?.[0] ||
+          error.response?.data?.category?.[0] ||
+          "Unable to update product.",
+      });
     }
 };
 
@@ -151,14 +237,23 @@ const handleDeleteProduct =
       await deleteProduct(id);
 
       fetchProducts();
+      setNotification({
+        show: true,
+        type: "success",
+        message: "Product deleted successfully.",
+      });
 
     } catch (error) {
 
       console.error(error);
 
-      alert(
-        "Failed to delete product"
-      );
+      setNotification({
+        show: true,
+        type: "error",
+        message:
+          error.response?.data?.detail ||
+          "Unable to delete product.",
+      });
     }
 };
 
@@ -184,26 +279,6 @@ useEffect(() => {
 
   return (
     <MainLayout>
-      {message && (
-
-  <div
-    className="
-    bg-green-100
-    text-green-800
-    border
-    border-green-300
-    px-5
-    py-3
-    rounded-xl
-    mb-5
-    font-semibold
-    "
-  >
-    {message}
-  </div>
-
-)}
-
 <>
   {/* Modern Header Section */}
   <div className="flex justify-between items-center mb-8 relative z-10 px-2">
@@ -215,7 +290,26 @@ useEffect(() => {
         Manage inventory listings, base pricing structures, and stock availability metrics.
       </p>
     </div>
-   
+    <div className="flex gap-3">
+    <button
+      onClick={() => setShowCategoryModal(true)}
+      className="
+      bg-white
+      border
+      border-slate-200
+      text-slate-700
+      px-6
+      py-3.5
+      rounded-2xl
+      text-sm
+      font-bold
+      hover:bg-slate-50
+      transition-all
+      "
+    >
+      Categories
+    </button>
+
 
     <button
       onClick={() => setShowAddModal(true)}
@@ -237,7 +331,7 @@ useEffect(() => {
     >
       + Add Product
     </button>
-  </div>
+  </div></div>
 
   {/* Main Table Content Module */}
   <div 
@@ -286,6 +380,7 @@ useEffect(() => {
           <tr>
             <th className="pb-3 text-left pl-5 w-32">Product ID</th>
             <th className="pb-3 text-left">Product</th>
+            <th className="pb-3 text-left w-40">Category</th>
             <th className="pb-3 text-left w-36">Price</th>
             <th className="pb-3 text-left w-36">Status</th>
             <th className="pb-3 text-center w-44">Actions</th>
@@ -305,10 +400,16 @@ useEffect(() => {
       <td className="p-5 font-bold text-slate-700 text-base">
         {product.name}
       </td>
+      <td className="p-5">
+        <span className="inline-flex px-3 py-1 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-bold">
+          {product.category_name || "-"}
+        </span>
+      </td>
       
       <td className="p-5 font-black text-slate-800 text-base">
         ₹{Number(product.price).toLocaleString("en-IN")}
       </td>
+
       
       <td className="p-5">
         <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl border ${
@@ -529,6 +630,28 @@ useEffect(() => {
       <option value="COMBO">Combo Product</option>
     </select>
 
+    <select
+      value={newProduct.category}
+      onChange={(e) =>
+        setNewProduct({
+          ...newProduct,
+          category: e.target.value,
+        })
+      }
+      className="w-full border rounded-xl p-3 mb-6"
+    >
+      <option value="">Select Category</option>
+
+      {categories.map((category) => (
+        <option
+          key={category.id}
+          value={category.id}
+        >
+          {category.name}
+        </option>
+      ))}
+    </select>
+
 
       <div
         className="
@@ -651,6 +774,48 @@ useEffect(() => {
             className="w-full bg-slate-50/60 border border-slate-200 rounded-xl p-3 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-800"
           />
         </div>
+        <div>
+        <label className="text-sm font-semibold text-slate-600 mb-2 block">
+          Category
+        </label>
+
+        <select
+          value={selectedProduct.category || ""}
+          onChange={(e) =>
+            setSelectedProduct({
+              ...selectedProduct,
+              category: e.target.value,
+            })
+          }
+          className="
+          w-full
+          bg-slate-50/60
+          border
+          border-slate-200
+          rounded-xl
+          p-3
+          outline-none
+          focus:bg-white
+          focus:border-indigo-500
+          transition-all
+          font-medium
+          text-slate-800
+          "
+        >
+          <option value="">
+            Select Category
+          </option>
+
+          {categories.map((category) => (
+            <option
+              key={category.id}
+              value={category.id}
+            >
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
         <div>
           <label className="text-sm font-semibold text-slate-600 mb-2 block">
@@ -760,6 +925,70 @@ useEffect(() => {
     }))
   }
 />
+{showCategoryModal && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+    <div className="bg-white rounded-2xl w-[500px] p-8">
+
+      <h2 className="text-2xl font-black mb-6">
+        Product Categories
+      </h2>
+
+      <div className="flex gap-3 mb-6">
+
+        <input
+          value={categoryName}
+          onChange={(e)=>setCategoryName(e.target.value)}
+          placeholder="Category name"
+          className="flex-1 border rounded-xl p-3"
+        />
+
+        <button
+          onClick={handleCreateCategory}
+          className="bg-indigo-600 text-white px-5 rounded-xl"
+        >
+          Add
+        </button>
+
+      </div>
+
+      <div className="space-y-2 max-h-72 overflow-y-auto">
+
+        {categories.map(category=>(
+          <div
+            key={category.id}
+            className="flex justify-between items-center border rounded-xl p-3"
+          >
+
+            <span>{category.name}</span>
+
+            <button
+              onClick={()=>handleDeleteCategory(category.id)}
+              className="text-red-500"
+            >
+              Delete
+            </button>
+
+          </div>
+        ))}
+
+      </div>
+
+      <div className="flex justify-end mt-6">
+
+        <button
+          onClick={()=>setShowCategoryModal(false)}
+          className="border rounded-xl px-5 py-3"
+        >
+          Close
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
 
     </MainLayout>
   );
