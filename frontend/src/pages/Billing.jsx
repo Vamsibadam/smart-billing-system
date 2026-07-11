@@ -152,6 +152,18 @@ useEffect(() => {
     }
 
   };
+  const [posMode, setPosMode] = useState(
+  localStorage.getItem("pos_mode") === "true"
+);
+useEffect(() => {
+
+  localStorage.setItem("pos_mode", posMode);
+
+  window.dispatchEvent(
+    new Event("pos-mode-change")
+  );
+
+}, [posMode]);
 
   const [generatedBill,setGeneratedBill] = useState(null);
   const [showBillModal,setShowBillModal] = useState(false);
@@ -1014,6 +1026,23 @@ const updateQuantityFromDialog = (newQuantity) => {
             Billing
           </h1>
             <div className="flex items-center gap-3">
+              <button
+              onClick={() => setPosMode(!posMode)}
+              className="
+              bg-slate-900
+              hover:bg-slate-800
+              text-white
+              px-5
+              py-3
+              rounded-2xl
+              text-sm
+              font-bold
+              transition-all
+              cursor-pointer
+              "
+            >
+              {posMode ? "🡸 Exit POS" : "⛶ Enter POS"}
+            </button>
 
             <button
               onClick={() =>

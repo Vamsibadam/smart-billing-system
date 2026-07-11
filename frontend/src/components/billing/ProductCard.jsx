@@ -1,6 +1,6 @@
 function ProductCard({
   product,
-  cart = [], // Defensive default to prevent errors if cart array is uninitialized
+  cart = [], 
   onClick,
   onBadgeClick,
 }) {
@@ -25,7 +25,7 @@ function ProductCard({
 
       {/* Product Content Title Header */}
       <div className="w-full">
-        <h3 className="line-clamp-2 text-base font-black tracking-tight text-slate-800 transition-colors duration-200 group-hover:text-slate-900 xl:text-lg">
+        <h3 className="line-clamp-2 text-base font-black tracking-tight text-slate-800 transition-colors duration-200 group-hover:text-slate-900 xl:text-2xl">
           {product.name}
         </h3>
       </div>

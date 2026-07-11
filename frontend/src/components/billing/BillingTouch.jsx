@@ -31,8 +31,8 @@ function BillingTouch({
 
       <div className="flex items-start gap-6">
         <div className="flex-1">
-          {/* Responsive Layout Grid: Scales from 2 columns on small screens up to exactly 5 on desktop viewports */}
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+         
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}

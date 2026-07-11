@@ -53,7 +53,7 @@ function CartPanel({
                     
                     `}
                         >
-                          <td className="p-3.5 font-bold text-slate-700 rounded-l-xl">
+                          <td className="p-3.5 font-bold text-slate-700 rounded-l-xl text-lg">
                             {item.name}
                           </td>
                           <td className="p-3 text-center">
@@ -128,7 +128,7 @@ function CartPanel({
                             <button
                               onClick={() => removeItem(item.id)}
                               className="
-                        text-xs
+                        text-s
                         text-red-500
                         font-black
                         hover:text-red-600
