@@ -26,6 +26,7 @@ import CartPanel from "../components/billing/CartPanel";
 import QuantityDialog from "../components/billing/QuantityDialog";
 import TouchCartDrawer from "../components/billing/TouchCartDrawer";
 import FloatingCheckoutButton from "../components/billing/FloatingCheckoutButton";
+import CashBook from "../components/billing/CashBook";
 
 
 function Billing() {
@@ -37,7 +38,7 @@ function Billing() {
   const [products, setProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
 
-  const [cart, setCart] =  useState([]);
+  const [cart, setCart] = useState([]);
 
   const [showShortcuts, setShowShortcuts] = useState(false);
 
@@ -56,49 +57,52 @@ function Billing() {
   const [selectedCartItem, setSelectedCartItem] = useState(null);
   const [showQuantityDialog, setShowQuantityDialog] = useState(false);
 
-const [selectedQuantityItem, setSelectedQuantityItem] = useState(null);
+  const [selectedQuantityItem, setSelectedQuantityItem] = useState(null);
   const [showComboCustomize, setShowComboCustomize] = useState(false);
 
   const [comboCartItem, setComboCartItem] = useState(null);
 
   const [layout, setLayout] = useState(() => {
-  return localStorage.getItem("billing_layout") || "classic";
-});
-useEffect(() => {
-  localStorage.setItem("billing_layout", layout);
-}, [layout]);
+    return localStorage.getItem("billing_layout") || "classic";
+  });
+  useEffect(() => {
+    localStorage.setItem("billing_layout", layout);
+  }, [layout]);
+
+  const [billingView, setBillingView] = useState("classic");
+  useEffect(() => { setBillingView(layout); }, [layout]);
 
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categories, setCategories] = useState([]);
   const [showTouchCart, setShowTouchCart] = useState(false);
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState(0);
-  
+
 
   const fetchCategories = async () => {
-  try {
-    const data = await getCategories();
-    setCategories(data);
-  } catch (error) {
-    console.error(error);
-  }
-};
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
- const saveCustomization = (overrides) => {
-  setCart((prev) =>
-    prev.map((item) =>
-      item.id === selectedCartItem.id
-        ? {
+  const saveCustomization = (overrides) => {
+    setCart((prev) =>
+      prev.map((item) =>
+        item.id === selectedCartItem.id
+          ? {
             ...item,
             recipe: selectedCartItem.recipe,
             combo_overrides: selectedCartItem.combo_overrides || [],
             ingredient_overrides: overrides,
           }
-        : item
-    )
-  );
-  setShowCustomize(false);
-  setSelectedCartItem(null);
-};
+          : item
+      )
+    );
+    setShowCustomize(false);
+    setSelectedCartItem(null);
+  };
 
   const handleSearchKeyDown = (e) => {
 
@@ -153,22 +157,22 @@ useEffect(() => {
 
   };
   const [posMode, setPosMode] = useState(
-  localStorage.getItem("pos_mode") === "true"
-);
-useEffect(() => {
-
-  localStorage.setItem("pos_mode", posMode);
-
-  window.dispatchEvent(
-    new Event("pos-mode-change")
+    localStorage.getItem("pos_mode") === "true"
   );
+  useEffect(() => {
 
-}, [posMode]);
+    localStorage.setItem("pos_mode", posMode);
 
-  const [generatedBill,setGeneratedBill] = useState(null);
-  const [showBillModal,setShowBillModal] = useState(false);
-  const [cartLoaded,setCartLoaded] =useState(false);
-  const [showPaymentModal, setShowPaymentModal] =useState(false);
+    window.dispatchEvent(
+      new Event("pos-mode-change")
+    );
+
+  }, [posMode]);
+
+  const [generatedBill, setGeneratedBill] = useState(null);
+  const [showBillModal, setShowBillModal] = useState(false);
+  const [cartLoaded, setCartLoaded] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const [payments, setPayments] =
     useState([
@@ -237,23 +241,23 @@ useEffect(() => {
 
   useEffect(() => {
 
-  if (layout !== "classic") {
-    return;
-  }
+    if (layout !== "classic") {
+      return;
+    }
 
-  if (search.trim().length > 0) {
+    if (search.trim().length > 0) {
 
-    fetchProducts();
+      fetchProducts();
 
-  } else {
+    } else {
 
-    setProducts([]);
+      setProducts([]);
 
-    setSelectedProductIndex(0);
+      setSelectedProductIndex(0);
 
-  }
+    }
 
-}, [search, layout]);
+  }, [search, layout]);
 
   const fetchAllProducts = async () => {
     try {
@@ -273,83 +277,83 @@ useEffect(() => {
       console.error(error);
     }
   };
-    useEffect(() => {
+  useEffect(() => {
 
     fetchCategories();
     fetchAllProducts();
 
   }, []);
 
-const touchProducts = allProducts.filter((product) => {
+  const touchProducts = allProducts.filter((product) => {
 
-  const matchesCategory =
-    selectedCategory === null ||
-    product.category === selectedCategory;
+    const matchesCategory =
+      selectedCategory === null ||
+      product.category === selectedCategory;
 
-  const matchesSearch =
-    product.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const matchesSearch =
+      product.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
-  return (
-    matchesCategory &&
-    matchesSearch
-  );
+    return (
+      matchesCategory &&
+      matchesSearch
+    );
 
-});
+  });
 
   const addToCart = async (product) => {
 
-  const existing = cart.find(
-    (item) => item.id === product.id
-  );
+    const existing = cart.find(
+      (item) => item.id === product.id
+    );
 
-  if (existing) {
+    if (existing) {
 
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === product.id
-          ? {
+      setCart((prev) =>
+        prev.map((item) =>
+          item.id === product.id
+            ? {
               ...item,
               quantity: item.quantity + 1,
             }
-          : item
-      )
-    );
+            : item
+        )
+      );
 
-    return;
-  }
+      return;
+    }
 
-  try {
+    try {
 
-    const recipe = await getCustomization(product.id);
+      const recipe = await getCustomization(product.id);
 
-    const cartItem = {
-      ...product,
-      quantity: 1,
-      recipe,
-      ingredient_overrides: [],
-      combo_overrides: [],
-    };
+      const cartItem = {
+        ...product,
+        quantity: 1,
+        recipe,
+        ingredient_overrides: [],
+        combo_overrides: [],
+      };
 
-    setCart((prev) => [
-      ...prev,
-      cartItem,
-    ]);
+      setCart((prev) => [
+        ...prev,
+        cartItem,
+      ]);
 
-  } catch (err) {
+    } catch (err) {
 
-    console.error(err);
+      console.error(err);
 
-  }
+    }
 
-  setSearch("");
-  setProducts([]);
-  setSelectedProductIndex(0);
+    setSearch("");
+    setProducts([]);
+    setSelectedProductIndex(0);
 
-  searchInputRef.current?.focus();
+    searchInputRef.current?.focus();
 
-};
+  };
   const updateQuantity =
     (
       id,
@@ -396,85 +400,85 @@ const touchProducts = allProducts.filter((product) => {
       );
       setSelectedCartIndex(0);
     };
-    const increaseQuantity = () => {
+  const increaseQuantity = () => {
 
-  setCart((prev) =>
-    prev.map((item) =>
-      item.id === selectedQuantityItem.id
-        ? {
+    setCart((prev) =>
+      prev.map((item) =>
+        item.id === selectedQuantityItem.id
+          ? {
             ...item,
             quantity: item.quantity + 1,
           }
-        : item
-    )
-  );
+          : item
+      )
+    );
 
-  setSelectedQuantityItem((prev) => ({
-    ...prev,
-    quantity: prev.quantity + 1,
-  }));
+    setSelectedQuantityItem((prev) => ({
+      ...prev,
+      quantity: prev.quantity + 1,
+    }));
 
-};
+  };
 
-const decreaseQuantity = () => {
+  const decreaseQuantity = () => {
 
-  if (selectedQuantityItem.quantity === 1) {
-    return;
-  }
+    if (selectedQuantityItem.quantity === 1) {
+      return;
+    }
 
-  setCart((prev) =>
-    prev.map((item) =>
-      item.id === selectedQuantityItem.id
-        ? {
+    setCart((prev) =>
+      prev.map((item) =>
+        item.id === selectedQuantityItem.id
+          ? {
             ...item,
             quantity: item.quantity - 1,
           }
-        : item
-    )
-  );
+          : item
+      )
+    );
 
-  setSelectedQuantityItem((prev) => ({
-    ...prev,
-    quantity: prev.quantity - 1,
-  }));
+    setSelectedQuantityItem((prev) => ({
+      ...prev,
+      quantity: prev.quantity - 1,
+    }));
 
-};
+  };
 
-const removeFromDialog = () => {
+  const removeFromDialog = () => {
 
-  removeItem(selectedQuantityItem.id);
+    removeItem(selectedQuantityItem.id);
 
-  setShowQuantityDialog(false);
+    setShowQuantityDialog(false);
 
-  setSelectedQuantityItem(null);
+    setSelectedQuantityItem(null);
 
-};  
-const updateQuantityFromDialog = (newQuantity) => {
+  };
+  const updateQuantityFromDialog = (newQuantity) => {
 
-  if (
-    !newQuantity ||
-    newQuantity < 1
-  ) {
-    return;
-  }
+    if (
+      !newQuantity ||
+      newQuantity < 1
+    ) {
+      return;
+    }
 
-  setCart((prev) =>
-    prev.map((item) =>
-      item.id === selectedQuantityItem.id
-        ? {
+    setCart((prev) =>
+      prev.map((item) =>
+        item.id === selectedQuantityItem.id
+          ? {
             ...item,
             quantity: Number(newQuantity),
           }
-        : item
-    )
-  );
+          : item
+      )
+    );
 
-  setSelectedQuantityItem((prev) => ({
-    ...prev,
-    quantity: Number(newQuantity),
-  }));
+    setSelectedQuantityItem((prev) => ({
+      ...prev,
+      quantity: Number(newQuantity),
+    }));
 
-};
+  };
 
   const totalAmount =
     cart.reduce(
@@ -1025,8 +1029,8 @@ const updateQuantityFromDialog = (newQuantity) => {
           <h1 className="text-3xl font-black tracking-tight text-slate-800">
             Billing
           </h1>
-            <div className="flex items-center gap-3">
-              <button
+          <div className="flex items-center gap-3">
+            <button
               onClick={() => setPosMode(!posMode)}
               className="
               bg-slate-900
@@ -1045,13 +1049,15 @@ const updateQuantityFromDialog = (newQuantity) => {
             </button>
 
             <button
-              onClick={() =>
-                setLayout(
+              onClick={() => {
+                const nextLayout =
                   layout === "classic"
                     ? "touch"
-                    : "classic"
-                )
-              }
+                    : "classic";
+                setLayout(nextLayout);
+                setBillingView(nextLayout);
+
+              }}
               className="
               bg-gradient-to-r
               from-orange-500
@@ -1068,158 +1074,181 @@ const updateQuantityFromDialog = (newQuantity) => {
                 ? "Touch POS"
                 : "Classic POS"}
             </button>
-          <button
-            onClick={() =>
-              setShowShortcuts(
-                !showShortcuts
-              )
-            }
-            className="
-    bg-white
-    border
-    border-slate-200
-    px-4
-    py-2
-    rounded-xl
-    text-sm
-    font-semibold
-    shadow-sm
-    hover:bg-slate-50
-    transition
-    "
-          >
-
-            <div className="flex items-center gap-2">
-              <Keyboard size={18} />
-              Shortcuts
-
-              {
-                showShortcuts
-                  ?
-                  <ChevronUp size={16} />
-                  :
-                  <ChevronDown size={16} />
+            <button
+              onClick={() => setBillingView("cashbook")}
+              className={`
+            px-5
+            py-3
+            rounded-2xl
+            text-sm
+            font-bold
+            transition-all
+            cursor-pointer
+            ${billingView === "cashbook"
+                  ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white"
+                  : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                }
+            `}
+            >
+              💸 Cash Book
+            </button>
+            <button
+              onClick={() =>
+                setShowShortcuts(
+                  !showShortcuts
+                )
               }
+              className="
+              bg-white
+              border
+              border-slate-200
+              px-4
+              py-2
+              rounded-xl
+              text-sm
+              font-semibold
+              shadow-sm
+              hover:bg-slate-50
+              transition
+              "
+            >
 
-            </div>
+              <div className="flex items-center gap-2">
+                <Keyboard size={18} />
+                Shortcuts
 
-          </button>
+                {
+                  showShortcuts
+                    ?
+                    <ChevronUp size={16} />
+                    :
+                    <ChevronDown size={16} />
+                }
+
+              </div>
+
+            </button>
+          </div>
         </div>
-        </div>
-              
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-full overflow-hidden pb-6 relative z-10 items-start">
 
-{/* Left Column Section: Dynamically stretches to full screen size if it is in touch mode */}
-<div className={layout === "classic" ? "lg:col-span-1" : "lg:col-span-3"}>
-  {layout === "classic" ? (
-    <div className="bg-slate-900 backdrop-blur-md border border-slate-800 rounded-[24px] p-6 shadow-sm">
-      <h2 className="text-lg font-black tracking-tight text-white mb-4">
-        Product Search
-      </h2>
+          {/* Left Column Section: Dynamically stretches to full screen size if it is in touch mode */}
+          <div className={layout === "classic" ? "lg:col-span-1" : "lg:col-span-3"}>
+            {billingView === "classic" ? (
+              <div className="bg-slate-900 backdrop-blur-md border border-slate-800 rounded-[24px] p-6 shadow-sm">
+                <h2 className="text-lg font-black tracking-tight text-white mb-4">
+                  Product Search
+                </h2>
 
-      <div className="relative w-full">
-        <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-          <Search size={18} />
-        </div>
+                <div className="relative w-full">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                    <Search size={18} />
+                  </div>
 
-        <input
-          ref={searchInputRef}
-          type="text"
-          placeholder="Search Product..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={handleSearchKeyDown}
-          className="w-full bg-white/20 border border-slate-800 text-white rounded-xl p-3.5 pl-11 text-sm font-semibold placeholder:text-slate-500 outline-none focus:bg-white/15 focus:border-indigo-500 transition-all"
-        />
-      </div>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Search Product..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                    className="w-full bg-white/20 border border-slate-800 text-white rounded-xl p-3.5 pl-11 text-sm font-semibold placeholder:text-slate-500 outline-none focus:bg-white/15 focus:border-indigo-500 transition-all"
+                  />
+                </div>
 
-      <div className="mt-4 max-h-[300px] overflow-y-auto pr-1 space-y-1.5 scrollbar-none">
-        {products.map((product, index) => (
-          <div
-            key={product.id}
-            onClick={() => {
-              if (!product.available) {
-                setNotification({
-                  show: true,
-                  type: "error",
-                  message: `${product.name} is out of stock.`,
-                });
-                return;
-              }
-              addToCart(product);
-            }}
-            className={`flex justify-between items-center p-3 rounded-xl cursor-pointer transition-all duration-200 group border ${
-              index === selectedProductIndex
-                ? "bg-slate-600 border-indigo-400 shadow-lg"
-                : "bg-slate-800/40 border-slate-800/60 hover:bg-slate-800 hover:border-slate-700"
-            }`}
-          >
-            <span className="text-sm font-semibold text-slate-300 group-hover:text-white">
-              {product.name}
-            </span>
+                <div className="mt-4 max-h-[300px] overflow-y-auto pr-1 space-y-1.5 scrollbar-none">
+                  {products.map((product, index) => (
+                    <div
+                      key={product.id}
+                      onClick={() => {
+                        if (!product.available) {
+                          setNotification({
+                            show: true,
+                            type: "error",
+                            message: `${product.name} is out of stock.`,
+                          });
+                          return;
+                        }
+                        addToCart(product);
+                      }}
+                      className={`flex justify-between items-center p-3 rounded-xl cursor-pointer transition-all duration-200 group border ${index === selectedProductIndex
+                        ? "bg-slate-600 border-indigo-400 shadow-lg"
+                        : "bg-slate-800/40 border-slate-800/60 hover:bg-slate-800 hover:border-slate-700"
+                        }`}
+                    >
+                      <span className="text-sm font-semibold text-slate-300 group-hover:text-white">
+                        {product.name}
+                      </span>
 
-            {!product.available && (
-              <span className="text-[10px] text-red-400 font-bold">
-                OUT OF STOCK
-              </span>
+                      {!product.available && (
+                        <span className="text-[10px] text-red-400 font-bold">
+                          OUT OF STOCK
+                        </span>
+                      )}
+
+                      <strong className="text-sm font-bold text-slate-200 group-hover:text-orange-400">
+                        ₹{product.price}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : billingView === "touch" ? (
+
+              <BillingTouch
+                search={search}
+                setSearch={setSearch}
+                categories={categories}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                filteredProducts={touchProducts}
+                addToCart={addToCart}
+                openQuantityDialog={(item) => {
+                  setSelectedQuantityItem(item);
+                  setShowQuantityDialog(true);
+                }}
+                showCheckout={() => setShowTouchCart(true)}
+                cartProps={{
+                  cart,
+                  totalAmount,
+                  updateQuantity,
+                  removeItem,
+                  generateBill,
+                  holdBill,
+                  setShowHeldBills,
+                  setSelectedCartItem,
+                  setShowCustomize,
+                  setComboCartItem,
+                  setShowComboCustomize,
+                }}
+              />
+
+            ) : (
+
+              <CashBook />
+
             )}
-
-            <strong className="text-sm font-bold text-slate-200 group-hover:text-orange-400">
-              ₹{product.price}
-            </strong>
           </div>
-        ))}
-      </div>
-    </div>
-  ) : (
-    <BillingTouch
-      search={search}
-      setSearch={setSearch}
-      categories={categories}
-      selectedCategory={selectedCategory}
-      setSelectedCategory={setSelectedCategory}
-      filteredProducts={touchProducts}
-      addToCart={addToCart}
-      showCheckout={() => setShowTouchCart(true)}
-      openQuantityDialog={(item) => {
-        setSelectedQuantityItem(item);
-        setShowQuantityDialog(true);
-      }}
-      cartProps={{
-        cart,
-        totalAmount,
-        updateQuantity,
-        removeItem,
-        generateBill,
-        holdBill,
-        setShowHeldBills,
-        setSelectedCartItem,
-        setShowCustomize,
-        setComboCartItem,
-        setShowComboCustomize,
-      }}
-    />
-  )}
-</div>
 
-{/* Right Column Section: Only displays during classic view to match your precise requirements */}
-{layout === "classic" && (
-  <div className="lg:col-span-2">
-    <CartPanel
-      cart={cart}
-      totalAmount={totalAmount}
-      updateQuantity={updateQuantity}
-      removeItem={removeItem}
-      generateBill={generateBill}
-      holdBill={holdBill}
-      setShowHeldBills={setShowHeldBills}
-      setSelectedCartItem={setSelectedCartItem}
-      setShowCustomize={setShowCustomize}
-      setComboCartItem={setComboCartItem}
-      setShowComboCustomize={setShowComboCustomize}
-    />
-  </div>
-)}
+          {/* Right Column Section: Only displays during classic view to match your precise requirements */}
+          {layout === "classic" && (
+            <div className="lg:col-span-2">
+              <CartPanel
+                cart={cart}
+                totalAmount={totalAmount}
+                updateQuantity={updateQuantity}
+                removeItem={removeItem}
+                generateBill={generateBill}
+                holdBill={holdBill}
+                setShowHeldBills={setShowHeldBills}
+                setSelectedCartItem={setSelectedCartItem}
+                setShowCustomize={setShowCustomize}
+                setComboCartItem={setComboCartItem}
+                setShowComboCustomize={setShowComboCustomize}
+              />
+            </div>
+          )}
 
         </div>
       </div>
@@ -1348,17 +1377,16 @@ const updateQuantityFromDialog = (newQuantity) => {
                     border
                     transition-all
                     cursor-pointer
-                    ${
-                      selectedPaymentIndex === index
+                    ${selectedPaymentIndex === index
                         ? "border-indigo-500 bg-indigo-50"
                         : "border-slate-200 bg-slate-50"
-                    }
+                      }
                   `}
                   >
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
                       <span className="text-sm font-black text-slate-700 uppercase tracking-wider">
-                        {payment.method} 
+                        {payment.method}
                       </span>
                     </div>
 
@@ -1408,8 +1436,8 @@ const updateQuantityFromDialog = (newQuantity) => {
             <div className="mt-6">
               {/* Dynamic Status Bar Card */}
               <div className={`p-4 rounded-2xl border flex justify-between items-center transition-all ${Math.abs(remainingAmount) <= 0.01
-                  ? "bg-emerald-50/50 border-emerald-200/60 text-emerald-900"
-                  : "bg-red-50/50 border-red-200/60 text-red-900"
+                ? "bg-emerald-50/50 border-emerald-200/60 text-emerald-900"
+                : "bg-red-50/50 border-red-200/60 text-red-900"
                 }`}>
                 <div>
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
@@ -1475,7 +1503,7 @@ const updateQuantityFromDialog = (newQuantity) => {
             </div>
 
           </div>
-        </div>,document.body
+        </div>, document.body
       )}
 
       {showBillModal && generatedBill && createPortal(
@@ -1660,7 +1688,7 @@ const updateQuantityFromDialog = (newQuantity) => {
             </div>
 
           </div>
-        </div>,document.body
+        </div>, document.body
       )}
 
 
@@ -1858,49 +1886,49 @@ text-sm
               </div>
             )}
           </div>
-        </div>,document.body
+        </div>, document.body
       )}
       {showComboCustomize &&
         comboCartItem && (
-        <ComboCustomizationModal
+          <ComboCustomizationModal
             product={comboCartItem}
             comboItems={comboCartItem.recipe}
-            onClose={()=>{
-                setShowComboCustomize(false);
+            onClose={() => {
+              setShowComboCustomize(false);
             }}
             onContinue={async (selectedProducts) => {
-                  try {
-                    const recipeGroups = await Promise.all(
-                      selectedProducts.map(async (item) => {
-                        const recipe = await getCustomization(
-                          item.product_id
-                        );
-                        return recipe[0];
-                      })
+              try {
+                const recipeGroups = await Promise.all(
+                  selectedProducts.map(async (item) => {
+                    const recipe = await getCustomization(
+                      item.product_id
                     );
-                    const updatedCart = cart.map((cartItem) =>
-                      cartItem.id === comboCartItem.id
-                        ? {
-                            ...cartItem,
-                            recipe: recipeGroups,
-                            combo_overrides: selectedProducts,
-                          }
-                        : cartItem
-                    );
-                    setCart(updatedCart);
-                    const updatedItem = updatedCart.find(
-                      (i) => i.id === comboCartItem.id
-                    );
-                    setSelectedCartItem(updatedItem);
-                    setShowComboCustomize(false);
-                    setShowCustomize(true);
-                  } catch (error) {
-                    console.error(error);
-                  }
-                }}
-                        />
-                        )
-                        }
+                    return recipe[0];
+                  })
+                );
+                const updatedCart = cart.map((cartItem) =>
+                  cartItem.id === comboCartItem.id
+                    ? {
+                      ...cartItem,
+                      recipe: recipeGroups,
+                      combo_overrides: selectedProducts,
+                    }
+                    : cartItem
+                );
+                setCart(updatedCart);
+                const updatedItem = updatedCart.find(
+                  (i) => i.id === comboCartItem.id
+                );
+                setSelectedCartItem(updatedItem);
+                setShowComboCustomize(false);
+                setShowCustomize(true);
+              } catch (error) {
+                console.error(error);
+              }
+            }}
+          />
+        )
+      }
 
       {showCustomize && (
         <IngredientCustomizationModal
@@ -1926,49 +1954,49 @@ text-sm
         }
       />
       <QuantityDialog
-      product={selectedQuantityItem}
-      quantity={selectedQuantityItem?.quantity || 0}
-      onIncrease={increaseQuantity}
-      onDecrease={decreaseQuantity}
-      onRemove={removeFromDialog}
-      onUpdate={updateQuantityFromDialog}
-      onClose={() => {
-        setShowQuantityDialog(false);
-        setSelectedQuantityItem(null);
-      }}
-    />
-    <TouchCartDrawer
-      open={showTouchCart}
-      onClose={() => setShowTouchCart(false)}
-    >
-
-      <CartPanel
-        cart={cart}
-        totalAmount={totalAmount}
-        updateQuantity={updateQuantity}
-        removeItem={removeItem}
-        generateBill={() => {
-          setShowTouchCart(false);
-          generateBill();
+        product={selectedQuantityItem}
+        quantity={selectedQuantityItem?.quantity || 0}
+        onIncrease={increaseQuantity}
+        onDecrease={decreaseQuantity}
+        onRemove={removeFromDialog}
+        onUpdate={updateQuantityFromDialog}
+        onClose={() => {
+          setShowQuantityDialog(false);
+          setSelectedQuantityItem(null);
         }}
-        holdBill={holdBill}
-        setShowHeldBills={setShowHeldBills}
-        setSelectedCartItem={setSelectedCartItem}
-        setShowCustomize={setShowCustomize}
-        setComboCartItem={setComboCartItem}
-        setShowComboCustomize={setShowComboCustomize}
       />
+      <TouchCartDrawer
+        open={showTouchCart}
+        onClose={() => setShowTouchCart(false)}
+      >
 
-    </TouchCartDrawer>
-    {layout === "touch" && (
+        <CartPanel
+          cart={cart}
+          totalAmount={totalAmount}
+          updateQuantity={updateQuantity}
+          removeItem={removeItem}
+          generateBill={() => {
+            setShowTouchCart(false);
+            generateBill();
+          }}
+          holdBill={holdBill}
+          setShowHeldBills={setShowHeldBills}
+          setSelectedCartItem={setSelectedCartItem}
+          setShowCustomize={setShowCustomize}
+          setComboCartItem={setComboCartItem}
+          setShowComboCustomize={setShowComboCustomize}
+        />
 
-    <FloatingCheckoutButton
-      visible={cart.length > 0}
-      total={totalAmount}
-      onClick={() => setShowTouchCart(true)}
-    />
+      </TouchCartDrawer>
+      {layout === "touch" && (
 
-  )}
+        <FloatingCheckoutButton
+          visible={cart.length > 0}
+          total={totalAmount}
+          onClick={() => setShowTouchCart(true)}
+        />
+
+      )}
     </MainLayout>
   );
 }

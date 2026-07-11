@@ -64,6 +64,10 @@ urlpatterns = [
     "api/ingredients/",
     include("ingredients.urls")
 ),
+    path(
+        "api/expenses/",
+        include("expenses.urls")
+    ),
 ]
 urlpatterns += static(
     settings.MEDIA_URL,
