@@ -5,6 +5,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useRef } from "react";
+import { toPng } from "html-to-image";
+import { Download } from "lucide-react";
 
 // Vibrant gradient palette mapping configurations for the visual indicators
 const VISUAL_COLORS = [
@@ -18,14 +21,37 @@ const VISUAL_COLORS = [
 // Flat equivalent hex colors optimized specifically for SVG rendering nodes
 const SVG_COLORS = ["#6366F1", "#14B8A6", "#0EA5E9", "#F59E0B", "#F43F5E"];
 
+
 function PaymentChart({ data }) {
   const total = data.reduce(
     (sum, item) => sum + Number(item.amount || 0),
     0
   );
+  const chartRef = useRef(null);
+const downloadChart = async () => {
+  if (!chartRef.current) return;
+
+  try {
+    const dataUrl = await toPng(chartRef.current, {
+      cacheBust: true,
+      pixelRatio: 3, // High quality
+    });
+
+    const link = document.createElement("a");
+
+    link.download = `Payment Summary ${new Date().toLocaleDateString("en-IN")}.png`;
+
+    link.href = dataUrl;
+
+    link.click();
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   return (
     <div
+      ref={chartRef}
       className="
       relative
       overflow-hidden
@@ -60,12 +86,43 @@ function PaymentChart({ data }) {
             Revenue by Channels
           </h4>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 border border-slate-100 shadow-xs rounded-2xl">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse" />
-          <span className="text-[10px] font-extrabold tracking-wider uppercase text-slate-600">
+        <div className="flex items-center gap-3">
+
+    <button
+        onClick={downloadChart}
+        className="
+        flex
+        items-center
+        gap-2
+        px-4
+        py-2
+        rounded-2xl
+        bg-white
+        border
+        border-slate-200
+        shadow-sm
+        hover:bg-slate-50
+        transition-all
+        cursor-pointer
+        "
+    >
+        <Download size={16}/>
+        <span className="text-xs font-bold">
+            Download
+        </span>
+    </button>
+
+    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 border border-slate-100 shadow-xs rounded-2xl">
+
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"/>
+
+        <span className="text-[10px] font-extrabold uppercase text-slate-600">
             Live Stream
-          </span>
-        </div>
+        </span>
+
+    </div>
+
+</div>
       </div>
 
       {/* Main Layout Grid */}

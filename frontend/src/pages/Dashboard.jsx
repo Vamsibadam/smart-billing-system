@@ -7,7 +7,7 @@ import PaymentChart from "../components/PaymentChart";
 import LowStockWidget from "../components/LowStockWidget";
 import SalesHeatmap from "../components/SalesHeatmap";
 import Loader from "../components/Loader";
-
+import { useNavigate } from "react-router-dom";
 import {
   getDashboardSummary,
   getSalesTrend,
@@ -39,6 +39,7 @@ function Dashboard() {
   const [heatmapData, setHeatmapData] = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
@@ -104,9 +105,48 @@ function Dashboard() {
               Business Dashboard
             </h1>
           </div>
+         <button 
+  onClick={() => navigate("/billing")}
+  className="
+  flex-1 
+  w-full 
+  sm:max-w-md 
+  flex 
+  items-center 
+  justify-center 
+  gap-3 
+  bg-slate-900 
+  text-white 
+  border border-slate-900
+  px-6
+  py-2.5 
+  rounded-2xl 
+  text-base 
+  font-bold 
+  tracking-wide 
+  shadow-sm 
+  hover:bg-transparent 
+  hover:text-slate-800 
+  hover:border-indigo-400/80
+  transition-all 
+  duration-200 
+  cursor-pointer 
+  self-stretch
+  "
+>
+
+  <span className="text-[13px] font-extrabold tracking-widest text-slate-400 uppercase pl-1">
+    Start Billing</span>
+     <span className="mt-2 text-slate-400 border-l border-slate-400/60">
+        Open POS and begin taking orders
+    </span>
+</button>
+
 
           <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200/60 shadow-3xs rounded-xl self-start sm:self-center">
+            
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+            
 
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
               System Synchronized

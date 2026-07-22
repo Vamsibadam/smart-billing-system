@@ -144,7 +144,7 @@ USE_I18N = True
 USE_TZ = True
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
-    default="https://smart-billing-system-six.vercel.app/"
+    default="https://smart-billing-system-six.vercel.app/,https://vamsi-nexbill.vercel.app/"
 ).split(",")
 
 # Static files (CSS, JavaScript, Images)

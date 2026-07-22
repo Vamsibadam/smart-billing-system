@@ -27,7 +27,7 @@ class DashboardSummaryAPIView(APIView):
 
         today = timezone.now().date()
 
-        week_start = today - timedelta(days=7)
+        week_start = today - timedelta(days=today.weekday())
 
         month_start = today.replace(day=1)
 
@@ -55,7 +55,7 @@ class DashboardSummaryAPIView(APIView):
             )["total"] or 0
         )
 
-        total_transactions = Transaction.objects.count()
+        total_transactions = Transaction.objects.filter( created_at__date__gte=month_start).count()
 
         return Response({
             "today_sales": today_sales,

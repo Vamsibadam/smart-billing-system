@@ -1031,6 +1031,49 @@ function Billing() {
           </h1>
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setShowHeldBills(true)}
+              className="
+              bg-white
+              border
+              border-slate-200
+              px-5
+              py-3
+              rounded-2xl
+              text-sm
+              font-bold
+              shadow-sm
+              hover:bg-slate-50
+              transition-all
+              cursor-pointer
+              "
+            >
+
+              🧾 Held Bills
+
+              {heldBills.length > 0 && (
+
+                <span
+                  className="
+                  ml-2
+                  inline-flex
+                  items-center
+                  justify-center
+                  w-6
+                  h-6
+                  rounded-full
+                  bg-orange-500
+                  text-white
+                  text-xs
+                  font-black
+                  "
+                >
+                  {heldBills.length}
+                </span>
+
+              )}
+
+            </button>
+            <button
               onClick={() => setPosMode(!posMode)}
               className="
               bg-slate-900
