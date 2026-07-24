@@ -210,45 +210,35 @@ from .models import (
 
 
 @transaction.atomic
-def adjust_stock(
-    ingredient,
-    quantity,
-    transaction_type
-):
+def adjust_stock(ingredient, quantity, transaction_type):
 
     quantity = Decimal(str(quantity))
+
+    print("Stock before:", ingredient.stock)
+    print("Quantity received:", quantity)
+    print("Transaction:", transaction_type)
 
     previous_stock = ingredient.stock
 
     if transaction_type == "WASTAGE":
-
-        if ingredient.stock < quantity:
-
-            raise ValueError(
-                "Insufficient stock."
-            )
-
         ingredient.stock -= quantity
-
     else:
-
         ingredient.stock += quantity
 
+    print("Stock after calculation:", ingredient.stock)
+
     ingredient.save()
+
+    print("Stock after save:", Ingredient.objects.get(id=ingredient.id).stock)
+
     update_product_availability()
 
     IngredientStockLog.objects.create(
-
         ingredient=ingredient,
-
         previous_stock=previous_stock,
-
         quantity_changed=quantity,
-
         new_stock=ingredient.stock,
-
         transaction_type=transaction_type
-
     )
 
     return ingredient

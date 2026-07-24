@@ -20,6 +20,7 @@ from billing.models import TransactionItem
 from django.db.models import Count
 from products.models import Product
 from django.db.models.functions import ExtractHour
+from expenses.models import Expense
 
 class DashboardSummaryAPIView(APIView):
 
@@ -57,10 +58,19 @@ class DashboardSummaryAPIView(APIView):
 
         total_transactions = Transaction.objects.filter( created_at__date__gte=month_start).count()
 
+        monthly_expense = (
+            Expense.objects.filter(
+                expense_date__gte=month_start
+            ).aggregate(
+                total=Sum("amount")
+            )["total"] or 0
+        )
+
         return Response({
             "today_sales": today_sales,
             "weekly_sales": weekly_sales,
             "monthly_sales": monthly_sales,
+            "monthly_expense": monthly_expense,
             "total_transactions": total_transactions
         })
     

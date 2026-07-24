@@ -1,14 +1,6 @@
 import api from "../api/axios";
 
-export const getExpenses = async (date) => {
 
-  const response = await api.get(
-    `/expenses/?date=${date}`
-  );
-
-  return response.data;
-
-};
 
 export const createExpense = async (data) => {
 
@@ -45,12 +37,36 @@ export const deleteExpense = async (
 
 };
 
-export const getExpenseCategories = async () => {
+export const getExpenses = async (
+    filter = "today",
+    from = "",
+    to = ""
+) => {
 
-  const response = await api.get(
-    "/expenses/categories/"
-  );
+    let url = "/expenses/";
 
-  return response.data;
+    if (filter === "custom") {
 
+        url += `?from=${from}&to=${to}`;
+
+    } else {
+
+        url += `?filter=${filter}`;
+
+    }
+
+    const { data } = await api.get(url);
+
+    return data;
 };
+export const getCategories = () =>
+    api.get("/expenses/categories/");
+
+export const createCategory = (data) =>
+    api.post("/expenses/categories/", data);
+
+export const updateCategory = (id, data) =>
+    api.put(`/expenses/categories/${id}/`, data);
+
+export const deleteCategory = (id) =>
+    api.delete(`/expenses/categories/${id}/`);

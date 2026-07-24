@@ -3,6 +3,9 @@ from rest_framework import generics
 from rest_framework.response import Response
 from .models import Expense,ExpenseCategory
 from .serializers import ExpenseSerializer,ExpenseCategorySerializer
+from datetime import timedelta
+from django.utils import timezone
+
 
 class ExpenseListCreateAPIView(
     generics.ListCreateAPIView
@@ -12,16 +15,36 @@ class ExpenseListCreateAPIView(
 
     def get_queryset(self):
 
-        queryset = Expense.objects.all()
+        queryset = Expense.objects.select_related("category")
 
-        date = self.request.query_params.get(
-            "date"
-        )
+        filter_type = self.request.query_params.get("filter")
 
-        if date:
+        from_date = self.request.query_params.get("from")
+
+        to_date = self.request.query_params.get("to")
+
+        today = timezone.localdate()
+
+        if filter_type == "today":
+            queryset = queryset.filter(expense_date=today)
+
+        elif filter_type == "week":
+            start = today - timedelta(days=today.weekday())
+            end = start + timedelta(days=6)
 
             queryset = queryset.filter(
-                expense_date=date
+                expense_date__range=[start, end]
+            )
+
+        elif filter_type == "month":
+            queryset = queryset.filter(
+                expense_date__year=today.year,
+                expense_date__month=today.month
+            )
+
+        elif from_date and to_date:
+            queryset = queryset.filter(
+                expense_date__range=[from_date, to_date]
             )
 
         return queryset
@@ -35,16 +58,17 @@ class ExpenseListCreateAPIView(
             many=True
         )
 
-        total = (
-            queryset.aggregate(
-                total=Sum("amount")
-            )["total"]
-            or 0
-        )
+        cash_total = queryset.filter(payment_method="Cash").aggregate(total=Sum("amount"))["total"] or 0
+
+        upi_total = queryset.filter(payment_method="UPI").aggregate(total=Sum("amount"))["total"] or 0
+
+        total = cash_total + upi_total
 
         return Response({
             "expenses": serializer.data,
-            "total": total
+            "cash_total": cash_total,
+            "upi_total": upi_total,
+            "total": total,
         })
 
 
@@ -56,8 +80,16 @@ class ExpenseDetailAPIView(
 
     serializer_class = ExpenseSerializer
 
-class ExpenseCategoryAPIView(generics.ListAPIView):
+class ExpenseCategoryAPIView(generics.ListCreateAPIView):
 
     queryset = ExpenseCategory.objects.all().order_by("name")
+
+    serializer_class = ExpenseCategorySerializer
+
+class ExpenseCategoryDetailAPIView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+
+    queryset = ExpenseCategory.objects.all()
 
     serializer_class = ExpenseCategorySerializer

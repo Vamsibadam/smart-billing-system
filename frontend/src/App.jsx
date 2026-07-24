@@ -11,7 +11,7 @@ import BillHistory from "./pages/BillHistory";
 import StoreSettings from "./pages/StoreSettings";
 import InvoicePreview from "./pages/InvoicePreview";
 import Ingredients from "./pages/Ingredients";
-
+import DashboardExpenses from "./pages/DashboardExpenses";
 
 function App() {
   
@@ -33,7 +33,7 @@ function App() {
         <Route path="/settings" element={<ProtectedRoute><StoreSettings /></ProtectedRoute>}/>
         <Route path="/invoice/:id" element={<ProtectedRoute><InvoicePreview /></ProtectedRoute>}/>
         <Route path="/ingredients" element={<ProtectedRoute><Ingredients /></ProtectedRoute>}/>
-      </Routes>
+        <Route path="/dashboard/expenses" element={<ProtectedRoute><DashboardExpenses /></ProtectedRoute>}/></Routes>
    
     </BrowserRouter>
   );

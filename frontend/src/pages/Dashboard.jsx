@@ -30,6 +30,7 @@ function Dashboard() {
     today_sales: 0,
     weekly_sales: 0,
     monthly_sales: 0,
+    monthly_expense: 0,
     total_transactions: 0,
   });
 
@@ -105,7 +106,12 @@ function Dashboard() {
               Business Dashboard
             </h1>
           </div>
-         <button 
+
+
+
+          <div className="flex items-center gap-2 px-3 py-1.5  shadow-3xs rounded-xl self-start sm:self-center">
+            
+                     <button 
   onClick={() => navigate("/billing")}
   className="
   flex-1 
@@ -141,20 +147,10 @@ function Dashboard() {
         Open POS and begin taking orders
     </span>
 </button>
-
-
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200/60 shadow-3xs rounded-xl self-start sm:self-center">
-            
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-            
-
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-              System Synchronized
-            </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <DashboardCards
             icon={<CircleCheckBig size={18} />}
             title="Today's Sales"
@@ -186,7 +182,17 @@ function Dashboard() {
               summary.total_transactions
             ).toLocaleString("en-IN")}
           />
+
+           <DashboardCards
+          icon={<ReceiptIndianRupee size={18} />}
+          title="Monthly Expenses"
+          value={`₹${Number(summary.monthly_expense).toLocaleString("en-IN")}`}
+          hint="Click to open →"
+          onClick={() => navigate("/dashboard/expenses")}
+          className="bg-amber-500 border-slate-1000 hover:bg-slate-900 cursor-pointer hover:scale-105"
+      />
         </div>
+       
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mt-5">
           <PaymentChart data={paymentData} />

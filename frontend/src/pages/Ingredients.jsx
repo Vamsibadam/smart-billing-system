@@ -10,6 +10,7 @@ import {
   adjustIngredientStock,
 } from "../services/ingredientService";
 import StockAdjustmentModal from "../components/StockAdjustmentModal";
+import { createPortal } from "react-dom";
 
 function Ingredients() {
   const [ingredients, setIngredients] = useState([]);
@@ -332,7 +333,8 @@ const [selectedStockIngredient, setSelectedStockIngredient] =
     }}
   />
 )}
-{showStockModal && (
+{showStockModal && createPortal(
+  
   <StockAdjustmentModal
     ingredient={selectedStockIngredient}
     onSave={handleStockAdjustment}
@@ -340,7 +342,7 @@ const [selectedStockIngredient, setSelectedStockIngredient] =
       setShowStockModal(false);
       setSelectedStockIngredient(null);
     }}
-  />
+  />,document.body
 )}
 
 

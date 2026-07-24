@@ -28,29 +28,61 @@ function PaymentChart({ data }) {
     0
   );
   const chartRef = useRef(null);
+const buttonRef = useRef(null);
+
 const downloadChart = async () => {
   if (!chartRef.current) return;
 
   try {
+    // Hide download button
+    if (buttonRef.current) {
+      buttonRef.current.style.visibility = "hidden";
+    }
+
     const dataUrl = await toPng(chartRef.current, {
       cacheBust: true,
-      pixelRatio: 3, // High quality
+
+      pixelRatio: 4,
+
+      backgroundColor: "#ffffff",
+
+      skipFonts: false,
+
+      style: {
+        transform: "scale(1)",
+        transformOrigin: "top left",
+      },
     });
+
+    if (buttonRef.current) {
+      buttonRef.current.style.visibility = "visible";
+    }
 
     const link = document.createElement("a");
 
-    link.download = `Payment Summary ${new Date().toLocaleDateString("en-IN")}.png`;
+    link.download = `SmartBilling_PaymentSummary_${
+      new Date().toLocaleDateString("en-GB").replace(/\//g, "-")
+    }.png`;
 
     link.href = dataUrl;
 
     link.click();
+
   } catch (err) {
+
+    if (buttonRef.current) {
+      buttonRef.current.style.visibility = "visible";
+    }
+
     console.error(err);
+
   }
+
 };
 
   return (
     <div
+    
       ref={chartRef}
       className="
       relative
@@ -89,6 +121,7 @@ const downloadChart = async () => {
         <div className="flex items-center gap-3">
 
     <button
+    ref={buttonRef}
         onClick={downloadChart}
         className="
         flex
