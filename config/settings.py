@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
-from decouple import Config, RepositoryEnv
+from decouple import AutoConfig, Config, RepositoryEnv
 from datetime import timedelta
 
 
@@ -28,7 +28,7 @@ if ENV_FILE.exists():
         RepositoryEnv(ENV_FILE)
     )
 else:
-    config = Config()
+    config = AutoConfig()
 
 
 # SECURITY WARNING: keep the secret key used in production!
