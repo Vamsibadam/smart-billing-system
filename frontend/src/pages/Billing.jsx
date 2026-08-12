@@ -4,6 +4,7 @@ import {
   searchProducts,
   createBill,
   getProducts,
+  getDiscounts,
 } from "../services/billingService";
 import { createPortal } from "react-dom";
 import {
@@ -76,6 +77,8 @@ function Billing() {
   const [categories, setCategories] = useState([]);
   const [showTouchCart, setShowTouchCart] = useState(false);
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState(0);
+  const [discounts, setDiscounts] = useState([]);
+  const [selectedDiscountId, setSelectedDiscountId] = useState(null);
 
 
   const fetchCategories = async () => {
@@ -480,22 +483,117 @@ function Billing() {
 
   };
 
-  const totalAmount =
-    cart.reduce(
+ const subtotalAmount = cart.reduce(
+  (total, item) =>
+    total +
+    Number(item.price) * item.quantity,
+  0
+);
 
-      (total, item) =>
 
-        total +
+// ==========================================
+// PRODUCT DISCOUNT
+// ==========================================
 
-        Number(
-          item.price
-        ) *
-        item.quantity,
+const productDiscountAmount = cart.reduce(
+  (total, item) => {
 
-      0
-
+    const productDiscount = discounts.find(
+      (discount) =>
+        discount.discount_type === "PRODUCT" &&
+        discount.product === item.id &&
+        discount.is_active
     );
 
+    if (
+      !productDiscount ||
+      !productDiscount.buy_quantity ||
+      !productDiscount.free_quantity
+    ) {
+      return total;
+    }
+
+    const buyQuantity =
+      Number(productDiscount.buy_quantity);
+
+    const freeQuantity =
+      Number(productDiscount.free_quantity);
+
+    const groupSize =
+      buyQuantity + freeQuantity;
+
+    const freeItems =
+      Math.floor(
+        item.quantity / groupSize
+      ) * freeQuantity;
+
+    return (
+      total +
+      freeItems * Number(item.price)
+    );
+  },
+  0
+);
+
+
+// ==========================================
+// TOTAL AFTER PRODUCT DISCOUNT
+// ==========================================
+
+const productDiscountedTotal = Math.max(
+  subtotalAmount -
+  productDiscountAmount,
+  0
+);
+
+
+// ==========================================
+// DIRECT DISCOUNT
+// ==========================================
+
+const selectedDiscount = discounts.find(
+  (discount) =>
+    discount.id === Number(selectedDiscountId)
+);
+
+let discountAmount = 0;
+
+if (
+  selectedDiscount &&
+  selectedDiscount.discount_type === "DIRECT"
+) {
+
+  if (
+    selectedDiscount.value_type === "PERCENTAGE"
+  ) {
+
+    discountAmount =
+      productDiscountedTotal *
+      Number(selectedDiscount.value) /
+      100;
+
+  } else if (
+    selectedDiscount.value_type === "FIXED"
+  ) {
+
+    discountAmount = Math.min(
+      Number(selectedDiscount.value),
+      productDiscountedTotal
+    );
+
+  }
+}
+
+
+// ==========================================
+// FINAL BILL TOTAL
+// ==========================================
+
+const totalAmount = Math.max(
+  productDiscountedTotal -
+  discountAmount,
+  0
+);
   const generateBill = () => {
 
     if (
@@ -578,7 +676,35 @@ function Billing() {
     );
 
   const remainingAmount = totalAmount - paidAmount;
+useEffect(() => {
 
+  if (!showPaymentModal) {
+    return;
+  }
+
+  setPayments((prev) => {
+
+    if (prev.length === 0) {
+      return prev;
+    }
+
+    // If there is only one payment,
+    // automatically keep it equal to the bill total.
+    if (prev.length === 1) {
+      return [
+        {
+          ...prev[0],
+          amount: totalAmount.toFixed(2),
+        },
+      ];
+    }
+
+    // For split payments, preserve the
+    // manually entered amounts.
+    return prev;
+  });
+
+}, [totalAmount, showPaymentModal]);
   const closeButtonRef =
     useRef(null);
 
@@ -627,7 +753,8 @@ function Billing() {
         const response =
           await createBill(
             items,
-            payments
+            payments,
+            selectedDiscountId
           );
 
         setGeneratedBill(
@@ -643,6 +770,7 @@ function Billing() {
         );
 
         setCart([]);
+        setSelectedDiscountId(null);
 
         localStorage.removeItem(
           "billing_cart"
@@ -745,7 +873,18 @@ function Billing() {
   }, [cart, heldBills]);
 
 
+  useEffect(() => {
+    const fetchDiscounts = async () => {
+      try {
+        const data = await getDiscounts();
+        setDiscounts(data);
+      } catch (error) {
+        console.error("Failed to fetch discounts:", error);
+      }
+    };
 
+    fetchDiscounts();
+  }, []);
 
   useEffect(() => {
 
@@ -791,16 +930,12 @@ function Billing() {
 
 
     const newHold = {
-
       id: Date.now(),
-
       billNumber:
         heldBills.length + 1,
-
       items: cart,
-
       total: totalAmount,
-
+      discountId: selectedDiscountId,
       createdAt:
         new Date()
           .toLocaleTimeString(
@@ -847,6 +982,9 @@ function Billing() {
 
     setCart(
       selectedBill.items
+    );
+    setSelectedDiscountId(
+      selectedBill.discountId || null
     );
 
 
@@ -1280,6 +1418,9 @@ function Billing() {
               <CartPanel
                 cart={cart}
                 totalAmount={totalAmount}
+                subtotalAmount={subtotalAmount}
+                productDiscountAmount={productDiscountAmount}
+                discountAmount={discountAmount}
                 updateQuantity={updateQuantity}
                 removeItem={removeItem}
                 generateBill={generateBill}
@@ -1321,7 +1462,66 @@ function Billing() {
                   </span>
                 </div>
               </div>
+              {/* Discount Selection */}
 
+              <div className="mb-6">
+
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Discount
+                  </span>
+
+                  {discountAmount > 0 && (
+                    <span className="text-xs font-black text-emerald-600">
+                      -₹{discountAmount.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+
+                <select
+                  value={selectedDiscountId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    setSelectedDiscountId(
+                      value ? Number(value) : null
+                    );
+                  }}
+                  className="
+      w-full
+      bg-white
+      border
+      border-slate-200
+      rounded-xl
+      p-3
+      text-sm
+      font-bold
+      text-slate-700
+      outline-none
+      focus:border-indigo-500
+      focus:ring-2
+      focus:ring-indigo-100
+    "
+                >
+
+                  <option value="">
+                    No Discount
+                  </option>
+
+                  {discounts
+                    .filter((discount) => discount.is_active)
+                    .map((discount) => (
+                      <option
+                        key={discount.id}
+                        value={discount.id}
+                      >
+                        {discount.name}
+                      </option>
+                    ))}
+
+                </select>
+
+              </div>
               {/* Brand Method Grid (Massive, Tactical Grid Buttons) */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                 {[
@@ -2016,6 +2216,9 @@ text-sm
         <CartPanel
           cart={cart}
           totalAmount={totalAmount}
+          subtotalAmount={subtotalAmount}
+          productDiscountAmount={productDiscountAmount}
+          discountAmount={discountAmount}
           updateQuantity={updateQuantity}
           removeItem={removeItem}
           generateBill={() => {

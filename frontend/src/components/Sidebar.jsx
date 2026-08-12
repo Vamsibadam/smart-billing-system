@@ -9,8 +9,8 @@ import {
   FileText,
   History,
   Settings,
-  UtensilsCrossed 
-  
+  UtensilsCrossed ,
+  BadgePercent,
 } from "lucide-react";
 
 function Sidebar() {
@@ -31,6 +31,7 @@ function Sidebar() {
     { name: "Products", path: "/products", icon: <Package size={22} /> },
     { name: "Ingredients", path: "/ingredients", icon: <UtensilsCrossed  size={22} /> },
     { name: "Inventory", path: "/inventory", icon: <Boxes size={22} /> },
+    { name: "Discounts", path: "/discounts", icon: <BadgePercent size={22} /> },
     { name: "Reports", path: "/reports", icon: <FileText size={22} /> },
     { name: "Store Settings", path: "/settings", icon: <Settings size={22} /> },
   ];

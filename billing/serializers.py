@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from .models import Discount
+
 
 class BillingItemSerializer(serializers.Serializer):
 
@@ -7,23 +9,15 @@ class BillingItemSerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
 
     combo_overrides = serializers.ListField(
-
         child=serializers.DictField(),
-
         required=False,
-
         default=[]
-
     )
 
     ingredient_overrides = serializers.ListField(
-
         child=serializers.DictField(),
-
         required=False,
-
         default=[]
-
     )
 
 
@@ -46,3 +40,15 @@ class BillingSerializer(serializers.Serializer):
     payments = PaymentSerializer(
         many=True
     )
+
+    direct_discount_id = serializers.IntegerField(
+        required=False,
+        allow_null=True
+    )
+
+
+class DiscountSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Discount
+        fields = "__all__"

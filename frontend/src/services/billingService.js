@@ -10,14 +10,15 @@ export const searchProducts = async (query) => {
 
 export const createBill = async (
   items,
-  payments
+  payments,
+  directDiscountId = null
 ) => {
-
   const response = await api.post(
     "/billing/create/",
     {
       items,
       payments,
+      direct_discount_id: directDiscountId,
     }
   );
 
@@ -72,5 +73,32 @@ export const getBillDetails =
 
 export const getProducts = async () => {
   const response = await api.get("/products/");
+  return response.data;
+};
+
+export const getDiscounts = async () => {
+  const response = await api.get("/billing/discounts/");
+  return response.data;
+};
+export const createDiscount = async (data) => {
+  const response = await api.post(
+    "/billing/discounts/",
+    data
+  );
+  return response.data;
+};
+
+export const updateDiscount = async (id, data) => {
+  const response = await api.patch(
+    `/billing/discounts/${id}/`,
+    data
+  );
+  return response.data;
+};
+
+export const deleteDiscount = async (id) => {
+  const response = await api.delete(
+    `/billing/discounts/${id}/`
+  );
   return response.data;
 };

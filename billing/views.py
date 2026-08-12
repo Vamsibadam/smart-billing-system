@@ -2,11 +2,11 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import BillingSerializer
+from .serializers import BillingSerializer,DiscountSerializer
 from .services import create_bill
 
 from rest_framework import generics
-from .models import Transaction
+from .models import Transaction,Discount
 from .history_serializers import (
     TransactionHistorySerializer,
     TransactionDetailSerializer
@@ -41,7 +41,10 @@ class CreateBillAPIView(APIView):
 
             bill = create_bill(
                 serializer.validated_data["items"],
-                serializer.validated_data["payments"]
+                serializer.validated_data["payments"],
+                serializer.validated_data.get(
+                    "direct_discount_id"
+                )
             )
 
             return Response(
@@ -189,3 +192,38 @@ class InvoicePDFAPIView(
             filename=
             f"{transaction.bill_number}.pdf"
         )
+
+class DiscountListCreateAPIView(
+    generics.ListCreateAPIView
+):
+
+    queryset = Discount.objects.all().order_by("-created_at")
+
+    serializer_class = DiscountSerializer
+
+    def get_queryset(self):
+
+        queryset = super().get_queryset()
+
+        active = self.request.query_params.get("active")
+        discount_type = self.request.query_params.get("type")
+
+        if active == "true":
+            queryset = queryset.filter(
+                is_active=True
+            )
+
+        if discount_type:
+            queryset = queryset.filter(
+                discount_type=discount_type
+            )
+
+        return queryset
+
+class DiscountDetailAPIView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+
+    queryset = Discount.objects.all()
+
+    serializer_class = DiscountSerializer

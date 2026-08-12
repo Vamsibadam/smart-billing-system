@@ -149,3 +149,70 @@ class TransactionItemIngredient(models.Model):
             f"{self.transaction_item.product.name} - "
             f"{self.ingredient.name}"
         )
+
+class Discount(models.Model):
+
+    DISCOUNT_TYPE_CHOICES = [
+        ("DIRECT", "Direct"),
+        ("PRODUCT", "Product"),
+    ]
+
+    VALUE_TYPE_CHOICES = [
+        ("PERCENTAGE", "Percentage"),
+        ("FIXED", "Fixed Amount"),
+    ]
+
+    name = models.CharField(
+        max_length=100
+    )
+
+    discount_type = models.CharField(
+        max_length=20,
+        choices=DISCOUNT_TYPE_CHOICES
+    )
+
+    value_type = models.CharField(
+        max_length=20,
+        choices=VALUE_TYPE_CHOICES,
+        blank=True,
+        null=True
+    )
+
+    value = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="discounts"
+    )
+
+    buy_quantity = models.PositiveIntegerField(
+        null=True,
+        blank=True
+    )
+
+    free_quantity = models.PositiveIntegerField(
+        null=True,
+        blank=True
+    )
+
+    is_active = models.BooleanField(
+        default=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return self.name
