@@ -11,18 +11,29 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
-from decouple import config
+from decouple import Config, RepositoryEnv
 from datetime import timedelta
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+# Build paths inside the project like this: BASE_DIR / "subdir".
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+# Environment configuration
+ENV_FILE = BASE_DIR / ".env.local"
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+if ENV_FILE.exists():
+    config = Config(
+        RepositoryEnv(ENV_FILE)
+    )
+else:
+    config = Config()
+
+
+# SECURITY WARNING: keep the secret key used in production!
+SECRET_KEY = config("SECRET_KEY")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config(
@@ -31,11 +42,11 @@ DEBUG = config(
     default=False
 )
 
+
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS",
     default="localhost,127.0.0.1"
 ).split(",")
-
 
 # Application definition
 
