@@ -7,6 +7,7 @@ import PaymentChart from "../components/PaymentChart";
 import LowStockWidget from "../components/LowStockWidget";
 import SalesHeatmap from "../components/SalesHeatmap";
 import Loader from "../components/Loader";
+import { getExpenses } from "../services/expenseService";
 import { useNavigate } from "react-router-dom";
 import {
   getDashboardSummary,
@@ -40,6 +41,7 @@ function Dashboard() {
   const [heatmapData, setHeatmapData] = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [todayExpense, setTodayExpense] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,6 +59,7 @@ function Dashboard() {
         paymentData,
         ingredientData,
         heatmapData,
+        expenseData,
       ] = await Promise.all([
         getDashboardSummary(),
         getSalesTrend(),
@@ -64,6 +67,7 @@ function Dashboard() {
         getPaymentAnalytics(),
         getIngredients(),
         getSalesHeatmap(),
+        getExpenses("today", "", ""),
       ]);
 
       setSummary(summaryData);
@@ -72,6 +76,9 @@ function Dashboard() {
       setPaymentData(paymentData);
       setIngredients(ingredientData);
       setHeatmapData(heatmapData);
+      setTodayExpense(
+        Number(expenseData?.total || 0)
+      );
     } catch (error) {
       console.error(error);
     } finally {
@@ -110,10 +117,10 @@ function Dashboard() {
 
 
           <div className="flex items-center gap-2 px-3 py-1.5  shadow-3xs rounded-xl self-start sm:self-center">
-            
-                     <button 
-  onClick={() => navigate("/billing")}
-  className="
+
+            <button
+              onClick={() => navigate("/billing")}
+              className="
   flex-1 
   w-full 
   sm:max-w-md 
@@ -139,14 +146,14 @@ function Dashboard() {
   cursor-pointer 
   self-stretch
   "
->
+            >
 
-  <span className="text-[13px] font-extrabold tracking-widest text-slate-400 uppercase pl-1">
-    Start Billing</span>
-     <span className="mt-2 text-slate-400 border-l border-slate-400/60">
-        Open POS and begin taking orders
-    </span>
-</button>
+              <span className="text-[13px] font-extrabold tracking-widest text-slate-400 uppercase pl-1">
+                Start Billing</span>
+              <span className="mt-2 text-slate-400 border-l border-slate-400/60">
+                Open POS and begin taking orders
+              </span>
+            </button>
           </div>
         </div>
 
@@ -183,19 +190,22 @@ function Dashboard() {
             ).toLocaleString("en-IN")}
           />
 
-           <DashboardCards
-          icon={<ReceiptIndianRupee size={18} />}
-          title="Monthly Expenses"
-          value={`₹${Number(summary.monthly_expense).toLocaleString("en-IN")}`}
-          hint="Click to open →"
-          onClick={() => navigate("/dashboard/expenses")}
-          className="bg-amber-500 border-slate-1000 hover:bg-slate-900 cursor-pointer hover:scale-105"
-      />
+          <DashboardCards
+            icon={<ReceiptIndianRupee size={18} />}
+            title="Monthly Expenses"
+            value={`₹${Number(summary.monthly_expense).toLocaleString("en-IN")}`}
+            hint="Click to open →"
+            onClick={() => navigate("/dashboard/expenses")}
+            className="bg-amber-500 border-slate-1000 hover:bg-slate-900 cursor-pointer hover:scale-105"
+          />
         </div>
-       
+
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mt-5">
-          <PaymentChart data={paymentData} />
+          <PaymentChart
+            data={paymentData}
+            todayExpense={todayExpense}
+          />
           <SalesHeatmap data={heatmapData} />
         </div>
 
