@@ -2932,21 +2932,36 @@ function Login() {
            MOBILE
         ====================================================== */
 
+        /* =====================================================
+           MOBILE
+           Fixed to the viewport - NO PAGE SCROLL
+        ====================================================== */
+
         @media (max-width: 767px) {
 
           .nex-page {
+            width: 100%;
+            height: 100svh;
             min-height: 100svh;
-            padding: 10px;
-            align-items: flex-start;
-            overflow-x: hidden;
-            overflow-y: auto;
+
+            padding: 8px;
+
+            align-items: center;
+            justify-content: center;
+
+            overflow: hidden;
           }
 
           .nex-card {
             width: 100%;
+            height: calc(100svh - 16px);
+            min-height: 0;
+            max-height: calc(100svh - 16px);
+
             flex-direction: column;
-            min-height: auto;
+
             border-radius: 25px;
+
             overflow: hidden;
           }
 
@@ -2956,11 +2971,16 @@ function Login() {
 
           .nex-brand-panel {
             width: 100%;
-            min-height: 245px;
-            height: 245px;
-            padding: 25px;
+
+            height: 215px;
+            min-height: 215px;
+
+            padding: 22px;
+
             position: relative;
             overflow: hidden;
+
+            flex-shrink: 0;
           }
 
           .nex-logo {
@@ -2968,26 +2988,31 @@ function Login() {
           }
 
           .brand-content {
-            margin-top: 42px;
+            margin-top: 34px;
+
             position: relative;
             z-index: 30;
           }
 
           .brand-content h1 {
-            font-size: 42px;
+            font-size: 40px;
           }
 
           /*
-             Keep the complete billing scene inside the card.
-             The PC, lamp and bulb themselves are NOT changed.
+             IMPORTANT:
+             The PC, lamp and bulb are untouched.
+             Only the complete scene container is repositioned.
           */
           .billing-scene {
             width: 440px;
             height: 330px;
-            right: -15px;
-            bottom: -15px;
-            transform: scale(.67);
+
+            right: -8px;
+            bottom: -30px;
+
+            transform: scale(.61);
             transform-origin: bottom right;
+
             z-index: 10;
           }
 
@@ -3006,21 +3031,33 @@ function Login() {
 
           .nex-login-panel {
             width: 100%;
-            min-height: 430px;
-            padding: 75px 25px 30px;
-            align-items: flex-start;
+            min-height: 0;
+            height: auto;
+
+            flex: 1;
+
+            padding: 58px 22px 16px;
+
+            align-items: center;
+
+            overflow: hidden;
           }
 
           .mobile-logo {
             display: flex;
+
             position: absolute;
-            top: 24px;
-            left: 25px;
+
+            top: 18px;
+            left: 22px;
+
             align-items: center;
             gap: 9px;
-            font-size: 19px;
+
+            font-size: 18px;
             font-weight: 750;
             letter-spacing: -.04em;
+
             color: #111315;
           }
 
@@ -3029,30 +3066,82 @@ function Login() {
           }
 
           .mobile-logo-box {
-            width: 28px;
-            height: 28px;
+            width: 27px;
+            height: 27px;
+
             display: flex;
             align-items: center;
             justify-content: center;
+
             border-radius: 8px;
+
             background: #111315;
           }
 
           .mobile-logo-box div {
-            width: 12px;
-            height: 12px;
+            width: 11px;
+            height: 11px;
+
             border-radius: 4px;
-            background: linear-gradient(135deg, #f97316, #6366f1);
+
+            background:
+              linear-gradient(
+                135deg,
+                #f97316,
+                #6366f1
+              );
+
             transform: rotate(45deg);
           }
 
+          .login-content {
+            width: 100%;
+            max-width: 390px;
+          }
+
+          .login-heading {
+            margin-bottom: 22px;
+          }
+
+          .heading-accent {
+            width: 28px;
+            height: 3px;
+            margin-bottom: 13px;
+          }
+
+          .login-heading p {
+            margin-bottom: 5px;
+            font-size: 9px;
+          }
+
           .login-heading h2 {
-            font-size: 36px;
+            font-size: 34px;
+          }
+
+          .heading-line {
+            margin-top: 16px;
+          }
+
+          .field {
+            margin-bottom: 13px;
+          }
+
+          .field label {
+            margin-bottom: 6px;
+            font-size: 9px;
           }
 
           .input-box,
           .login-button {
-            height: 56px;
+            height: 54px;
+          }
+
+          .login-button {
+            margin-top: 6px;
+          }
+
+          .login-footer {
+            margin-top: 17px;
           }
 
         }
@@ -3060,44 +3149,181 @@ function Login() {
 
         /* =====================================================
            SMALL PHONES
+           Keep everything inside the viewport
         ====================================================== */
 
         @media (max-width: 390px) {
 
           .nex-page {
-            padding: 8px;
+            padding: 6px;
+          }
+
+          .nex-card {
+            height: calc(100svh - 12px);
+            max-height: calc(100svh - 12px);
+
+            border-radius: 22px;
           }
 
           .nex-brand-panel {
-            min-height: 220px;
-            height: 220px;
-            padding: 22px;
+            height: 195px;
+            min-height: 195px;
+
+            padding: 20px;
           }
 
           .brand-content {
-            margin-top: 38px;
+            margin-top: 30px;
           }
 
           .brand-content h1 {
-            font-size: 37px;
+            font-size: 36px;
           }
 
-          /* Keep the complete scene visible on small phones */
+          /*
+             Same PC / lamp / bulb.
+             Only the scene container is moved slightly
+             further into the panel for narrow screens.
+          */
           .billing-scene {
             width: 440px;
             height: 330px;
-            right: -5px;
-            bottom: -15px;
-            transform: scale(.56);
+
+            right: 0;
+            bottom: -35px;
+
+            transform: scale(.53);
             transform-origin: bottom right;
           }
 
           .nex-login-panel {
-            padding: 70px 20px 25px;
+            padding:
+              54px
+              18px
+              12px;
           }
 
           .mobile-logo {
-            left: 20px;
+            top: 15px;
+            left: 18px;
+          }
+
+          .mobile-logo-box {
+            width: 25px;
+            height: 25px;
+          }
+
+          .mobile-logo-box div {
+            width: 10px;
+            height: 10px;
+          }
+
+          .login-heading {
+            margin-bottom: 18px;
+          }
+
+          .login-heading h2 {
+            font-size: 31px;
+          }
+
+          .heading-line {
+            margin-top: 13px;
+          }
+
+          .field {
+            margin-bottom: 10px;
+          }
+
+          .input-box,
+          .login-button {
+            height: 50px;
+          }
+
+          .input-box input {
+            font-size: 13px;
+          }
+
+          .login-footer {
+            margin-top: 12px;
+          }
+
+        }
+
+
+        /* =====================================================
+           VERY SHORT MOBILE SCREENS
+           Example: 667px and shorter
+        ====================================================== */
+
+        @media (max-width: 767px) and (max-height: 700px) {
+
+          .nex-brand-panel {
+            height: 185px;
+            min-height: 185px;
+          }
+
+          .brand-content {
+            margin-top: 27px;
+          }
+
+          .brand-content h1 {
+            font-size: 34px;
+          }
+
+          .brand-dots {
+            margin-top: 17px;
+          }
+
+          .billing-scene {
+            bottom: -42px;
+            transform: scale(.50);
+            transform-origin: bottom right;
+          }
+
+          .nex-login-panel {
+            padding-top: 49px;
+            padding-bottom: 10px;
+          }
+
+          .mobile-logo {
+            top: 12px;
+          }
+
+          .login-heading {
+            margin-bottom: 14px;
+          }
+
+          .heading-accent {
+            margin-bottom: 9px;
+          }
+
+          .login-heading h2 {
+            font-size: 29px;
+          }
+
+          .heading-line {
+            margin-top: 10px;
+          }
+
+          .field {
+            margin-bottom: 8px;
+          }
+
+          .field label {
+            margin-bottom: 4px;
+          }
+
+          .input-box,
+          .login-button {
+            height: 47px;
+          }
+
+          .login-button {
+            margin-top: 3px;
+          }
+
+          .login-footer {
+            margin-top: 9px;
           }
 
         }
