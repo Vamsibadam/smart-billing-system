@@ -155,16 +155,7 @@ function CartPanel({
 
         <div className="space-y-2 mb-4">
 
-          {/* Subtotal */}
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-bold text-slate-400">
-              Subtotal
-            </span>
-
-            <span className="text-sm font-bold text-slate-700">
-              ₹{subtotalAmount.toFixed(2)}
-            </span>
-          </div>
+          
 
 
           {/* Product Discount */}

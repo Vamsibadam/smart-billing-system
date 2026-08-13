@@ -251,7 +251,118 @@ def generate_invoice_pdf(transaction):
     elements.append(Spacer(1, 20))
 
     # --- Total and Footer Blocks ---
-    elements.append(Paragraph(f"Grand Total:  Rs. {float(transaction.total_amount):,.2f}", grand_total_style))
+        # ============================================================
+    # BILL TOTALS / DISCOUNTS
+    # ============================================================
+
+    summary_data = []
+
+    # Original subtotal
+    summary_data.append([
+        Paragraph(
+            "Subtotal",
+            table_cell_style
+        ),
+        Paragraph(
+            f"Rs. {float(transaction.subtotal_amount):,.2f}",
+            table_cell_style
+        )
+    ])
+
+    # Product offer
+    if (
+        transaction.product_discount_amount
+        and
+        transaction.product_discount_amount > 0
+    ):
+
+        offer_name = (
+            transaction.product_discount_name
+            or "Product Offer"
+        )
+
+        summary_data.append([
+            Paragraph(
+                offer_name,
+                table_cell_style
+            ),
+            Paragraph(
+                f"- Rs. {float(transaction.product_discount_amount):,.2f}",
+                table_cell_style
+            )
+        ])
+
+    # Percentage discount
+    if (
+        transaction.discount_percentage
+        and
+        transaction.discount_percentage > 0
+    ):
+
+        summary_data.append([
+            Paragraph(
+                f"Additional Discount "
+                f"({float(transaction.discount_percentage):.2f}%)",
+                table_cell_style
+            ),
+            Paragraph(
+                f"- Rs. {float(transaction.direct_discount_amount):,.2f}",
+                table_cell_style
+            )
+        ])
+
+    # Summary table
+    summary_table = Table(
+        summary_data,
+        colWidths=[380, 160]
+    )
+
+    summary_table.setStyle(
+        TableStyle([
+            (
+                "ALIGN",
+                (1, 0),
+                (1, -1),
+                "RIGHT"
+            ),
+
+            (
+                "VALIGN",
+                (0, 0),
+                (-1, -1),
+                "MIDDLE"
+            ),
+
+            (
+                "TOPPADDING",
+                (0, 0),
+                (-1, -1),
+                5
+            ),
+
+            (
+                "BOTTOMPADDING",
+                (0, 0),
+                (-1, -1),
+                5
+            ),
+        ])
+    )
+
+    elements.append(summary_table)
+
+    elements.append(Spacer(1, 8))
+
+    # Grand total
+    elements.append(
+        Paragraph(
+            f"Grand Total:  Rs. "
+            f"{float(transaction.total_amount):,.2f}",
+            grand_total_style
+        )
+    )
+
+    elements.append(Spacer(1, 35))
     elements.append(Spacer(1, 35))
 
     if store and store.footer_message:

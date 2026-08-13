@@ -28,8 +28,8 @@ function Discounts() {
 
   const [form, setForm] = useState({
     name: "",
-    discount_type: "DIRECT",
-    value_type: "PERCENTAGE",
+    discount_type: "PRODUCT",
+    value_type: "",
     value: "",
     product: "",
     buy_quantity: "",
@@ -107,8 +107,8 @@ function Discounts() {
 
     setForm({
       name: "",
-      discount_type: "DIRECT",
-      value_type: "PERCENTAGE",
+      discount_type: "PRODUCT",
+      value_type: "",
       value: "",
       product: "",
       buy_quantity: "",
@@ -149,10 +149,10 @@ function Discounts() {
       name: discount.name || "",
 
       discount_type:
-        discount.discount_type || "DIRECT",
+        discount.discount_type || "PRODUCT",
 
       value_type:
-        discount.value_type || "PERCENTAGE",
+        discount.value_type || "",
 
       value:
         discount.value ?? "",
@@ -170,6 +170,7 @@ function Discounts() {
         discount.is_active,
     });
 
+
     // Show existing product name
     if (discount.product) {
 
@@ -184,6 +185,7 @@ function Discounts() {
 
     } else {
 
+      // NULL means All Products
       setProductSearch("");
 
     }
@@ -239,19 +241,27 @@ function Discounts() {
         discount_type:
           form.discount_type,
 
+        // Product discounts do not use direct
+        // value type/value.
         value_type:
-          form.discount_type === "DIRECT"
-            ? form.value_type
-            : "",
+          form.discount_type === "PRODUCT"
+            ? ""
+            : form.value_type,
 
         value:
-          form.discount_type === "DIRECT"
-            ? Number(form.value || 0)
-            : 0,
+          form.discount_type === "PRODUCT"
+            ? 0
+            : Number(form.value || 0),
 
+        // IMPORTANT:
+        // Empty product = All Products = null
         product:
           form.discount_type === "PRODUCT"
-            ? Number(form.product)
+            ? (
+                form.product === ""
+                  ? null
+                  : Number(form.product)
+              )
             : null,
 
         buy_quantity:
@@ -267,6 +277,12 @@ function Discounts() {
         is_active:
           form.is_active,
       };
+
+
+      console.log(
+        "Discount payload:",
+        payload
+      );
 
 
       if (editingDiscount) {
@@ -298,6 +314,7 @@ function Discounts() {
 
       alert(
         error?.response?.data ||
+        error?.response?.data?.detail ||
         "Failed to save discount."
       );
 
@@ -385,7 +402,7 @@ function Discounts() {
 
     const product = products.find(
       (item) =>
-        item.id === productId
+        item.id === Number(productId)
     );
 
     return product?.name || "Unknown Product";
@@ -641,9 +658,11 @@ function Discounts() {
                       mt-2
                     ">
                       Product:{" "}
-                      {getProductName(
-                        discount.product
-                      )}
+                      {discount.product
+                        ? getProductName(
+                            discount.product
+                          )
+                        : "All Products"}
                     </p>
 
                   )}
@@ -838,7 +857,7 @@ function Discounts() {
                     value={form.name}
                     onChange={handleChange}
                     required
-                    placeholder="Example: Employee Discount"
+                    placeholder="Example: Buy 2 Get 1"
                     className="
                       w-full
                       border
@@ -909,8 +928,6 @@ function Discounts() {
 
                   <>
 
-                    {/* VALUE TYPE */}
-
                     <div>
 
                       <label className="
@@ -952,8 +969,6 @@ function Discounts() {
 
                     </div>
 
-
-                    {/* DISCOUNT VALUE */}
 
                     <div>
 
@@ -1010,7 +1025,7 @@ function Discounts() {
                   <>
 
                     {/* -------------------------------------------------
-                        PRODUCT SEARCH
+                        PRODUCT SELECTION
                     ------------------------------------------------- */}
 
                     <div className="relative">
@@ -1030,9 +1045,10 @@ function Discounts() {
                       <input
                         type="text"
                         value={
-                          selectedProduct
-                            ? selectedProduct.name
-                            : productSearch
+                          form.product === ""
+                            ? productSearch
+                            : selectedProduct?.name ||
+                              productSearch
                         }
                         onChange={(e) => {
 
@@ -1045,14 +1061,19 @@ function Discounts() {
                             product: "",
                           }));
 
-                          setShowProductResults(true);
+                          setShowProductResults(
+                            true
+                          );
 
                         }}
                         onFocus={() => {
-                          setShowProductResults(true);
+                          setShowProductResults(
+                            true
+                          );
                         }}
-                        placeholder="Search product..."
-                        required={!form.product}
+                        placeholder="
+                          Search product or leave blank for all products
+                        "
                         className="
                           w-full
                           border
@@ -1086,7 +1107,45 @@ function Discounts() {
                           overflow-y-auto
                         ">
 
-                          {filteredProducts.length === 0 ? (
+                          {/* ALL PRODUCTS */}
+
+                          <button
+                            type="button"
+                            onClick={() => {
+
+                              setForm((prev) => ({
+                                ...prev,
+                                product: "",
+                              }));
+
+                              setProductSearch("");
+
+                              setShowProductResults(
+                                false
+                              );
+
+                            }}
+                            className="
+                              w-full
+                              text-left
+                              px-4
+                              py-3
+                              text-sm
+                              font-black
+                              text-indigo-600
+                              bg-indigo-50
+                              hover:bg-indigo-100
+                              transition-colors
+                            "
+                          >
+                            All Products
+                          </button>
+
+
+                          {/* PRODUCTS */}
+
+                          {filteredProducts.length ===
+                          0 ? (
 
                             <div className="
                               px-4
@@ -1149,6 +1208,15 @@ function Discounts() {
                         </div>
 
                       )}
+
+                      <p className="
+                        text-[11px]
+                        text-slate-400
+                        mt-2
+                      ">
+                        Choose <strong>All Products</strong> to
+                        apply this offer to any product.
+                      </p>
 
                     </div>
 

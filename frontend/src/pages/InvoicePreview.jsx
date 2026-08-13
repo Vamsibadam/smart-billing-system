@@ -24,6 +24,12 @@ function InvoicePreview() {
 
   const navigate =
     useNavigate();
+    const searchParams = new URLSearchParams(
+  window.location.search
+);
+
+const isCustomerInvoice =
+  searchParams.get("customer") === "true";
 
   const [bill,
     setBill] =
@@ -209,14 +215,94 @@ function InvoicePreview() {
     </div>
 
     {/* Bottom Accounting Summary Block */}
-    <div className="flex flex-col items-end gap-1.5 mt-6 pr-2">
-      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-        Grand Total
+<div className="flex flex-col items-end gap-2 mt-8 pr-2">
+
+  {/* Subtotal */}
+  <div className="w-full max-w-sm flex justify-between items-center">
+    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+      Subtotal
+    </span>
+
+    <span className="text-sm font-bold text-slate-700">
+      ₹ {Number(bill.subtotal_display ??bill.subtotal_amount ?? 0).toFixed(2)}
+    </span>
+  </div>
+
+
+  {/* Product Offer */}
+  {bill.product_discount_display && (
+  <div className="w-full max-w-sm flex justify-between items-center">
+
+    <div className="flex flex-col">
+
+      <span className="text-xs font-bold text-slate-500">
+        {bill.product_discount_display.name}
       </span>
-      <h2 className="text-3xl font-black text-slate-900 tracking-tight">
-        ₹ {bill.total_amount}
-      </h2>
+
+      <span className="text-[10px] font-semibold text-slate-400">
+        Product Offer
+      </span>
+
     </div>
+
+    <span className="text-sm font-black text-emerald-600">
+      - ₹{" "}
+      {Number(
+        bill.product_discount_display.amount
+      ).toFixed(2)}
+    </span>
+
+  </div>
+)}
+
+  {/* Percentage Discount */}
+  {Number(bill.discount_percentage || 0) > 0 && (
+    <div className="w-full max-w-sm flex justify-between items-center">
+
+      <div className="flex flex-col">
+
+        <span className="text-xs font-bold text-slate-500">
+          Additional Discount
+        </span>
+
+        <span className="text-[10px] font-semibold text-slate-400">
+          {Number(
+            bill.discount_percentage
+          ).toFixed(2)}%
+        </span>
+
+      </div>
+
+      <span className="text-sm font-black text-emerald-600">
+        - ₹ {Number(
+          bill.direct_discount_amount
+        ).toFixed(2)}
+      </span>
+
+    </div>
+  )}
+
+
+  {/* Divider */}
+  <div className="w-full max-w-sm border-t border-slate-200 my-2" />
+
+
+  {/* Grand Total */}
+  <div className="w-full max-w-sm flex justify-between items-end">
+
+    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+      Grand Total
+    </span>
+
+    <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+      ₹ {Number(
+        bill.total_amount
+      ).toFixed(2)}
+    </h2>
+
+  </div>
+
+</div>
 
     {/* Optional Messaging Area */}
     {store.footer_message && (
@@ -227,39 +313,41 @@ function InvoicePreview() {
 
     {/* FIXED: Increased sizing parameter classes (px-6 py-3.5 text-sm) and synchronized colors with the orange/indigo palette core tokens */}
     <div className="flex flex-wrap gap-4 mt-8 pt-5 border-t border-slate-100">
-      <button
-        onClick={() => {
-    const iframe = document.createElement("iframe");
+      {!isCustomerInvoice && (
+  <button
+    onClick={() => {
+      const iframe =
+        document.createElement("iframe");
 
-    iframe.style.display = "none";
+      iframe.style.display = "none";
 
-    iframe.src =
-      `${import.meta.env.VITE_API_URL}/billing/history/${bill.id}/pdf/`;
+      iframe.src =
+        `${import.meta.env.VITE_API_URL}/billing/history/${bill.id}/pdf/`;
 
-    document.body.appendChild(iframe);
+      document.body.appendChild(iframe);
 
-    iframe.onload = () => {
-      iframe.contentWindow.print();
-    };
-  }}
-        className="
-        bg-slate-800
-        text-white
-        px-6
-        py-3.5
-        rounded-xl
-        text-sm
-        font-bold
-        tracking-wide
-        shadow-sm
-        hover:bg-slate-900
-        transition-all
-        cursor-pointer
-        "
-      >
-        Print Receipt
-      </button>
-
+      iframe.onload = () => {
+        iframe.contentWindow.print();
+      };
+    }}
+    className="
+      bg-slate-800
+      text-white
+      px-6
+      py-3.5
+      rounded-xl
+      text-sm
+      font-bold
+      tracking-wide
+      shadow-sm
+      hover:bg-slate-900
+      transition-all
+      cursor-pointer
+    "
+  >
+    Print Receipt
+  </button>
+)}
       <a
         href={`${import.meta.env.VITE_API_URL}/billing/history/${bill.id}/pdf/`}
         target="_blank"
@@ -281,27 +369,29 @@ function InvoicePreview() {
         Download PDF
       </a>
 
-      <button
-        onClick={() => navigate(-1)}
-        className="
-        bg-white
-        border border-slate-200
-        text-slate-600
-        px-6
-        py-3.5
-        rounded-xl
-        text-sm
-        font-bold
-        tracking-wide
-        shadow-3xs
-        hover:bg-slate-50
-        hover:text-slate-800
-        transition-all
-        cursor-pointer
-        "
-      >
-        Back
-      </button>
+      {!isCustomerInvoice && (
+  <button
+    onClick={() => navigate(-1)}
+    className="
+      bg-white
+      border border-slate-200
+      text-slate-600
+      px-6
+      py-3.5
+      rounded-xl
+      text-sm
+      font-bold
+      tracking-wide
+      shadow-3xs
+      hover:bg-slate-50
+      hover:text-slate-800
+      transition-all
+      cursor-pointer
+    "
+  >
+    Back
+  </button>
+)}
     </div>
   </div>
 </MainLayout>

@@ -16,9 +16,27 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    unavailable_ingredients = (
+        serializers.SerializerMethodField()
+    )
+
     class Meta:
+
         model = Product
+
         exclude = ["stock"]
+
+    def get_unavailable_ingredients(self, obj):
+
+        from .utils import (
+            get_product_unavailable_ingredients
+        )
+
+        return (
+            get_product_unavailable_ingredients(obj)
+            if not obj.available
+            else []
+        )
 
 class RecipeIngredientAlternativeSerializer(
     serializers.ModelSerializer

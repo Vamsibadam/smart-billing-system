@@ -43,7 +43,10 @@ class CreateBillAPIView(APIView):
                 serializer.validated_data["items"],
                 serializer.validated_data["payments"],
                 serializer.validated_data.get(
-                    "direct_discount_id"
+                    "product_discount_id"
+                ),
+                serializer.validated_data.get(
+                    "direct_discount_percentage"
                 )
             )
 

@@ -14,7 +14,6 @@ class TransactionHistorySerializer(
 
     payment_display = serializers.SerializerMethodField()
 
-
     class Meta:
 
         model = Transaction
@@ -22,11 +21,21 @@ class TransactionHistorySerializer(
         fields = (
             "id",
             "bill_number",
-            "total_amount",
-            "payment_display",
-            "created_at"
-        )
 
+            "subtotal_amount",
+
+            "product_discount_name",
+            "product_discount_amount",
+
+            "discount_percentage",
+            "direct_discount_amount",
+
+            "total_amount",
+
+            "payment_display",
+
+            "created_at",
+        )
 
     def get_payment_display(self, obj):
 
@@ -35,19 +44,16 @@ class TransactionHistorySerializer(
 
             return obj.payment_method
 
-
         payments = obj.payments.all()
-
 
         # New bills with one payment
         if payments.count() == 1:
 
             return payments.first().method
 
-
         # Multiple payment methods
         return "split"
-
+    
 class TransactionItemSerializer(
     serializers.ModelSerializer
 ):
@@ -83,7 +89,6 @@ class PaymentSerializer(
             "amount",
         )
 
-
 class TransactionDetailSerializer(
     serializers.ModelSerializer
 ):
@@ -95,6 +100,9 @@ class TransactionDetailSerializer(
 
     payments = serializers.SerializerMethodField()
 
+    subtotal_display = serializers.SerializerMethodField()
+
+    product_discount_display = serializers.SerializerMethodField()
 
     class Meta:
 
@@ -103,12 +111,91 @@ class TransactionDetailSerializer(
         fields = (
             "id",
             "bill_number",
+
+            "subtotal_amount",
+            "subtotal_display",
+
+            "product_discount_name",
+            "product_discount_amount",
+            "product_discount_display",
+
+            "discount_percentage",
+            "direct_discount_amount",
+
             "total_amount",
+
             "created_at",
+
             "items",
             "payments",
         )
 
+    def get_subtotal_display(self, obj):
+
+        from decimal import Decimal
+
+        # New bills
+        if (
+            obj.subtotal_amount is not None
+            and obj.subtotal_amount > 0
+        ):
+            return obj.subtotal_amount
+
+        # Old bills
+        subtotal = Decimal("0.00")
+
+        for item in obj.items.all():
+
+            subtotal += (
+                item.unit_price *
+                item.quantity
+            )
+
+        return subtotal
+
+    def get_product_discount_display(self, obj):
+
+        from decimal import Decimal
+
+        # New bills
+        if (
+            obj.product_discount_amount is not None
+            and obj.product_discount_amount > 0
+        ):
+            return {
+                "name": (
+                    obj.product_discount_name
+                    or "Product Offer"
+                ),
+                "amount": obj.product_discount_amount
+            }
+
+        # Old bills
+        subtotal = Decimal("0.00")
+        charged_subtotal = Decimal("0.00")
+
+        for item in obj.items.all():
+
+            subtotal += (
+                item.unit_price *
+                item.quantity
+            )
+
+            charged_subtotal += item.subtotal
+
+        discount_amount = (
+            subtotal -
+            charged_subtotal
+        )
+
+        if discount_amount > 0:
+
+            return {
+                "name": "Product Offer",
+                "amount": discount_amount
+            }
+
+        return None
 
     def get_payments(self, obj):
 
@@ -121,7 +208,6 @@ class TransactionDetailSerializer(
                     "amount": obj.total_amount
                 }
             ]
-
 
         # New bills
         return PaymentSerializer(

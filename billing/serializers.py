@@ -41,11 +41,19 @@ class BillingSerializer(serializers.Serializer):
         many=True
     )
 
-    direct_discount_id = serializers.IntegerField(
+    product_discount_id = serializers.IntegerField(
         required=False,
         allow_null=True
     )
 
+    direct_discount_percentage = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+        min_value=0,
+        max_value=100
+    )
 
 class DiscountSerializer(serializers.ModelSerializer):
 

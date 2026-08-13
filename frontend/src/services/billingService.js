@@ -11,14 +11,21 @@ export const searchProducts = async (query) => {
 export const createBill = async (
   items,
   payments,
-  directDiscountId = null
+  productDiscountId = null,
+  directDiscountPercentage = 0
 ) => {
+
   const response = await api.post(
     "/billing/create/",
     {
       items,
       payments,
-      direct_discount_id: directDiscountId,
+
+      product_discount_id:
+        productDiscountId,
+
+      direct_discount_percentage:
+        directDiscountPercentage,
     }
   );
 

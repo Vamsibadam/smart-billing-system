@@ -78,7 +78,8 @@ function Billing() {
   const [showTouchCart, setShowTouchCart] = useState(false);
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState(0);
   const [discounts, setDiscounts] = useState([]);
-  const [selectedDiscountId, setSelectedDiscountId] = useState(null);
+  const [selectedProductDiscountId, setSelectedProductDiscountId] = useState(null);
+  const [discountPercentage, setDiscountPercentage] = useState(0);
 
 
   const fetchCategories = async () => {
@@ -483,141 +484,153 @@ function Billing() {
 
   };
 
- const subtotalAmount = cart.reduce(
-  (total, item) =>
-    total +
-    Number(item.price) * item.quantity,
-  0
-);
-
-
-// ==========================================
-// PRODUCT DISCOUNT
-// ==========================================
-
-const productDiscountAmount = cart.reduce(
-  (total, item) => {
-
-    const productDiscount = discounts.find(
-      (discount) =>
-        discount.discount_type === "PRODUCT" &&
-        discount.product === item.id &&
-        discount.is_active
-    );
-
-    if (
-      !productDiscount ||
-      !productDiscount.buy_quantity ||
-      !productDiscount.free_quantity
-    ) {
-      return total;
-    }
-
-    const buyQuantity =
-      Number(productDiscount.buy_quantity);
-
-    const freeQuantity =
-      Number(productDiscount.free_quantity);
-
-    const groupSize =
-      buyQuantity + freeQuantity;
-
-    const freeItems =
-      Math.floor(
-        item.quantity / groupSize
-      ) * freeQuantity;
-
-    return (
+  const subtotalAmount = cart.reduce(
+    (total, item) =>
       total +
-      freeItems * Number(item.price)
-    );
-  },
-  0
-);
+      Number(item.price) * item.quantity,
+    0
+  );
 
 
-// ==========================================
-// TOTAL AFTER PRODUCT DISCOUNT
-// ==========================================
-
-const productDiscountedTotal = Math.max(
-  subtotalAmount -
-  productDiscountAmount,
-  0
-);
-
-
-// ==========================================
-// DIRECT DISCOUNT
-// ==========================================
-
-const selectedDiscount = discounts.find(
-  (discount) =>
-    discount.id === Number(selectedDiscountId)
-);
-
-let discountAmount = 0;
-
-if (
-  selectedDiscount &&
-  selectedDiscount.discount_type === "DIRECT"
-) {
-
-  if (
-    selectedDiscount.value_type === "PERCENTAGE"
-  ) {
-
-    discountAmount =
-      productDiscountedTotal *
-      Number(selectedDiscount.value) /
-      100;
-
-  } else if (
-    selectedDiscount.value_type === "FIXED"
-  ) {
-
-    discountAmount = Math.min(
-      Number(selectedDiscount.value),
-      productDiscountedTotal
-    );
-
-  }
-}
-
-
-// ==========================================
-// FINAL BILL TOTAL
-// ==========================================
-
-const totalAmount = Math.max(
-  productDiscountedTotal -
-  discountAmount,
-  0
-);
+  // ==========================================
+  // BILLING TOTAL
+  // ==========================================
   const generateBill = () => {
 
-    if (
-      cart.length === 0
-    ) {
+    if (cart.length === 0) {
 
-      alert(
-        "Cart is empty"
-      );
+      alert("Cart is empty");
 
       return;
     }
 
+    // Every new bill starts with NO offer selected.
+    setSelectedProductDiscountId(null);
+
+    // Percentage discount also starts at 0.
+    setDiscountPercentage(0);
+
     setPayments([
       {
         method: "upi",
-        amount: totalAmount
+        amount: subtotalAmount.toFixed(2),
       }
     ]);
 
-    setShowPaymentModal(
-      true
-    );
+    setShowPaymentModal(true);
   };
+  // ==========================================
+  // PAYMENT MODAL DISCOUNT CALCULATION
+  // ==========================================
+
+  const selectedProductDiscount =
+    discounts.find(
+      (discount) =>
+        discount.id ===
+        Number(selectedProductDiscountId) &&
+        discount.discount_type === "PRODUCT" &&
+        discount.is_active
+    );
+
+  let paymentProductDiscountAmount = 0;
+
+  if (selectedProductDiscount) {
+
+    const buyQuantity =
+      Number(
+        selectedProductDiscount.buy_quantity || 0
+      );
+
+    const freeQuantity =
+      Number(
+        selectedProductDiscount.free_quantity || 0
+      );
+
+    const groupSize =
+      buyQuantity + freeQuantity;
+
+    if (groupSize > 0) {
+
+      const units = [];
+
+      cart.forEach((item) => {
+
+        for (
+          let i = 0;
+          i < item.quantity;
+          i++
+        ) {
+
+          units.push({
+            productId: item.id,
+            price: Number(item.price),
+          });
+
+        }
+
+      });
+
+      // Cheapest items first
+      units.sort(
+        (a, b) => a.price - b.price
+      );
+
+      const numberOfGroups =
+        Math.floor(
+          units.length / groupSize
+        );
+
+      const numberOfFreeItems =
+        numberOfGroups * freeQuantity;
+
+      paymentProductDiscountAmount =
+        units
+          .slice(
+            0,
+            numberOfFreeItems
+          )
+          .reduce(
+            (total, unit) =>
+              total + unit.price,
+            0
+          );
+    }
+  }
+
+
+  // ==========================================
+  // AFTER PRODUCT OFFER
+  // ==========================================
+
+  const paymentProductDiscountedTotal =
+    Math.max(
+      subtotalAmount -
+      paymentProductDiscountAmount,
+      0
+    );
+
+
+  // ==========================================
+  // CUSTOM PERCENTAGE DISCOUNT
+  // ==========================================
+
+  const paymentDiscountAmount =
+    paymentProductDiscountedTotal *
+    (Number(discountPercentage) || 0) /
+    100;
+
+
+  // ==========================================
+  // FINAL PAYMENT TOTAL
+  // ==========================================
+
+  const paymentTotalAmount =
+    Math.max(
+      paymentProductDiscountedTotal -
+      paymentDiscountAmount,
+      0
+    );
+
   const addPayment = (method = "upi") => {
 
     if (payments.some(payment => payment.method === method)) {
@@ -675,36 +688,36 @@ const totalAmount = Math.max(
       0
     );
 
-  const remainingAmount = totalAmount - paidAmount;
-useEffect(() => {
+  const remainingAmount = paymentTotalAmount - paidAmount;
+  useEffect(() => {
 
-  if (!showPaymentModal) {
-    return;
-  }
+    if (!showPaymentModal) {
+      return;
+    }
 
-  setPayments((prev) => {
+    setPayments((prev) => {
 
-    if (prev.length === 0) {
+      if (prev.length === 0) {
+        return prev;
+      }
+
+      // If there is only one payment,
+      // automatically keep it equal to the bill total.
+      if (prev.length === 1) {
+        return [
+          {
+            ...prev[0],
+            amount: paymentTotalAmount.toFixed(2),
+          },
+        ];
+      }
+
+      // For split payments, preserve the
+      // manually entered amounts.
       return prev;
-    }
+    });
 
-    // If there is only one payment,
-    // automatically keep it equal to the bill total.
-    if (prev.length === 1) {
-      return [
-        {
-          ...prev[0],
-          amount: totalAmount.toFixed(2),
-        },
-      ];
-    }
-
-    // For split payments, preserve the
-    // manually entered amounts.
-    return prev;
-  });
-
-}, [totalAmount, showPaymentModal]);
+  }, [paymentTotalAmount, showPaymentModal]);
   const closeButtonRef =
     useRef(null);
 
@@ -754,7 +767,8 @@ useEffect(() => {
           await createBill(
             items,
             payments,
-            selectedDiscountId
+            selectedProductDiscountId,
+            discountPercentage
           );
 
         setGeneratedBill(
@@ -770,7 +784,8 @@ useEffect(() => {
         );
 
         setCart([]);
-        setSelectedDiscountId(null);
+        setDiscountPercentage(0);
+        setSelectedProductDiscountId(null);
 
         localStorage.removeItem(
           "billing_cart"
@@ -784,6 +799,11 @@ useEffect(() => {
         ]);
 
       } catch (error) {
+        console.error("BILL ERROR:", error);
+  console.error(
+    "BACKEND RESPONSE:",
+    error.response?.data
+  );
 
         console.error(error);
         setNotification({
@@ -931,21 +951,19 @@ useEffect(() => {
 
     const newHold = {
       id: Date.now(),
-      billNumber:
-        heldBills.length + 1,
+      billNumber: heldBills.length + 1,
       items: cart,
-      total: totalAmount,
-      discountId: selectedDiscountId,
+      total: subtotalAmount,
+      discountPercentage: 0,
+      productDiscountId: null,
       createdAt:
-        new Date()
-          .toLocaleTimeString(
-            "en-IN",
-            {
-              hour: "2-digit",
-              minute: "2-digit"
-            }
-          )
-
+        new Date().toLocaleTimeString(
+          "en-IN",
+          {
+            hour: "2-digit",
+            minute: "2-digit"
+          }
+        )
     };
 
 
@@ -983,8 +1001,8 @@ useEffect(() => {
     setCart(
       selectedBill.items
     );
-    setSelectedDiscountId(
-      selectedBill.discountId || null
+    setDiscountPercentage(
+      selectedBill.discountPercentage || null
     );
 
 
@@ -1392,7 +1410,7 @@ useEffect(() => {
                 showCheckout={() => setShowTouchCart(true)}
                 cartProps={{
                   cart,
-                  totalAmount,
+                  totalAmount: subtotalAmount,
                   updateQuantity,
                   removeItem,
                   generateBill,
@@ -1417,10 +1435,8 @@ useEffect(() => {
             <div className="lg:col-span-2">
               <CartPanel
                 cart={cart}
-                totalAmount={totalAmount}
+                totalAmount={paymentTotalAmount}
                 subtotalAmount={subtotalAmount}
-                productDiscountAmount={productDiscountAmount}
-                discountAmount={discountAmount}
                 updateQuantity={updateQuantity}
                 removeItem={removeItem}
                 generateBill={generateBill}
@@ -1458,70 +1474,190 @@ useEffect(() => {
                     Total Bill
                   </span>
                   <span className="text-2xl font-black text-slate-950 block mt-0.5">
-                    ₹{totalAmount}
+                    ₹{paymentTotalAmount}
                   </span>
                 </div>
               </div>
-              {/* Discount Selection */}
+              {/* Product Offer + Discount */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
-              <div className="mb-6">
+  {/* Product Offer */}
+  <div>
 
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Discount
-                  </span>
+    <div className="flex justify-between items-center mb-2">
+      <span
+        className="
+          text-xs
+          font-bold
+          text-slate-400
+          uppercase
+          tracking-wider
+        "
+      >
+        Product Offer
+      </span>
 
-                  {discountAmount > 0 && (
-                    <span className="text-xs font-black text-emerald-600">
-                      -₹{discountAmount.toFixed(2)}
-                    </span>
-                  )}
-                </div>
+      {paymentProductDiscountAmount > 0 && (
+        <span
+          className="
+            text-xs
+            font-black
+            text-emerald-600
+          "
+        >
+          -₹{paymentProductDiscountAmount.toFixed(2)}
+        </span>
+      )}
+    </div>
 
-                <select
-                  value={selectedDiscountId || ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
+    <select
+      value={selectedProductDiscountId || ""}
+      onChange={(e) => {
+        const value = e.target.value;
 
-                    setSelectedDiscountId(
-                      value ? Number(value) : null
-                    );
-                  }}
-                  className="
-      w-full
-      bg-white
-      border
-      border-slate-200
-      rounded-xl
-      p-3
-      text-sm
-      font-bold
-      text-slate-700
-      outline-none
-      focus:border-indigo-500
-      focus:ring-2
-      focus:ring-indigo-100
-    "
-                >
+        setSelectedProductDiscountId(
+          value ? Number(value) : null
+        );
+      }}
+      className="
+        w-full
+        bg-white
+        border
+        border-slate-200
+        rounded-xl
+        p-3
+        text-sm
+        font-bold
+        text-slate-700
+        outline-none
+        focus:border-indigo-500
+        focus:ring-2
+        focus:ring-indigo-100
+      "
+    >
 
-                  <option value="">
-                    No Discount
-                  </option>
+      <option value="">
+        No Product Offer
+      </option>
 
-                  {discounts
-                    .filter((discount) => discount.is_active)
-                    .map((discount) => (
-                      <option
-                        key={discount.id}
-                        value={discount.id}
-                      >
-                        {discount.name}
-                      </option>
-                    ))}
+      {discounts
+        .filter(
+          (discount) =>
+            discount.discount_type === "PRODUCT" &&
+            discount.is_active
+        )
+        .map((discount) => (
 
-                </select>
+          <option
+            key={discount.id}
+            value={discount.id}
+          >
+            {discount.name}
+            {discount.product === null
+              ? " - All Products"
+              : ""}
+          </option>
 
-              </div>
+        ))}
+
+    </select>
+
+  </div>
+
+
+  {/* Percentage Discount */}
+  <div>
+
+    <div className="flex justify-between items-center mb-2">
+
+      <span
+        className="
+          text-xs
+          font-bold
+          text-slate-400
+          uppercase
+          tracking-wider
+        "
+      >
+        Discount
+      </span>
+
+      {paymentDiscountAmount > 0 && (
+        <span
+          className="
+            text-xs
+            font-black
+            text-emerald-600
+          "
+        >
+          -₹{paymentDiscountAmount.toFixed(2)}
+        </span>
+      )}
+
+    </div>
+
+    <div className="relative">
+
+      <input
+        type="number"
+        min="0"
+        max="100"
+        step="0.01"
+        value={discountPercentage}
+        onChange={(e) => {
+
+          let value =
+            Number(e.target.value);
+
+          if (value < 0) {
+            value = 0;
+          }
+
+          if (value > 100) {
+            value = 100;
+          }
+
+          setDiscountPercentage(value);
+
+        }}
+        className="
+          w-full
+          bg-white
+          border
+          border-slate-200
+          rounded-xl
+          p-3
+          pr-10
+          text-sm
+          font-bold
+          text-slate-700
+          outline-none
+          focus:border-indigo-500
+          focus:ring-2
+          focus:ring-indigo-100
+        "
+        placeholder="Enter discount percentage"
+      />
+
+      <span
+        className="
+          absolute
+          right-4
+          top-1/2
+          -translate-y-1/2
+          text-sm
+          font-black
+          text-slate-400
+        "
+      >
+        %
+      </span>
+
+    </div>
+
+  </div>
+
+</div>
               {/* Brand Method Grid (Massive, Tactical Grid Buttons) */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                 {[
@@ -2215,10 +2351,8 @@ text-sm
 
         <CartPanel
           cart={cart}
-          totalAmount={totalAmount}
+          totalAmount={paymentTotalAmount}
           subtotalAmount={subtotalAmount}
-          productDiscountAmount={productDiscountAmount}
-          discountAmount={discountAmount}
           updateQuantity={updateQuantity}
           removeItem={removeItem}
           generateBill={() => {
@@ -2238,7 +2372,7 @@ text-sm
 
         <FloatingCheckoutButton
           visible={cart.length > 0}
-          total={totalAmount}
+          total={subtotalAmount}
           onClick={() => setShowTouchCart(true)}
         />
 
