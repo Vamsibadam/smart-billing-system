@@ -164,6 +164,20 @@ class Transaction(models.Model):
         auto_now_add=True
     )
 
+    INVENTORY_PENDING = "PENDING"
+    INVENTORY_COMPLETED = "COMPLETED"
+
+    INVENTORY_STATUS_CHOICES = (
+        (INVENTORY_PENDING, "Pending"),
+        (INVENTORY_COMPLETED, "Completed"),
+    )
+
+    inventory_status = models.CharField(
+        max_length=20,
+        choices=INVENTORY_STATUS_CHOICES,
+        default=INVENTORY_PENDING,
+    )
+
     def __str__(self):
         return self.bill_number
 
@@ -232,6 +246,15 @@ class TransactionItem(models.Model):
     subtotal = models.DecimalField(
         max_digits=10,
         decimal_places=2
+    )
+    ingredient_overrides = models.JSONField(
+    default=list,
+    blank=True
+    )
+
+    combo_overrides = models.JSONField(
+        default=list,
+        blank=True
     )
 
     def __str__(self):

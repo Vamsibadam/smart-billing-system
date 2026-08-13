@@ -4,96 +4,9 @@ from products.models import RecipeIngredient, ComboItem, Product
 from .models import IngredientStockLog,Ingredient
 from products.utils import update_product_availability
 
-
-def consume_recipe(product, quantity,transaction_item=None,ingredient_overrides=None):
-    
-
-    recipe_items = RecipeIngredient.objects.filter(
-        product=product
-    )
-    override_map = {}
-
-    if ingredient_overrides:
-
-        override_map = {
-
-            item["recipe_ingredient_id"]: item["ingredient_id"]
-
-            for item in ingredient_overrides
-
-        }
-
-    if not recipe_items.exists():
-        raise ValueError(
-            f"{product.name} has no recipe configured."
-        )
-    if quantity <= 0:
-        raise ValueError("Quantity must be greater than zero.")
-    for recipe in recipe_items:
-
-        ingredient = recipe.ingredient
-
-        override_id = override_map.get(recipe.id)
-
-        if override_id:
-
-            from ingredients.models import Ingredient
-
-            ingredient = Ingredient.objects.get(
-                id=override_id
-            )
-
-        required_quantity = (
-            recipe.quantity * Decimal(str(quantity))
-        )
-
-        if ingredient.stock < required_quantity:
-
-            raise ValueError(
-                f"Insufficient stock for ingredient: {ingredient.name}"
-            )
-
-        previous_stock = ingredient.stock
-
-        ingredient.stock -= required_quantity
-
-        ingredient.save()
-
-        IngredientStockLog.objects.create(
-
-            ingredient=ingredient,
-
-            previous_stock=previous_stock,
-
-            quantity_changed=required_quantity,
-
-            new_stock=ingredient.stock,
-
-            transaction_type="SALE"
-
-        )
-        if transaction_item:
-
-            from billing.models import TransactionItemIngredient
-
-            TransactionItemIngredient.objects.create(
-
-                transaction_item=transaction_item,
-
-                ingredient=ingredient,
-
-                quantity_used=required_quantity,
-
-                # unit=ingredient.unit
-
-            )
-
-
-@transaction.atomic
-def consume_inventory(
+def validate_inventory(
     product,
     quantity,
-    transaction_item,
     ingredient_overrides=None,
     combo_overrides=None
 ):
@@ -104,6 +17,205 @@ def consume_inventory(
     if combo_overrides is None:
         combo_overrides = []
 
+    quantity = Decimal(str(quantity))
+
+    # ==========================================================
+    # NORMAL PRODUCT
+    # ==========================================================
+
+    if product.product_type == Product.TYPE_PRODUCT:
+
+        recipe_items = (
+            RecipeIngredient.objects
+            .filter(product=product)
+            .select_related("ingredient")
+        )
+
+        if not recipe_items.exists():
+
+            raise ValueError(
+                f"{product.name} has no recipe configured."
+            )
+
+        override_map = {
+            item["recipe_ingredient_id"]:
+                item["ingredient_id"]
+            for item in ingredient_overrides
+        }
+
+        for recipe in recipe_items:
+
+            ingredient = recipe.ingredient
+
+            override_id = override_map.get(
+                recipe.id
+            )
+
+            if override_id:
+
+                ingredient = Ingredient.objects.get(
+                    id=override_id
+                )
+
+            required_quantity = (
+                recipe.quantity * quantity
+            )
+
+            if ingredient.stock < required_quantity:
+
+                raise ValueError(
+                    f"Insufficient stock for "
+                    f"ingredient: {ingredient.name}. "
+                    f"Required: {required_quantity} "
+                    f"{ingredient.unit}, "
+                    f"Available: {ingredient.stock} "
+                    f"{ingredient.unit}."
+                )
+
+        return
+
+
+    # ==========================================================
+    # COMBO
+    # ==========================================================
+
+    combo_items = (
+        ComboItem.objects
+        .filter(combo=product)
+        .select_related("product")
+    )
+
+    if not combo_items.exists():
+
+        raise ValueError(
+            f"{product.name} has no combo items configured."
+        )
+
+    combo_override_map = {
+        item["combo_item_id"]:
+            item["product_id"]
+        for item in combo_overrides
+    }
+
+    for combo_item in combo_items:
+
+        selected_product = combo_item.product
+
+        override_id = combo_override_map.get(
+            combo_item.id
+        )
+
+        if override_id:
+
+            selected_product = Product.objects.get(
+                id=override_id
+            )
+
+        required_quantity = (
+            quantity * combo_item.quantity
+        )
+
+        validate_inventory(
+            selected_product,
+            required_quantity,
+            ingredient_overrides,
+            combo_overrides
+        )
+
+def consume_recipe(
+    product,
+    quantity,
+    transaction_item=None,
+    ingredient_overrides=None
+):
+
+    if quantity <= 0:
+        raise ValueError(
+            "Quantity must be greater than zero."
+        )
+
+    recipe_items = list(
+        RecipeIngredient.objects
+        .filter(product=product)
+        .select_related("ingredient")
+    )
+
+    if not recipe_items:
+        raise ValueError(
+            f"{product.name} has no recipe configured."
+        )
+
+    override_map = {
+        item["recipe_ingredient_id"]: item["ingredient_id"]
+        for item in (ingredient_overrides or [])
+    }
+
+    for recipe in recipe_items:
+
+        ingredient = recipe.ingredient
+
+        override_id = override_map.get(recipe.id)
+
+        if override_id:
+            ingredient = Ingredient.objects.get(
+                id=override_id
+            )
+
+        required_quantity = (
+            recipe.quantity *
+            Decimal(str(quantity))
+        )
+
+        if ingredient.stock < required_quantity:
+            raise ValueError(
+                f"Insufficient stock for ingredient: "
+                f"{ingredient.name}"
+            )
+
+        previous_stock = ingredient.stock
+
+        ingredient.stock -= required_quantity
+
+        ingredient.save(
+            update_fields=["stock"]
+        )
+
+        IngredientStockLog.objects.create(
+            ingredient=ingredient,
+            previous_stock=previous_stock,
+            quantity_changed=required_quantity,
+            new_stock=ingredient.stock,
+            transaction_type="SALE"
+        )
+
+        if transaction_item:
+
+            from billing.models import (
+                TransactionItemIngredient
+            )
+
+            TransactionItemIngredient.objects.create(
+                transaction_item=transaction_item,
+                ingredient=ingredient,
+                quantity_used=required_quantity
+            )
+
+@transaction.atomic
+def consume_inventory(
+    product,
+    quantity,
+    transaction_item,
+    ingredient_overrides=None,
+    combo_overrides=None
+):
+
+    ingredient_overrides = ingredient_overrides or []
+    combo_overrides = combo_overrides or []
+
+    # ============================================================
+    # NORMAL PRODUCT
+    # ============================================================
+
     if product.product_type == Product.TYPE_PRODUCT:
 
         consume_recipe(
@@ -112,15 +224,20 @@ def consume_inventory(
             transaction_item,
             ingredient_overrides
         )
-        update_product_availability()
 
         return
 
-    combo_items = ComboItem.objects.filter(
-        combo=product
-    ).select_related("product")
+    # ============================================================
+    # COMBO
+    # ============================================================
 
-    if not combo_items.exists():
+    combo_items = list(
+        ComboItem.objects
+        .filter(combo=product)
+        .select_related("product")
+    )
+
+    if not combo_items:
 
         raise ValueError(
             f"{product.name} has no combo items configured."
@@ -131,15 +248,36 @@ def consume_inventory(
         for item in combo_overrides
     }
 
+    # Cache overridden products
+    override_products = {}
+
+    if override_map:
+
+        override_products = {
+            product.id: product
+            for product in Product.objects.filter(
+                id__in=override_map.values()
+            )
+        }
+
     for combo_item in combo_items:
 
         selected_product = combo_item.product
 
-        if combo_item.id in override_map:
+        override_id = override_map.get(
+            combo_item.id
+        )
 
-            selected_product = Product.objects.get(
-                id=override_map[combo_item.id]
+        if override_id:
+
+            selected_product = override_products.get(
+                override_id
             )
+
+            if not selected_product:
+                raise ValueError(
+                    "Invalid combo substitution."
+                )
 
         consume_inventory(
             selected_product,
@@ -148,7 +286,6 @@ def consume_inventory(
             ingredient_overrides,
             combo_overrides
         )
-    update_product_availability()
 
 @transaction.atomic
 def restore_inventory(transaction_item):
@@ -242,3 +379,48 @@ def adjust_stock(ingredient, quantity, transaction_type):
     )
 
     return ingredient
+
+@transaction.atomic
+def deduct_bill_inventory(bill):
+
+    from billing.models import (
+        Transaction,
+        TransactionItem
+    )
+
+    # Already completed → NEVER deduct again
+    if (
+        bill.inventory_status
+        == Transaction.INVENTORY_COMPLETED
+    ):
+        return
+
+    items = (
+        TransactionItem.objects
+        .filter(transaction=bill)
+        .select_related("product")
+    )
+
+    for item in items:
+
+        consume_inventory(
+            item.product,
+            item.quantity,
+            item,
+            item.ingredient_overrides,
+            item.combo_overrides
+        )
+
+    # Update product availability only ONCE
+    update_product_availability()
+
+    # Mark completed INSIDE the same transaction
+    bill.inventory_status = (
+        Transaction.INVENTORY_COMPLETED
+    )
+
+    bill.save(
+        update_fields=[
+            "inventory_status"
+        ]
+    )

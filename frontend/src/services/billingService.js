@@ -109,3 +109,85 @@ export const deleteDiscount = async (id) => {
   );
   return response.data;
 };
+export const deductBillInventory = async (billId) => {
+  try {
+    console.log(
+      "DEDUCTING INVENTORY FOR BILL:",
+      billId
+    );
+
+    const response = await api.post(
+      `/billing/${billId}/deduct-inventory/`
+    );
+
+    console.log(
+      "INVENTORY SUCCESS:",
+      response.data
+    );
+
+    return response.data;
+
+  } catch (error) {
+
+    console.error(
+      "INVENTORY ERROR:",
+      error.response?.status,
+      error.response?.data
+    );
+
+    throw error;
+  }
+};
+export const deductBillInventoryWithRetry = async (
+  billId,
+  retries = 5
+) => {
+
+  for (
+    let attempt = 1;
+    attempt <= retries;
+    attempt++
+  ) {
+
+    try {
+
+      return await deductBillInventory(
+        billId
+      );
+
+    } catch (error) {
+
+      const status =
+        error.response?.status;
+
+      console.error(
+        `Inventory deduction attempt ${attempt} failed`,
+        error
+      );
+
+      // ==========================================
+      // 400 = PERMANENT / BUSINESS ERROR
+      // ==========================================
+
+      if (status === 400) {
+        throw error;
+      }
+
+      // ==========================================
+      // OTHER ERRORS = RETRY
+      // ==========================================
+
+      if (attempt === retries) {
+        throw error;
+      }
+
+      await new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            attempt * 3000
+          )
+      );
+    }
+  }
+};

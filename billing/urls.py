@@ -6,7 +6,8 @@ from .views import (
     DeleteBillAPIView,
     InvoicePDFAPIView,
     DiscountListCreateAPIView,
-    DiscountDetailAPIView
+    DiscountDetailAPIView,
+    DeductBillInventoryAPIView
 )
 
 urlpatterns = [
@@ -41,4 +42,8 @@ urlpatterns = [
         "discounts/<int:pk>/",
         DiscountDetailAPIView.as_view()
     ),
+    path(
+    "<int:pk>/deduct-inventory/",
+    DeductBillInventoryAPIView.as_view()
+),
 ]

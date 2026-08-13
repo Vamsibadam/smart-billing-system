@@ -5,6 +5,7 @@ import {
   createBill,
   getProducts,
   getDiscounts,
+  deductBillInventoryWithRetry,
 } from "../services/billingService";
 import { createPortal } from "react-dom";
 import {
@@ -720,6 +721,8 @@ function Billing() {
   }, [paymentTotalAmount, showPaymentModal]);
   const closeButtonRef =
     useRef(null);
+    const confirmButtonRef =
+  useRef(null);
 
   useEffect(() => {
 
@@ -735,88 +738,117 @@ function Billing() {
 
   }, [showBillModal]);
 
-  const confirmPayment =
-    async () => {
+  const confirmPayment = async () => {
+    if (Math.abs(remainingAmount) > 0.01) {
+      setNotification({
+        show: true,
+        type: "error",
+        message: "Payment amount must match bill total",
+      });
+      return;
+    }
 
-      if (
-        Math.abs(remainingAmount) > 0.01
-      ) {
-        setNotification({
-          show: true,
-          type: "error",
-          message:
-            "Payment amount must match bill total",
-        });
+    try {
+      const items = cart.map((item) => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        combo_overrides: item.combo_overrides || [],
+        ingredient_overrides: item.ingredient_overrides || [],
+      }));
 
+      // 1️⃣ CREATE BILL
+      const response = await createBill(
+        items,
+        payments,
+        selectedProductDiscountId,
+        discountPercentage
+      );
 
-        return;
+      console.log("BILL CREATED:", response);
+
+      // 2️⃣ MARK INVENTORY AS PENDING
+      const pendingBills = JSON.parse(
+        localStorage.getItem("pending_inventory_bills") || "[]"
+      );
+
+      if (!pendingBills.includes(response.id)) {
+        pendingBills.push(response.id);
+
+        localStorage.setItem(
+          "pending_inventory_bills",
+          JSON.stringify(pendingBills)
+        );
       }
 
-      try {
-
-        const items =
-          cart.map(item => ({
-            product_id: item.id,
-            quantity: item.quantity,
-            combo_overrides: item.combo_overrides || [],
-            ingredient_overrides:
-              item.ingredient_overrides || [],
-          }))
-
-        const response =
-          await createBill(
-            items,
-            payments,
-            selectedProductDiscountId,
-            discountPercentage
+      // 3️⃣ DEDUCT INVENTORY
+      // Don't await — invoice appears immediately.
+      deductBillInventoryWithRetry(response.id)
+        .then(() => {
+          console.log(
+            "INVENTORY DEDUCTED:",
+            response.id
           );
 
-        setGeneratedBill(
-          response
-        );
+          const currentPending = JSON.parse(
+            localStorage.getItem("pending_inventory_bills") || "[]"
+          );
 
-        setShowPaymentModal(
-          false
-        );
+          const updatedPending = currentPending.filter(
+            (id) => id !== response.id
+          );
 
-        setShowBillModal(
-          true
-        );
+          localStorage.setItem(
+            "pending_inventory_bills",
+            JSON.stringify(updatedPending)
+          );
+        })
+        .catch((error) => {
+          console.error(
+            "INVENTORY DEDUCTION FAILED:",
+            error
+          );
 
-        setCart([]);
-        setDiscountPercentage(0);
-        setSelectedProductDiscountId(null);
-
-        localStorage.removeItem(
-          "billing_cart"
-        );
-
-        setPayments([
-          {
-            method: "upi",
-            amount: ""
-          }
-        ]);
-
-      } catch (error) {
-        console.error("BILL ERROR:", error);
-  console.error(
-    "BACKEND RESPONSE:",
-    error.response?.data
-  );
-
-        console.error(error);
-        setNotification({
-          show: true,
-          type: "error",
-          message:
-            error.response?.data?.error,
+          // IMPORTANT:
+          // Do NOT remove from pending list.
         });
-      }
-    };
-  const confirmButtonRef =
-    useRef(null);
 
+      // 4️⃣ SHOW BILL IMMEDIATELY
+      setGeneratedBill(response);
+      setShowPaymentModal(false);
+      setShowBillModal(true);
+
+      // 5️⃣ CLEAR CART
+      setCart([]);
+      setDiscountPercentage(0);
+      setSelectedProductDiscountId(null);
+
+      localStorage.removeItem("billing_cart");
+
+      setPayments([
+        {
+          method: "upi",
+          amount: "",
+        },
+      ]);
+
+    } catch (error) {
+      console.error("BILL ERROR:", error);
+
+      console.error(
+        "BACKEND RESPONSE:",
+        error.response?.data
+      );
+
+      setNotification({
+        show: true,
+        type: "error",
+        message:
+          error.response?.data?.error ||
+          "Unable to create bill.",
+      });
+    }
+  };
+  
   useEffect(() => {
 
     if (showPaymentModal) {
@@ -1179,7 +1211,7 @@ function Billing() {
   return (
     <MainLayout>
 
-     <div className="
+      <div className="
   w-full
   min-h-screen
   bg-gradient-to-tr
@@ -1530,7 +1562,7 @@ function Billing() {
 
             {/* Header Block */}
             <div>
-             <div className="
+              <div className="
   flex
   flex-col
   sm:flex-row
@@ -1559,47 +1591,47 @@ function Billing() {
                 </div>
               </div>
               {/* Product Offer + Discount */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
-  {/* Product Offer */}
-  <div>
+                {/* Product Offer */}
+                <div>
 
-    <div className="flex justify-between items-center mb-2">
-      <span
-        className="
+                  <div className="flex justify-between items-center mb-2">
+                    <span
+                      className="
           text-xs
           font-bold
           text-slate-400
           uppercase
           tracking-wider
         "
-      >
-        Product Offer
-      </span>
+                    >
+                      Product Offer
+                    </span>
 
-      {paymentProductDiscountAmount > 0 && (
-        <span
-          className="
+                    {paymentProductDiscountAmount > 0 && (
+                      <span
+                        className="
             text-xs
             font-black
             text-emerald-600
           "
-        >
-          -₹{paymentProductDiscountAmount.toFixed(2)}
-        </span>
-      )}
-    </div>
+                      >
+                        -₹{paymentProductDiscountAmount.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
 
-    <select
-      value={selectedProductDiscountId || ""}
-      onChange={(e) => {
-        const value = e.target.value;
+                  <select
+                    value={selectedProductDiscountId || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
 
-        setSelectedProductDiscountId(
-          value ? Number(value) : null
-        );
-      }}
-      className="
+                      setSelectedProductDiscountId(
+                        value ? Number(value) : null
+                      );
+                    }}
+                    className="
         w-full
         bg-white
         border
@@ -1614,93 +1646,93 @@ function Billing() {
         focus:ring-2
         focus:ring-indigo-100
       "
-    >
+                  >
 
-      <option value="">
-        No Product Offer
-      </option>
+                    <option value="">
+                      No Product Offer
+                    </option>
 
-      {discounts
-        .filter(
-          (discount) =>
-            discount.discount_type === "PRODUCT" &&
-            discount.is_active
-        )
-        .map((discount) => (
+                    {discounts
+                      .filter(
+                        (discount) =>
+                          discount.discount_type === "PRODUCT" &&
+                          discount.is_active
+                      )
+                      .map((discount) => (
 
-          <option
-            key={discount.id}
-            value={discount.id}
-          >
-            {discount.name}
-            {discount.product === null
-              ? " - All Products"
-              : ""}
-          </option>
+                        <option
+                          key={discount.id}
+                          value={discount.id}
+                        >
+                          {discount.name}
+                          {discount.product === null
+                            ? " - All Products"
+                            : ""}
+                        </option>
 
-        ))}
+                      ))}
 
-    </select>
+                  </select>
 
-  </div>
+                </div>
 
 
-  {/* Percentage Discount */}
-  <div>
+                {/* Percentage Discount */}
+                <div>
 
-    <div className="flex justify-between items-center mb-2">
+                  <div className="flex justify-between items-center mb-2">
 
-      <span
-        className="
+                    <span
+                      className="
           text-xs
           font-bold
           text-slate-400
           uppercase
           tracking-wider
         "
-      >
-        Discount
-      </span>
+                    >
+                      Discount
+                    </span>
 
-      {paymentDiscountAmount > 0 && (
-        <span
-          className="
+                    {paymentDiscountAmount > 0 && (
+                      <span
+                        className="
             text-xs
             font-black
             text-emerald-600
           "
-        >
-          -₹{paymentDiscountAmount.toFixed(2)}
-        </span>
-      )}
+                      >
+                        -₹{paymentDiscountAmount.toFixed(2)}
+                      </span>
+                    )}
 
-    </div>
+                  </div>
 
-    <div className="relative">
+                  <div className="relative">
 
-      <input
-        type="number"
-        min="0"
-        max="100"
-        step="0.01"
-        value={discountPercentage}
-        onChange={(e) => {
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={discountPercentage}
+                      onChange={(e) => {
 
-          let value =
-            Number(e.target.value);
+                        let value =
+                          Number(e.target.value);
 
-          if (value < 0) {
-            value = 0;
-          }
+                        if (value < 0) {
+                          value = 0;
+                        }
 
-          if (value > 100) {
-            value = 100;
-          }
+                        if (value > 100) {
+                          value = 100;
+                        }
 
-          setDiscountPercentage(value);
+                        setDiscountPercentage(value);
 
-        }}
-        className="
+                      }}
+                      className="
           w-full
           bg-white
           border
@@ -1716,11 +1748,11 @@ function Billing() {
           focus:ring-2
           focus:ring-indigo-100
         "
-        placeholder="Enter discount percentage"
-      />
+                      placeholder="Enter discount percentage"
+                    />
 
-      <span
-        className="
+                    <span
+                      className="
           absolute
           right-4
           top-1/2
@@ -1729,15 +1761,15 @@ function Billing() {
           font-black
           text-slate-400
         "
-      >
-        %
-      </span>
+                    >
+                      %
+                    </span>
 
-    </div>
+                  </div>
 
-  </div>
+                </div>
 
-</div>
+              </div>
               {/* Brand Method Grid (Massive, Tactical Grid Buttons) */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                 {[

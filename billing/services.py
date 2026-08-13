@@ -2,7 +2,7 @@ from decimal import Decimal
 from django.db import transaction
 
 from products.models import Product
-
+from ingredients.services import validate_inventory
 from .utils import generate_bill_number
 from .models import (
     Transaction,
@@ -11,7 +11,7 @@ from .models import (
     Discount,
 )
 
-from ingredients.services import consume_inventory
+
 
 
 @transaction.atomic
@@ -52,7 +52,28 @@ def create_bill(
                 "Selected product discount does not exist "
                 "or is inactive."
             )
+    # ==========================================================
+    # INVENTORY VALIDATION
+    # ==========================================================
 
+    for item in items:
+
+        product = Product.objects.get(
+            id=item["product_id"]
+        )
+
+        validate_inventory(
+            product,
+            item["quantity"],
+            item.get(
+                "ingredient_overrides",
+                []
+            ),
+            item.get(
+                "combo_overrides",
+                []
+            )
+        )
     # ============================================================
     # CREATE BILL
     # ============================================================
@@ -77,31 +98,54 @@ def create_bill(
             )
         ),
         direct_discount_amount=0,
-        payment_method=None
+        payment_method=None,
+        inventory_status=Transaction.INVENTORY_PENDING,
     )
-
     # ============================================================
     # PREPARE PRODUCTS
     # ============================================================
+
+    product_ids = [
+        item["product_id"]
+        for item in items
+    ]
+
+    products = Product.objects.filter(
+        id__in=product_ids
+    )
+
+    product_map = {
+        product.id: product
+        for product in products
+    }
 
     prepared_items = []
 
     for item in items:
 
-        product = Product.objects.get(
-            id=item["product_id"]
-        )
+        product_id = item["product_id"]
+
+        product = product_map.get(product_id)
+
+        if not product:
+            raise ValueError(
+                f"Product with id {product_id} does not exist."
+            )
 
         quantity = int(
             item["quantity"]
         )
+
+        if quantity <= 0:
+            raise ValueError(
+                "Quantity must be greater than zero."
+            )
 
         prepared_items.append({
             "item": item,
             "product": product,
             "quantity": quantity,
         })
-
     # ============================================================
     # CALCULATE ORIGINAL SUBTOTAL
     # ============================================================
@@ -241,40 +285,22 @@ def create_bill(
             product=product,
             quantity=quantity,
             unit_price=product.price,
-            subtotal=subtotal
+            subtotal=subtotal,
+            ingredient_overrides=item.get(
+                "ingredient_overrides",
+                []
+            ),
+            combo_overrides=item.get(
+                "combo_overrides",
+                []
+            )
         )
 
         # ========================================================
         # INVENTORY
         # ========================================================
 
-        if product.product_type == Product.TYPE_PRODUCT:
-
-            consume_inventory(
-                product,
-                quantity,
-                transaction_item,
-                item.get(
-                    "ingredient_overrides",
-                    []
-                )
-            )
-
-        else:
-
-            consume_inventory(
-                product,
-                quantity,
-                transaction_item,
-                item.get(
-                    "ingredient_overrides",
-                    []
-                ),
-                item.get(
-                    "combo_overrides",
-                    []
-                )
-            )
+        
 
     # ============================================================
     # AFTER PRODUCT OFFER
@@ -403,5 +429,6 @@ def create_bill(
             "total_amount",
         ]
     )
+    
 
     return bill

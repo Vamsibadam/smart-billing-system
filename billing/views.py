@@ -23,7 +23,7 @@ from django.http import FileResponse
 from .pdf_generator import (
     generate_invoice_pdf
 )
-from ingredients.services import restore_bill
+from ingredients.services import restore_bill,deduct_bill_inventory
 
 class CreateBillAPIView(APIView):
 
@@ -230,3 +230,51 @@ class DiscountDetailAPIView(
     queryset = Discount.objects.all()
 
     serializer_class = DiscountSerializer
+
+class DeductBillInventoryAPIView(APIView):
+
+    def post(self, request, pk):
+
+        try:
+
+            bill = Transaction.objects.get(
+                id=pk
+            )
+
+            deduct_bill_inventory(bill)
+
+            return Response(
+                {
+                    "message":
+                    "Inventory deducted successfully."
+                },
+                status=status.HTTP_200_OK
+            )
+
+        except Transaction.DoesNotExist:
+
+            return Response(
+                {
+                    "error": "Bill not found."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        except ValueError as e:
+
+            return Response(
+                {
+                    "error": str(e)
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        except Exception as e:
+
+            return Response(
+                {
+                    "error": "Unable to deduct inventory.",
+                    "details": str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

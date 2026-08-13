@@ -49,7 +49,7 @@ function BillHistory() {
     useState(false);
 
   const [loading, setLoading] = useState(true);
-
+  const [deleteLoading, setDeleteLoading] = useState(false);
   useEffect(() => {
 
     fetchBills(getTodayDate());
@@ -114,16 +114,30 @@ function BillHistory() {
     };
 
   const handleDelete = async () => {
-    try {
-      await deleteBill(billToDelete.id);
 
-      fetchBills(selectedDate);
+    try {
+
+      setDeleteLoading(true);
+
+      await deleteBill(
+        billToDelete.id
+      );
+
+      await fetchBills(
+        selectedDate
+      );
 
       setShowDeleteModal(false);
       setBillToDelete(null);
 
     } catch (error) {
+
       console.error(error);
+
+    } finally {
+
+      setDeleteLoading(false);
+
     }
   };
 
@@ -471,43 +485,75 @@ function BillHistory() {
 
               <button
                 onClick={() => {
+                  if (deleteLoading) return;
+
                   setShowDeleteModal(false);
                   setBillToDelete(null);
                 }}
+                disabled={deleteLoading}
                 className="
-          flex-1
-          py-3
-          rounded-xl
-          border
-          border-slate-200
-          bg-white
-          text-slate-600
-          font-bold
-          hover:bg-slate-50
-          transition
-          cursor-pointer
-          "
+    flex-1
+    py-3
+    rounded-xl
+    border
+    border-slate-200
+    bg-white
+    text-slate-600
+    font-bold
+    hover:bg-slate-50
+    transition
+    cursor-pointer
+    disabled:opacity-50
+    disabled:cursor-not-allowed
+  "
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleDelete}
+                disabled={deleteLoading}
                 className="
-          flex-1
-          py-3
-          rounded-xl
-          bg-gradient-to-r
-          from-red-500
-          to-red-600
-          text-white
-          font-bold
-          hover:opacity-95
-          transition
-          cursor-pointer
-          "
+    flex-1
+    py-3
+    rounded-xl
+    bg-gradient-to-r
+    from-red-500
+    to-red-600
+    text-white
+    font-bold
+    transition-all
+    duration-200
+    cursor-pointer
+    disabled:opacity-70
+    disabled:cursor-not-allowed
+    flex
+    items-center
+    justify-center
+    gap-2
+  "
               >
-                Delete Bill
+                {deleteLoading ? (
+                  <>
+                    <div
+                      className="
+          h-4
+          w-4
+          border-2
+          border-white/40
+          border-t-white
+          rounded-full
+          animate-spin
+        "
+                    />
+
+                    <span>
+                      Deleting...
+                    </span>
+                  </>
+                ) : (
+                  "Delete Bill"
+                )}
               </button>
 
             </div>

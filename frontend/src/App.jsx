@@ -13,8 +13,14 @@ import InvoicePreview from "./pages/InvoicePreview";
 import Ingredients from "./pages/Ingredients";
 import DashboardExpenses from "./pages/DashboardExpenses";
 import Discounts from "./pages/Discounts";
+import { recoverPendingInventory } from "./utils/inventoryRecovery";
+import { useState, useEffect, useRef } from "react";
 function App() {
-  
+  useEffect(() => {
+
+    recoverPendingInventory();
+
+  }, []);
   
   return (
     
