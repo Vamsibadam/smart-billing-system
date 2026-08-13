@@ -8,6 +8,33 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.contrib.auth.password_validation import validate_password
+
+class RefreshTokenAPIView(APIView):
+
+    def post(self, request):
+
+        refresh_token = request.data.get("refresh")
+
+        if not refresh_token:
+            return Response(
+                {"error": "Refresh token is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+
+            refresh = RefreshToken(refresh_token)
+
+            return Response({
+                "access": str(refresh.access_token)
+            })
+
+        except Exception:
+
+            return Response(
+                {"error": "Invalid or expired refresh token."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 class LoginAPIView(APIView):
 
     authentication_classes = []

@@ -1179,13 +1179,43 @@ function Billing() {
   return (
     <MainLayout>
 
-      <div className="w-full min-h-screen bg-gradient-to-tr from-indigo-200/70 via-slate-50 to-orange-200/40 p-6 rounded-[24px]">
+     <div className="
+  w-full
+  min-h-screen
+  bg-gradient-to-tr
+  from-indigo-200/70
+  via-slate-50
+  to-orange-200/40
+  p-2
+  sm:p-4
+  md:p-6
+  rounded-2xl
+  sm:rounded-[24px]
+">
 
-        <div className="mb-6 relative z-10 flex justify-between items-start">
+        <div className="
+  mb-4
+  sm:mb-6
+  relative
+  z-10
+  flex
+  flex-col
+  lg:flex-row
+  lg:justify-between
+  lg:items-start
+  gap-3
+">
           <h1 className="text-3xl font-black tracking-tight text-slate-800">
             Billing
           </h1>
-          <div className="flex items-center gap-3">
+          <div className="
+  flex
+  flex-wrap
+  items-center
+  gap-2
+  w-full
+  lg:w-auto
+">
             <button
               onClick={() => setShowHeldBills(true)}
               className="
@@ -1330,12 +1360,36 @@ function Billing() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-full overflow-hidden pb-6 relative z-10 items-start">
+        <div className="
+  grid
+  grid-cols-1
+  lg:grid-cols-3
+  gap-3
+  sm:gap-4
+  lg:gap-6
+  max-w-full
+  overflow-hidden
+  pb-6
+  relative
+  z-10
+  items-start
+">
 
           {/* Left Column Section: Dynamically stretches to full screen size if it is in touch mode */}
           <div className={layout === "classic" ? "lg:col-span-1" : "lg:col-span-3"}>
             {billingView === "classic" ? (
-              <div className="bg-slate-900 backdrop-blur-md border border-slate-800 rounded-[24px] p-6 shadow-sm">
+              <div className="
+  bg-slate-900
+  backdrop-blur-md
+  border
+  border-slate-800
+  rounded-2xl
+  sm:rounded-[24px]
+  p-3
+  sm:p-4
+  md:p-6
+  shadow-sm
+">
                 <h2 className="text-lg font-black tracking-tight text-white mb-4">
                   Product Search
                 </h2>
@@ -1455,11 +1509,37 @@ function Billing() {
 
       {showPaymentModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/20 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-2xl bg-white border border-slate-200/80 rounded-[32px] shadow-2xl p-8 flex flex-col justify-between">
+          <div className="
+  w-full
+  max-w-2xl
+  max-h-[95vh]
+  overflow-y-auto
+  bg-white
+  border
+  border-slate-200/80
+  rounded-2xl
+  sm:rounded-[32px]
+  shadow-2xl
+  p-4
+  sm:p-6
+  md:p-8
+  flex
+  flex-col
+  justify-between
+">
 
             {/* Header Block */}
             <div>
-              <div className="flex justify-between items-start mb-6">
+             <div className="
+  flex
+  flex-col
+  sm:flex-row
+  sm:justify-between
+  sm:items-start
+  gap-3
+  mb-5
+  sm:mb-6
+">
                 <div>
                   <h2 className="text-2xl font-black tracking-tight text-slate-800">
                     Choose Payment Method
@@ -1778,7 +1858,7 @@ function Billing() {
                           value={payment.amount}
                           onChange={(e) => updatePayment(index, "amount", e.target.value)}
                           className="
-                    w-40
+                    w-28 sm:w-40
                     bg-white
                     border border-slate-200
                     text-slate-900
@@ -1833,7 +1913,14 @@ function Billing() {
               </div>
 
               {/* Main Action Large Button Bar */}
-              <div className="flex gap-3 mt-6">
+              <div className="
+  flex
+  flex-col
+  sm:flex-row
+  gap-3
+  mt-5
+  sm:mt-6
+">
                 <button
                   onClick={() => setShowPaymentModal(false)}
                   className="
