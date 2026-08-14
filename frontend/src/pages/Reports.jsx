@@ -110,7 +110,7 @@ useEffect(() => {
 
   <MainLayout>
 
-  <div className="mb-6 relative z-10 px-6">
+  <div className="mb-6 relative z-10 px-6 m-4">
     <h1 className="text-3xl font-black tracking-tight text-slate-800">
       Reports
     </h1>

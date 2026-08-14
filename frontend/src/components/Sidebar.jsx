@@ -1,5 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
   LogOut,
@@ -14,22 +13,14 @@ import {
   BadgePercent,
 } from "lucide-react";
 
-
 function Sidebar({ onNavigate }) {
-
   const location = useLocation();
-
   const navigate = useNavigate();
 
-
   const logout = () => {
-
     localStorage.clear();
-
     navigate("/login");
-
   };
-
 
   const menuItems = [
     {
@@ -37,49 +28,41 @@ function Sidebar({ onNavigate }) {
       path: "/dashboard",
       icon: <LayoutDashboard size={22} />,
     },
-
     {
       name: "Billing",
       path: "/billing",
       icon: <Receipt size={22} />,
     },
-
     {
       name: "Bill History",
       path: "/bill-history",
       icon: <History size={22} />,
     },
-
     {
       name: "Products",
       path: "/products",
       icon: <Package size={22} />,
     },
-
     {
       name: "Ingredients",
       path: "/ingredients",
       icon: <UtensilsCrossed size={22} />,
     },
-
     {
       name: "Inventory",
       path: "/inventory",
       icon: <Boxes size={22} />,
     },
-
     {
       name: "Discounts",
       path: "/discounts",
       icon: <BadgePercent size={22} />,
     },
-
     {
       name: "Reports",
       path: "/reports",
       icon: <FileText size={22} />,
     },
-
     {
       name: "Store Settings",
       path: "/settings",
@@ -87,43 +70,50 @@ function Sidebar({ onNavigate }) {
     },
   ];
 
-
   return (
-
-   <div className="
-  p-4
-  h-screen
-  flex
-  relative
-  overflow-hidden
-  bg-transparent
-">
-
+    <div
+      className="
+        p-4
+        h-screen
+        flex
+        relative
+        overflow-hidden
+        bg-transparent
+      "
+    >
       {/* =====================================================
           SIDEBAR CARD
-      ===================================================== */}
+      ====================================================== */}
 
       <div
-  className="
-    w-72
-    h-full
-    bg-gradient-to-b
-    from-slate-900
-    via-[#0F172A]
-    to-slate-900/90
-    backdrop-blur-xl
-    rounded-[32px]
-    border
-    border-slate-800/80
-    shadow-[0_4px_25px_-5px_rgba(0,0,0,0.3),0_16px_40px_-15px_rgba(0,0,0,0.5)]
-    flex
-    flex-col
-    justify-between
-    p-5
-    relative
-    z-10
-  "
->
+        className="
+          w-72
+          h-full
+
+          bg-gradient-to-b
+          from-slate-900
+          via-[#0F172A]
+          to-slate-900
+
+          rounded-[32px]
+
+          border
+          border-slate-800/80
+
+          shadow-[0_4px_25px_-5px_rgba(0,0,0,0.3),0_16px_40px_-15px_rgba(0,0,0,0.5)]
+
+          flex
+          flex-col
+          justify-between
+
+          p-5
+
+          relative
+          z-10
+
+          overflow-hidden
+        "
+      >
 
         {/* =====================================================
             AMBIENT EFFECTS
@@ -170,14 +160,15 @@ function Sidebar({ onNavigate }) {
           "
         />
 
-
         {/* =====================================================
             MENU CONTENT
         ===================================================== */}
 
         <div className="relative z-10">
 
-          {/* Header Branding */}
+          {/* =================================================
+              HEADER BRANDING
+          ================================================== */}
 
           <div
             className="
@@ -213,7 +204,6 @@ function Sidebar({ onNavigate }) {
                 shadow-indigo-900/50
               "
             >
-
               <span
                 className="
                   w-2.5
@@ -226,12 +216,9 @@ function Sidebar({ onNavigate }) {
                   shadow-xs
                 "
               />
-
             </div>
 
-
             <div>
-
               <h2
                 className="
                   text-lg
@@ -255,7 +242,6 @@ function Sidebar({ onNavigate }) {
               >
                 Operator Panel
               </p>
-
             </div>
 
           </div>
@@ -263,30 +249,23 @@ function Sidebar({ onNavigate }) {
 
           {/* =================================================
               MENU LINKS
-          ================================================= */}
+          ================================================== */}
 
           <div className="space-y-1.5">
 
             {menuItems.map((item) => {
-
               const isActive =
                 location.pathname === item.path;
 
-
               return (
-
                 <Link
                   key={item.name}
                   to={item.path}
-
                   onClick={() => {
-
                     if (onNavigate) {
                       onNavigate();
                     }
-
                   }}
-
                   className={`
                     flex
                     items-center
@@ -309,7 +288,6 @@ function Sidebar({ onNavigate }) {
 
                     ${
                       isActive
-
                         ? `
                           bg-slate-800/90
                           text-white
@@ -319,7 +297,6 @@ function Sidebar({ onNavigate }) {
 
                           shadow-[0_4px_15px_-3px_rgba(0,0,0,0.2)]
                         `
-
                         : `
                           text-slate-400
 
@@ -333,7 +310,6 @@ function Sidebar({ onNavigate }) {
                   {/* Active Indicator */}
 
                   {isActive && (
-
                     <div
                       className="
                         absolute
@@ -349,7 +325,6 @@ function Sidebar({ onNavigate }) {
                         shadow-[0_0_8px_#818cf8]
                       "
                     />
-
                   )}
 
 
@@ -364,9 +339,7 @@ function Sidebar({ onNavigate }) {
 
                       ${
                         isActive
-
                           ? "text-indigo-400"
-
                           : "text-slate-500 group-hover:text-orange-400"
                       }
                     `}
@@ -387,9 +360,7 @@ function Sidebar({ onNavigate }) {
                   </span>
 
                 </Link>
-
               );
-
             })}
 
           </div>
@@ -405,7 +376,7 @@ function Sidebar({ onNavigate }) {
           className="
             p-4
 
-            bg-slate-950/50
+            bg-slate-950/80
 
             border
             border-slate-800/60
@@ -427,7 +398,6 @@ function Sidebar({ onNavigate }) {
 
             <button
               onClick={logout}
-
               className="
                 inline-flex
                 items-center
@@ -459,13 +429,11 @@ function Sidebar({ onNavigate }) {
                 duration-200
               "
             >
-
               <span>
                 Term Session
               </span>
 
               <LogOut size={14} />
-
             </button>
 
           </div>
@@ -487,11 +455,8 @@ function Sidebar({ onNavigate }) {
         </div>
 
       </div>
-
     </div>
-
   );
 }
-
 
 export default Sidebar;

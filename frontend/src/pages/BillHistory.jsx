@@ -166,8 +166,8 @@ function BillHistory() {
 
     <MainLayout>
 
-      <div className="mb-6 relative z-10 px-6">
-        <h1 className="text-3xl font-black tracking-tight text-slate-800">
+      <div className="m-6 relative z-10 px-6 ">
+        <h1 className="text-3xl font-black tracking-tight text-slate-800 ">
           Bill History
         </h1>
         <p className="text-sm font-semibold text-slate-400 mt-1">

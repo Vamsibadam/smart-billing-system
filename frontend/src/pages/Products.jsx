@@ -313,7 +313,7 @@ function Products() {
     <MainLayout>
       <>
         {/* Modern Header Section */}
-        <div className="flex justify-between items-center mb-8 relative z-10 px-2">
+        <div className="flex justify-between items-center mb-8 mt-5 relative z-10 px-8">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-slate-800">
               Products
@@ -372,7 +372,10 @@ function Products() {
     backdrop-blur-md
     border border-white/60
     rounded-[28px]
-    p-8 /* Increased main box inner padding */
+    m-6
+     px-8
+    sm:px-6
+    py-6
     shadow-[0_4px_25px_-5px_rgba(0,0,0,0.02),0_12px_35px_-10px_rgba(99,102,241,0.03)]
     relative 
     z-10
@@ -380,7 +383,7 @@ function Products() {
         >
 
           {/* Filter Input Field */}
-          <div className="mb-8">
+          <div className="mb-6">
             <input
               type="text"
               placeholder="Filter products by code, status, or asset name..."

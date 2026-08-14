@@ -3,22 +3,17 @@ import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function MainLayout({ children }) {
-
   const [posMode, setPosMode] = useState(
     localStorage.getItem("pos_mode") === "true"
   );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-
   useEffect(() => {
-
     const handlePosModeChange = () => {
-
       setPosMode(
         localStorage.getItem("pos_mode") === "true"
       );
-
     };
 
     window.addEventListener(
@@ -27,64 +22,53 @@ function MainLayout({ children }) {
     );
 
     return () => {
-
       window.removeEventListener(
         "pos-mode-change",
         handlePosModeChange
       );
-
     };
-
   }, []);
 
-
   return (
-
     <div
       className="
         h-screen
         w-full
-        bg-slate-100
-        antialiased
         overflow-hidden
+        antialiased
+        bg-[#F4F5F8]
       "
     >
 
       {/* =====================================================
-          FIXED DESKTOP SIDEBAR
-      ===================================================== */}
+          DESKTOP SIDEBAR
+      ====================================================== */}
 
       {!posMode && (
-
         <aside
           className="
-            hidden
-            md:block
-
             fixed
             left-0
             top-0
+            z-40
+
+            hidden
+            md:block
 
             w-80
             h-screen
-
-            z-40
           "
         >
-
           <Sidebar />
-
         </aside>
-
       )}
 
 
       {/* =====================================================
           MOBILE SIDEBAR
-      ===================================================== */}
+      ====================================================== */}
 
       {!posMode && mobileMenuOpen && (
-
         <div
           className="
             fixed
@@ -94,14 +78,22 @@ function MainLayout({ children }) {
           "
         >
 
-          {/* Overlay */}
+          {/* =================================================
+              MOBILE OVERLAY
+
+              No backdrop blur here.
+              This keeps the dashboard behind the menu sharp.
+          ================================================== */}
 
           <div
             className="
               absolute
               inset-0
-              bg-black/40
-              backdrop-blur-sm
+
+              bg-slate-950/55
+
+              transition-opacity
+              duration-200
             "
             onClick={() =>
               setMobileMenuOpen(false)
@@ -109,7 +101,9 @@ function MainLayout({ children }) {
           />
 
 
-          {/* Sidebar */}
+          {/* =================================================
+              MOBILE SIDEBAR
+          ================================================== */}
 
           <div
             className="
@@ -117,37 +111,38 @@ function MainLayout({ children }) {
               left-0
               top-0
 
-              h-full
-
-              w-[300px]
-              max-w-[90vw]
-
               z-[9999]
+
+              h-full
+              w-[300px]
+              max-w-[88vw]
+
+           
+
+              
+
+              animate-[slideIn_0.2s_ease-out]
             "
           >
-
             <Sidebar
               onNavigate={() =>
                 setMobileMenuOpen(false)
               }
             />
-
           </div>
 
         </div>
-
       )}
 
 
       {/* =====================================================
-          MAIN APPLICATION AREA
-      ===================================================== */}
+          MAIN APPLICATION
+      ====================================================== */}
 
       <div
         className={`
-          h-screen
-
           flex
+          h-screen
           flex-col
 
           ${
@@ -158,152 +153,70 @@ function MainLayout({ children }) {
         `}
       >
 
-
         {/* ===================================================
-            FIXED NAVBAR
+            NAVBAR
         =================================================== */}
 
         {!posMode && (
-
           <div
             className="
-              flex-shrink-0
               relative
               z-30
+
+              flex-shrink-0
+
+              px-2
+              pt-2
+
+              sm:px-4
+              sm:pt-4
             "
           >
-
             <Navbar
               onMenuClick={() =>
                 setMobileMenuOpen(true)
               }
             />
-
           </div>
-
         )}
 
 
         {/* ===================================================
-            SCROLLABLE PAGE AREA
+            CONTENT AREA
         =================================================== */}
 
         <main
-          className={`
-            flex-1
+          className="
             min-h-0
             min-w-0
-
-            ${
-              posMode
-                ? ""
-                : "px-2 sm:px-3 md:px-4 pb-2 md:pb-4"
-            }
-          `}
+            flex-1
+            overflow-hidden
+          "
         >
 
           <div
             className={`
-              w-full
-              h-full
-
               relative
 
-              overflow-y-auto
+              h-full
+              w-full
+
               overflow-x-hidden
+              overflow-y-auto
 
               scrollbar-none
 
               ${
                 posMode
-
                   ? "bg-white"
-
-                  : `
-                    bg-gradient-to-tr
-                    from-orange-100/40
-                    via-slate-50
-                    to-indigo-50/60
-
-                    backdrop-blur-md
-
-                    rounded-2xl
-                    sm:rounded-3xl
-
-                    border
-                    border-white/80
-
-                    shadow-[0_4px_25px_-5px_rgba(249,115,22,0.04),0_16px_40px_-15px_rgba(0,0,0,0.06)]
-                  `
+                  : "bg-[#F4F5F8]"
               }
             `}
           >
 
             {/* =================================================
-                BACKGROUND EFFECTS
-            ================================================= */}
-
-            {!posMode && (
-
-              <>
-
-                <div
-                  className="
-                    absolute
-                    bottom-[-10%]
-                    left-[-5%]
-
-                    w-72
-                    h-72
-
-                    sm:w-96
-                    sm:h-96
-
-                    bg-gradient-to-tr
-                    from-amber-400/10
-                    via-orange-400/5
-                    to-transparent
-
-                    rounded-full
-                    blur-3xl
-
-                    pointer-events-none
-                  "
-                />
-
-
-                <div
-                  className="
-                    absolute
-                    top-[-10%]
-                    right-[-5%]
-
-                    w-72
-                    h-72
-
-                    sm:w-96
-                    sm:h-96
-
-                    bg-gradient-to-bl
-                    from-indigo-500/5
-                    via-purple-500/5
-                    to-transparent
-
-                    rounded-full
-                    blur-3xl
-
-                    pointer-events-none
-                  "
-                />
-
-              </>
-
-            )}
-
-
-            {/* =================================================
                 PAGE CONTENT
-            ================================================= */}
+            ================================================== */}
 
             <div
               className={`
@@ -311,19 +224,16 @@ function MainLayout({ children }) {
                 z-10
 
                 w-full
-                max-w-full
                 min-w-0
 
                 ${
                   posMode
                     ? "p-2 sm:p-4"
-                    : "p-3 sm:p-4 md:p-6"
+                    : "p-0"
                 }
               `}
             >
-
               {children}
-
             </div>
 
           </div>
@@ -333,7 +243,6 @@ function MainLayout({ children }) {
       </div>
 
     </div>
-
   );
 }
 

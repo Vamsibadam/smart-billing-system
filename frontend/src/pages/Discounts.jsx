@@ -458,7 +458,7 @@ function Discounts() {
           flex
           justify-between
           items-center
-          mb-6
+          m-8
         ">
 
           <div>
@@ -516,6 +516,7 @@ function Discounts() {
             py-16
             text-slate-400
             font-bold
+            
           ">
             Loading discounts...
           </div>
@@ -528,6 +529,7 @@ function Discounts() {
             border-white
             rounded-2xl
             p-12
+          
             text-center
           ">
 
@@ -560,6 +562,7 @@ function Discounts() {
             md:grid-cols-2
             xl:grid-cols-3
             gap-5
+            m-6
           ">
 
             {discounts.map((discount) => (

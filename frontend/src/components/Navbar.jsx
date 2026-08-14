@@ -1,10 +1,13 @@
 import { useNavigate } from "react-router-dom";
+
 import {
   KeyRound,
   User,
-  Sparkles,
+  ReceiptText,
   Menu,
+  LogOut,
 } from "lucide-react";
+
 
 function Navbar({ onMenuClick }) {
 
@@ -15,424 +18,876 @@ function Navbar({ onMenuClick }) {
     navigate("/login");
   };
 
+  const username =
+    localStorage.getItem("username") || "Operator_01";
+
+
   return (
+    <>
 
-    <div className="p-2 sm:p-4 w-full bg-transparent">
+      {/* =====================================================
+          NEXBILL MOBILE ANIMATIONS
+      ====================================================== */}
 
-      <div
-        className="
-          min-h-16
-          sm:h-20
+      <style>{`
 
-          bg-gradient-to-r
-          from-slate-900
-          via-[#0F172A]
-          to-slate-900/90
+        @keyframes nexLogoFloat {
 
-          backdrop-blur-md
+          0%,
+          100% {
+            transform: translateY(0);
+          }
 
-          rounded-2xl
-          sm:rounded-[24px]
+          50% {
+            transform: translateY(-3px);
+          }
 
-          border
-          border-slate-800/80
+        }
 
-          flex
-          items-center
-          justify-between
 
-          px-3
-          sm:px-8
+        @keyframes nexLogoGlow {
 
-          py-2
-          sm:py-0
+          0%,
+          100% {
+            box-shadow:
+              0 5px 16px rgba(99,102,241,0.25);
+          }
 
-          shadow-[0_4px_25px_-5px_rgba(0,0,0,0.3),0_16px_40px_-15px_rgba(0,0,0,0.5)]
+          50% {
+            box-shadow:
+              0 7px 26px rgba(249,115,22,0.42),
+              0 0 18px rgba(129,140,248,0.25);
+          }
 
-          relative
-          z-50
+        }
 
-          gap-2
-        "
-      >
 
-        {/* Ambient Glow */}
+        @keyframes nexLogoShine {
+
+          0% {
+            transform: translateX(-180%) rotate(18deg);
+            opacity: 0;
+          }
+
+          15% {
+            opacity: 0.1;
+          }
+
+          35% {
+            opacity: 0.45;
+          }
+
+          55% {
+            opacity: 0;
+          }
+
+          100% {
+            transform: translateX(180%) rotate(18deg);
+            opacity: 0;
+          }
+
+        }
+
+
+        @keyframes nexTextPulse {
+
+          0%,
+          100% {
+            opacity: 1;
+            transform: translateX(0);
+          }
+
+          50% {
+            opacity: 0.9;
+            transform: translateX(1px);
+          }
+
+        }
+
+
+        @keyframes nexMenuPulse {
+
+          0%,
+          100% {
+            transform: scale(1);
+          }
+
+          50% {
+            transform: scale(1.04);
+          }
+
+        }
+
+
+        @keyframes nexControlPulse {
+
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+
+          50% {
+            transform: translateY(-2px);
+          }
+
+        }
+
+
+        @keyframes nexUserGlow {
+
+          0%,
+          100% {
+            box-shadow:
+              0 0 0 rgba(99,102,241,0);
+          }
+
+          50% {
+            box-shadow:
+              0 0 15px rgba(99,102,241,0.2);
+          }
+
+        }
+
+
+        .nex-logo-animation {
+
+          animation:
+            nexLogoFloat 3s ease-in-out infinite,
+            nexLogoGlow 3s ease-in-out infinite;
+
+        }
+
+
+        .nex-logo-shine {
+
+          animation:
+            nexLogoShine 4s ease-in-out infinite;
+
+        }
+
+
+        .nex-text-animation {
+
+          animation:
+            nexTextPulse 3s ease-in-out infinite;
+
+        }
+
+
+        .nex-menu-animation {
+
+          animation:
+            nexMenuPulse 3s ease-in-out infinite;
+
+        }
+
+
+        .nex-control-animation {
+
+          animation:
+            nexControlPulse 3.5s ease-in-out infinite;
+
+        }
+
+
+        .nex-user-animation {
+
+          animation:
+            nexUserGlow 3s ease-in-out infinite;
+
+        }
+
+
+        /* =====================================================
+           DESKTOP
+           Keep desktop professional/static
+        ====================================================== */
+
+        @media (min-width: 1024px) {
+
+          .nex-logo-animation,
+          .nex-logo-shine,
+          .nex-text-animation,
+          .nex-menu-animation,
+          .nex-control-animation,
+          .nex-user-animation {
+
+            animation: none;
+
+          }
+
+        }
+
+
+        /* =====================================================
+           MOBILE
+           Slightly stronger animations
+        ====================================================== */
+
+        @media (max-width: 1023px) {
+
+          .nex-logo-animation {
+            animation:
+              nexLogoFloat 3s ease-in-out infinite,
+              nexLogoGlow 3s ease-in-out infinite;
+          }
+
+          .nex-text-animation {
+            animation:
+              nexTextPulse 3s ease-in-out infinite;
+          }
+
+          .nex-menu-animation {
+            animation:
+              nexMenuPulse 3s ease-in-out infinite;
+          }
+
+          .nex-control-animation {
+            animation:
+              nexControlPulse 3.5s ease-in-out infinite;
+          }
+
+          .nex-user-animation {
+            animation:
+              nexUserGlow 3s ease-in-out infinite;
+          }
+
+        }
+
+      `}</style>
+
+
+      {/* =====================================================
+          NAVBAR WRAPPER
+      ====================================================== */}
+
+      <div className="w-full">
+
+
+        {/* ===================================================
+            NAVBAR BOX
+        ==================================================== */}
 
         <div
           className="
-            absolute
-            top-0
-            left-0
-            w-32
-            h-full
+            relative
+            z-50
+
+            w-full
+
+            min-h-[80px]
+            lg:h-20
+
+            flex
+            items-center
+            justify-between
+
+            gap-2
+
+            px-4
+            lg:px-8
+
+            py-3
+            lg:py-0
+
             bg-gradient-to-r
-            from-orange-500/5
-            to-transparent
-            pointer-events-none
-            rounded-l-[24px]
+            from-slate-900
+            via-[#111827]
+            to-slate-900
+
+            rounded-2xl
+            lg:rounded-[24px]
+
+            border
+            border-slate-800/80
+
+            shadow-[0_4px_25px_-5px_rgba(0,0,0,0.3),0_16px_40px_-15px_rgba(0,0,0,0.5)]
+
+            overflow-hidden
           "
-        />
-
-        <div
-          className="
-            absolute
-            top-0
-            right-0
-            w-32
-            h-full
-            bg-gradient-to-l
-            from-indigo-500/5
-            to-transparent
-            pointer-events-none
-            rounded-r-[24px]
-          "
-        />
+        >
 
 
-        {/* =====================================================
-            LEFT SIDE
-        ===================================================== */}
-
-        <div className="flex items-center gap-2 sm:gap-3.5 relative z-10 min-w-0">
-
-          {/* Mobile Menu */}
-
-          <button
-            type="button"
-            onClick={onMenuClick}
-            className="
-              md:hidden
-
-              w-10
-              h-10
-
-              flex
-              items-center
-              justify-center
-
-              rounded-xl
-
-              bg-slate-800
-              border
-              border-slate-700
-
-              text-slate-300
-
-              hover:bg-slate-700
-              hover:text-white
-
-              active:scale-95
-
-              transition-all
-            "
-            aria-label="Open menu"
-          >
-
-            <Menu size={20} />
-
-          </button>
-
-
-          {/* Branding */}
+          {/* =================================================
+              AMBIENT LEFT LIGHT
+          ================================================== */}
 
           <div
             className="
-              flex
-              items-center
-              gap-2
-              sm:gap-3.5
+              pointer-events-none
+              absolute
+              inset-y-0
+              left-0
 
-              group
-              cursor-pointer
+              w-32
+              lg:w-44
 
+              bg-gradient-to-r
+              from-orange-500/[0.07]
+              to-transparent
+            "
+          />
+
+
+          {/* =================================================
+              AMBIENT RIGHT LIGHT
+          ================================================== */}
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              inset-y-0
+              right-0
+
+              w-32
+              lg:w-44
+
+              bg-gradient-to-l
+              from-indigo-500/[0.07]
+              to-transparent
+            "
+          />
+
+
+          {/* =====================================================
+              LEFT SECTION
+          ====================================================== */}
+
+          <div
+            className="
               relative
               z-10
 
-              min-w-0
+              flex
+              flex-shrink-0
+
+              items-center
+
+              gap-2.5
+              lg:gap-3.5
             "
-            onClick={() => navigate("/dashboard")}
           >
 
-            <div
+
+            {/* =================================================
+                MOBILE MENU
+            ================================================== */}
+
+            <button
+              type="button"
+              onClick={onMenuClick}
+              aria-label="Open menu"
               className="
-                w-9
-                h-9
-                sm:w-10
-                sm:h-10
+                nex-menu-animation
+
+                md:hidden
+
+                flex
+                h-12
+                w-12
 
                 flex-shrink-0
 
-                rounded-xl
-                sm:rounded-2xl
-
-                bg-gradient-to-tr
-                from-orange-500
-                to-indigo-500
-
-                flex
                 items-center
                 justify-center
 
-                shadow-md
-                shadow-indigo-900/50
+                rounded-2xl
+
+                border
+                border-slate-700
+
+                bg-slate-800
+
+                text-slate-300
+
+                transition-all
+                duration-200
+
+                hover:bg-slate-700
+                hover:text-white
+
+                active:scale-95
               "
             >
 
-              <Sparkles
-                size={15}
-                className="text-white sm:w-4 sm:h-4"
+              <Menu
+                size={24}
+                strokeWidth={2.2}
               />
 
-            </div>
+            </button>
 
 
-            <div className="min-w-0">
+            {/* =================================================
+                NEXBILL BRAND
+            ================================================== */}
+
+            <div
+              className="
+                group
+
+                relative
+                z-10
+
+                flex
+                flex-shrink-0
+
+                cursor-pointer
+
+                items-center
+
+                gap-2.5
+                lg:gap-3
+
+                min-w-[140px]
+                lg:min-w-0
+              "
+              onClick={() =>
+                navigate("/dashboard")
+              }
+            >
+
+
+              {/* =================================================
+                  LOGO
+              ================================================== */}
+
+              <div
+                className="
+                  nex-logo-animation
+
+                  relative
+
+                  flex
+
+                  h-12
+                  w-12
+
+                  lg:h-11
+                  lg:w-11
+
+                  flex-shrink-0
+
+                  items-center
+                  justify-center
+
+                  overflow-hidden
+
+                  rounded-2xl
+
+                  bg-gradient-to-br
+                  from-orange-500
+                  via-amber-500
+                  to-indigo-500
+
+                  shadow-[0_5px_18px_rgba(99,102,241,0.25)]
+
+                  transition-transform
+                  duration-300
+
+                  group-hover:scale-105
+                "
+              >
+
+                {/* Shine */}
+
+                <div
+                  className="
+                    nex-logo-shine
+
+                    pointer-events-none
+
+                    absolute
+
+                    -left-1/2
+                    top-[-30%]
+
+                    h-[160%]
+                    w-1/2
+
+                    rotate-[18deg]
+
+                    bg-gradient-to-r
+                    from-transparent
+                    via-white/50
+                    to-transparent
+                  "
+                />
+
+
+                <ReceiptText
+                  size={23}
+                  strokeWidth={2.5}
+                  className="
+                    relative
+                    z-10
+
+                    text-white
+                  "
+                />
+
+              </div>
+
+
+              {/* =================================================
+                  NEXBILL TEXT
+              ================================================== */}
 
               <h1
                 className="
-                  text-sm
-                  sm:text-lg
+                  nex-text-animation
 
-                  font-bold
-                  tracking-tight
+                  whitespace-nowrap
 
-                  text-slate-100
+                  flex-shrink-0
 
-                  truncate
+                  text-[24px]
+                  lg:text-xl
+
+                  font-black
+
+                  tracking-[-0.035em]
+
+                  leading-none
+
+                  text-white
                 "
               >
-                Smart Billing System
+                NexBill
               </h1>
 
             </div>
 
           </div>
 
-        </div>
 
-
-        {/* =====================================================
-            RIGHT SIDE
-        ===================================================== */}
-
-        <div
-          className="
-            flex
-            items-center
-
-            gap-2
-            sm:gap-4
-
-            relative
-            z-10
-          "
-        >
-
-          {/* Change Password */}
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate("/change-password")
-            }
-            className="
-              hidden
-              sm:inline-flex
-
-              items-center
-              gap-2
-
-              bg-slate-800/90
-
-              text-slate-300
-
-              border
-              border-slate-700/50
-
-              px-4
-              py-2.5
-
-              rounded-2xl
-
-              text-xs
-              font-semibold
-
-              hover:bg-slate-800
-              hover:text-white
-              hover:border-slate-600
-
-              transition-all
-              duration-200
-            "
-          >
-
-            <KeyRound
-              size={14}
-              className="text-slate-400"
-            />
-
-            <span>
-              Change Password
-            </span>
-
-          </button>
-
-
-          {/* User Badge */}
+          {/* =====================================================
+              RIGHT SECTION
+          ====================================================== */}
 
           <div
             className="
+              relative
+              z-10
+
               flex
+              flex-shrink-0
+
               items-center
 
               gap-2
-              sm:gap-3
-
-              px-2
-              sm:px-3.5
-
-              py-2
-
-              bg-slate-950/50
-
-              border
-              border-slate-800/60
-
-              rounded-xl
-              sm:rounded-2xl
-
-              shadow-inner
+              lg:gap-4
             "
           >
 
-            {/* User Icon */}
 
-            <div
+            {/* =================================================
+                CHANGE PASSWORD
+            ================================================== */}
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/change-password")
+              }
+              aria-label="Change Password"
+              title="Change Password"
               className="
-                w-7
-                h-7
+                nex-control-animation
+
+                flex
+
+                h-12
+                w-12
+
+                lg:h-auto
+                lg:w-auto
 
                 flex-shrink-0
 
-                rounded-xl
-
-                bg-gradient-to-br
-                from-indigo-500/10
-                to-purple-500/10
-
-                flex
                 items-center
                 justify-center
 
-                text-indigo-400
+                gap-2
+
+                rounded-2xl
+                lg:rounded-2xl
 
                 border
-                border-indigo-500/20
+                border-slate-700/50
+
+                bg-slate-800/90
+
+                px-0
+                lg:px-4
+
+                py-0
+                lg:py-2.5
+
+                text-xs
+                font-semibold
+
+                text-slate-300
+
+                transition-all
+                duration-200
+
+                hover:border-slate-600
+                hover:bg-slate-800
+                hover:text-white
+
+                active:scale-95
               "
             >
 
-              <User size={14} />
+              <KeyRound
+                size={19}
+                className="text-slate-400"
+              />
+
+
+              <span
+                className="
+                  hidden
+                  lg:inline
+                "
+              >
+                Change Password
+              </span>
+
+            </button>
+
+
+            {/* =================================================
+                USER BADGE
+            ================================================== */}
+
+            <div
+              className="
+                nex-user-animation
+
+                flex
+
+                h-12
+                w-12
+
+                lg:h-auto
+                lg:w-auto
+
+                flex-shrink-0
+
+                items-center
+
+                justify-center
+
+                gap-3
+
+                rounded-2xl
+                lg:rounded-2xl
+
+                border
+                border-slate-800/60
+
+                bg-slate-950/50
+
+                px-0
+                lg:px-3.5
+
+                py-2
+
+                shadow-inner
+              "
+            >
+
+              {/* User Icon */}
+
+              <div
+                className="
+                  flex
+
+                  h-8
+                  w-8
+
+                  flex-shrink-0
+
+                  items-center
+                  justify-center
+
+                  rounded-xl
+
+                  border
+                  border-indigo-500/20
+
+                  bg-gradient-to-br
+                  from-indigo-500/10
+                  to-purple-500/10
+
+                  text-indigo-400
+                "
+              >
+
+                <User size={16} />
+
+              </div>
+
+
+              {/* User Details */}
+
+              <div
+                className="
+                  hidden
+                  lg:flex
+
+                  flex-col
+
+                  text-left
+                "
+              >
+
+                <span
+                  className="
+                    text-[9px]
+
+                    font-bold
+
+                    uppercase
+
+                    tracking-wider
+
+                    leading-none
+
+                    text-slate-500
+                  "
+                >
+                  Active Session
+                </span>
+
+
+                <span
+                  className="
+                    mt-1
+
+                    max-w-[140px]
+
+                    truncate
+
+                    text-xs
+
+                    font-semibold
+
+                    leading-none
+
+                    text-slate-300
+                  "
+                >
+                  {username}
+                </span>
+
+              </div>
 
             </div>
 
 
-            {/* User Information */}
+            {/* =================================================
+                DIVIDER
+            ================================================== */}
 
-            <div className="hidden sm:flex flex-col text-left">
+            <div
+              className="
+                hidden
+                lg:block
+
+                h-5
+                w-px
+
+                bg-slate-800/60
+              "
+            />
+
+
+            {/* =================================================
+                LOGOUT
+            ================================================== */}
+
+            <button
+              type="button"
+              onClick={logout}
+              aria-label="Logout"
+              title="Logout"
+              className="
+                nex-control-animation
+
+                flex
+
+                h-12
+                w-12
+
+                lg:h-auto
+                lg:w-auto
+
+                flex-shrink-0
+
+                items-center
+                justify-center
+
+                gap-2
+
+                rounded-2xl
+                lg:rounded-2xl
+
+                border
+                border-slate-700/50
+
+                bg-slate-800/90
+
+                px-0
+                lg:px-4
+
+                py-0
+                lg:py-2.5
+
+                text-xs
+                font-semibold
+
+                text-slate-300
+
+                transition-all
+                duration-200
+
+                hover:border-red-500/20
+                hover:bg-red-500/10
+                hover:text-red-400
+
+                active:scale-95
+              "
+            >
+
+              <LogOut
+                size={19}
+              />
+
 
               <span
                 className="
-                  text-[9px]
-                  font-bold
-                  text-slate-500
-                  uppercase
-                  tracking-wider
-                  leading-none
+                  hidden
+                  lg:inline
                 "
               >
-                Active Session
+                Logout
               </span>
 
-              <span
-                className="
-                  text-xs
-                  font-semibold
-                  text-slate-300
-
-                  mt-1
-                  leading-none
-
-                  max-w-[140px]
-                  truncate
-                "
-              >
-                {localStorage.getItem("username") ||
-                  "Operator_01"}
-              </span>
-
-            </div>
+            </button>
 
           </div>
-
-
-          {/* Divider */}
-
-          <div
-            className="
-              hidden
-              sm:block
-
-              h-5
-              w-px
-
-              bg-slate-800/60
-            "
-          />
-
-
-          {/* Logout */}
-
-          <button
-            type="button"
-            onClick={logout}
-            className="
-              hidden
-              sm:inline-flex
-
-              items-center
-              justify-center
-
-              bg-slate-800/90
-
-              text-slate-300
-
-              border
-              border-slate-700/50
-
-              px-4
-              py-2.5
-
-              rounded-2xl
-
-              text-xs
-              font-semibold
-
-              hover:bg-red-500/10
-              hover:text-red-400
-              hover:border-red-500/20
-
-              transition-all
-            "
-          >
-            Logout
-          </button>
 
         </div>
 
       </div>
 
-    </div>
+    </>
   );
 }
+
 
 export default Navbar;
