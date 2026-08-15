@@ -83,6 +83,31 @@ const isCustomerInvoice =
     );
   }
 
+const subtotalAmount = Number(
+  bill.subtotal_display ??
+  bill.subtotal_amount ??
+  0
+);
+
+const productDiscountAmount = Number(
+  bill.product_discount_display?.amount ?? 0
+);
+
+const directDiscountAmount = Number(
+  bill.direct_discount_amount ?? 0
+);
+
+const calculatedTotal =
+  subtotalAmount -
+  productDiscountAmount -
+  directDiscountAmount;
+
+const roundedTotal = Math.round(
+  calculatedTotal
+);
+
+const roundOffAmount =
+  roundedTotal - calculatedTotal;
   return (
 
 <MainLayout>
@@ -169,7 +194,7 @@ const isCustomerInvoice =
               Total Amount Paid
             </span>
             <span className="text-base font-black text-indigo-600">
-              ₹ {bill.total_amount}
+              ₹  {roundedTotal}
             </span>
           </div>
         </div>
@@ -281,6 +306,28 @@ const isCustomerInvoice =
 
     </div>
   )}
+  {/* Round Off */}
+{Math.abs(roundOffAmount) > 0.001 && (
+  <div className="w-full max-w-sm flex justify-between items-center">
+
+    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+      Round Off
+    </span>
+
+    <span
+      className={`text-sm font-black ${
+        roundOffAmount >= 0
+          ? "text-emerald-600"
+          : "text-red-500"
+      }`}
+    >
+      {roundOffAmount >= 0 ? "+" : "-"} ₹{" "}
+      {Math.abs(roundOffAmount).toFixed(2)}
+    </span>
+
+  </div>
+)}
+
 
 
   {/* Divider */}
@@ -295,9 +342,7 @@ const isCustomerInvoice =
     </span>
 
     <h2 className="text-3xl font-black text-slate-900 tracking-tight">
-      ₹ {Number(
-        bill.total_amount
-      ).toFixed(2)}
+        ₹ {roundedTotal}
     </h2>
 
   </div>

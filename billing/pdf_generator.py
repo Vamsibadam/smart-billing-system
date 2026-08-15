@@ -1,4 +1,5 @@
 from io import BytesIO
+from decimal import Decimal, ROUND_HALF_UP
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
@@ -21,6 +22,13 @@ def generate_invoice_pdf(transaction):
     styles = getSampleStyleSheet()
     elements = []
     store = StoreSettings.objects.first()
+    # Round final payable amount to nearest rupee
+    rounded_total = Decimal(
+        str(transaction.total_amount)
+    ).quantize(
+        Decimal("1"),
+        rounding=ROUND_HALF_UP
+    )
 
     # --- Typography Definitions ---
     shop_name_style = ParagraphStyle(
@@ -162,7 +170,7 @@ def generate_invoice_pdf(transaction):
     if getattr(transaction, "payment_method", None):
 
         payment_lines.append(
-            f"<b>{transaction.payment_method.upper()}</b> - ₹ {float(transaction.total_amount):,.2f}"
+            f"<b>{transaction.payment_method.upper()}</b> - ₹ {rounded_total:,.0f}"
         )
 
     # New bills with split payments
@@ -357,7 +365,7 @@ def generate_invoice_pdf(transaction):
     elements.append(
         Paragraph(
             f"Grand Total:  Rs. "
-            f"{float(transaction.total_amount):,.2f}",
+            f"{rounded_total:,.0f}",
             grand_total_style
         )
     )

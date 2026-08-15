@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from django.db import transaction
 
 from products.models import Product
@@ -340,28 +340,29 @@ def create_bill(
 
         total_amount -= direct_discount_amount
 
-    # ============================================================
-    # QUANTIZE
+  # ============================================================
+    # ROUND OFF FINAL BILL AMOUNT
     # ============================================================
 
-    subtotal_amount = subtotal_amount.quantize(
-        Decimal("0.01")
-    )
-
+    # Keep discount values accurate to paise
     product_discount_amount = (
         product_discount_amount.quantize(
-            Decimal("0.01")
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP
         )
     )
 
     direct_discount_amount = (
         direct_discount_amount.quantize(
-            Decimal("0.01")
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP
         )
     )
 
+    # Round ONLY the final payable amount
     total_amount = total_amount.quantize(
-        Decimal("0.01")
+        Decimal("1"),
+        rounding=ROUND_HALF_UP
     )
 
     # ============================================================
@@ -373,8 +374,10 @@ def create_bill(
         for payment in payments
     )
 
+    # Payment must match the rounded final bill
     payment_total = payment_total.quantize(
-        Decimal("0.01")
+        Decimal("1"),
+        rounding=ROUND_HALF_UP
     )
 
     if payment_total != total_amount:
@@ -382,7 +385,6 @@ def create_bill(
         raise ValueError(
             "Payment total must equal bill amount."
         )
-
     # ============================================================
     # SAVE PAYMENTS
     # ============================================================

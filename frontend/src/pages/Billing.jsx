@@ -625,12 +625,13 @@ function Billing() {
   // FINAL PAYMENT TOTAL
   // ==========================================
 
-  const paymentTotalAmount =
-    Math.max(
-      paymentProductDiscountedTotal -
-      paymentDiscountAmount,
-      0
-    );
+  const paymentTotalAmount = Math.round(
+  Math.max(
+    paymentProductDiscountedTotal  -
+    paymentDiscountAmount,
+    0
+  )
+);
 
   const addPayment = (method = "upi") => {
 
