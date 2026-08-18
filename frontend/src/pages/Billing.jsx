@@ -6,6 +6,7 @@ import {
   getProducts,
   getDiscounts,
   deductBillInventoryWithRetry,
+  searchCustomers,
 } from "../services/billingService";
 import { createPortal } from "react-dom";
 import {
@@ -81,6 +82,14 @@ function Billing() {
   const [discounts, setDiscounts] = useState([]);
   const [selectedProductDiscountId, setSelectedProductDiscountId] = useState(null);
   const [discountPercentage, setDiscountPercentage] = useState(0);
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerName, setCustomerName] = useState("");
+
+  const [customerResults, setCustomerResults] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+
+  const [customerSearching, setCustomerSearching] = useState(false);
+  const [showCustomerResults, setShowCustomerResults] = useState(false);
 
 
   const fetchCategories = async () => {
@@ -178,6 +187,7 @@ function Billing() {
   const [showBillModal, setShowBillModal] = useState(false);
   const [cartLoaded, setCartLoaded] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
 
   const [payments, setPayments] =
     useState([
@@ -510,6 +520,11 @@ function Billing() {
 
     // Percentage discount also starts at 0.
     setDiscountPercentage(0);
+    setCustomerPhone("");
+    setCustomerName("");
+    setSelectedCustomer(null);
+    setCustomerResults([]);
+    setShowCustomerResults(false);
 
     setPayments([
       {
@@ -518,7 +533,7 @@ function Billing() {
       }
     ]);
 
-    setShowPaymentModal(true);
+    setShowCustomerModal(true);
   };
   // ==========================================
   // PAYMENT MODAL DISCOUNT CALCULATION
@@ -626,12 +641,12 @@ function Billing() {
   // ==========================================
 
   const paymentTotalAmount = Math.round(
-  Math.max(
-    paymentProductDiscountedTotal  -
-    paymentDiscountAmount,
-    0
-  )
-);
+    Math.max(
+      paymentProductDiscountedTotal -
+      paymentDiscountAmount,
+      0
+    )
+  );
 
   const addPayment = (method = "upi") => {
 
@@ -722,8 +737,8 @@ function Billing() {
   }, [paymentTotalAmount, showPaymentModal]);
   const closeButtonRef =
     useRef(null);
-    const confirmButtonRef =
-  useRef(null);
+  const confirmButtonRef =
+    useRef(null);
 
   useEffect(() => {
 
@@ -738,6 +753,26 @@ function Billing() {
     }
 
   }, [showBillModal]);
+
+  const selectCustomer = (customer) => {
+
+    setSelectedCustomer(customer);
+
+    setCustomerPhone(
+      customer.phone_number || ""
+    );
+
+    setCustomerName(
+      customer.name || ""
+    );
+
+    setCustomerResults([]);
+    setShowCustomerResults(false);
+  };
+  const continueToPayment = () => {
+    setShowCustomerModal(false);
+    setShowPaymentModal(true);
+  };
 
   const confirmPayment = async () => {
     if (Math.abs(remainingAmount) > 0.01) {
@@ -756,13 +791,20 @@ function Billing() {
         combo_overrides: item.combo_overrides || [],
         ingredient_overrides: item.ingredient_overrides || [],
       }));
-
+      const customerData =
+        customerPhone.trim()
+          ? {
+            name: customerName.trim(),
+            phone_number: customerPhone.trim(),
+          }
+          : null;
       // 1️⃣ CREATE BILL
       const response = await createBill(
         items,
         payments,
         selectedProductDiscountId,
-        discountPercentage
+        discountPercentage,
+        customerData
       );
 
       console.log("BILL CREATED:", response);
@@ -849,7 +891,7 @@ function Billing() {
       });
     }
   };
-  
+
   useEffect(() => {
 
     if (showPaymentModal) {
@@ -1209,6 +1251,66 @@ function Billing() {
     return () => clearTimeout(timer);
   }, [notification.show]);
 
+  useEffect(() => {
+
+    if (!showCustomerModal) {
+      return;
+    }
+
+    const phone = customerPhone
+      .replace(/\D/g, "");
+
+    if (phone.length < 3) {
+
+      setCustomerResults([]);
+      setShowCustomerResults(false);
+
+      return;
+    }
+
+    const timer = setTimeout(
+      async () => {
+
+        try {
+
+          setCustomerSearching(true);
+
+          const results =
+            await searchCustomers(phone);
+
+          setCustomerResults(results);
+
+          setShowCustomerResults(
+            results.length > 0
+          );
+
+        } catch (error) {
+
+          console.error(
+            "CUSTOMER SEARCH ERROR:",
+            error
+          );
+
+          setCustomerResults([]);
+          setShowCustomerResults(false);
+
+        } finally {
+
+          setCustomerSearching(false);
+
+        }
+
+      },
+      300
+    );
+
+    return () => clearTimeout(timer);
+
+  }, [
+    customerPhone,
+    showCustomerModal
+  ]);
+
   return (
     <MainLayout>
 
@@ -1537,9 +1639,487 @@ function Billing() {
             </div>
           )}
 
+
         </div>
       </div>
+      {showCustomerModal && createPortal(
+        <div className="
+    fixed
+    inset-0
+    z-50
+    flex
+    items-center
+    justify-center
+    p-4
+    bg-slate-950/20
+    backdrop-blur-sm
+    animate-fade-in
+  ">
 
+          <div className="
+      w-full
+      max-w-lg
+      bg-white
+      border
+      border-slate-200
+      rounded-[28px]
+      shadow-2xl
+      p-5
+      sm:p-7
+    ">
+
+            {/* HEADER */}
+            <div className="flex items-start justify-between mb-6">
+
+              <div>
+                <p className="
+            text-[10px]
+            font-black
+            text-indigo-500
+            uppercase
+            tracking-[0.18em]
+            mb-1
+          ">
+                  Step 1 of 2
+                </p>
+
+                <h2 className="
+            text-2xl
+            font-black
+            text-slate-800
+          ">
+                  Customer Details
+                </h2>
+
+                <p className="
+            text-xs
+            font-semibold
+            text-slate-400
+            mt-1
+          ">
+                  Optional — enter details for WhatsApp billing
+                  and future offers.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowCustomerModal(false)}
+                className="
+            w-9
+            h-9
+            rounded-xl
+            flex
+            items-center
+            justify-center
+            text-slate-400
+            hover:text-red-500
+            hover:bg-red-50
+            transition-all
+            cursor-pointer
+          "
+              >
+                ✕
+              </button>
+
+            </div>
+
+            {/* PHONE */}
+            <div className="relative">
+
+              <label className="
+          block
+          text-xs
+          font-bold
+          text-slate-500
+          mb-2
+        ">
+                Phone / WhatsApp Number
+              </label>
+
+              <input
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                autoFocus
+                value={customerPhone}
+                onChange={(e) => {
+
+                  const value =
+                    e.target.value.replace(/\D/g, "");
+
+                  setCustomerPhone(value);
+
+                  if (
+                    selectedCustomer &&
+                    value !==
+                    selectedCustomer.phone_number
+                      ?.replace(/\D/g, "")
+                      .replace(/^91/, "")
+                  ) {
+                    setSelectedCustomer(null);
+                    setCustomerName("");
+                  }
+
+                }}
+                onFocus={() => {
+
+                  if (customerResults.length > 0) {
+                    setShowCustomerResults(true);
+                  }
+
+                }}
+                placeholder="Enter phone number"
+                className="
+            w-full
+            border
+            border-slate-200
+            bg-slate-50
+            rounded-2xl
+            px-4
+            py-4
+            text-sm
+            font-semibold
+            text-slate-800
+            outline-none
+            focus:bg-white
+            focus:border-indigo-500
+            focus:ring-4
+            focus:ring-indigo-500/10
+            transition-all
+          "
+              />
+
+              {customerSearching && (
+                <div className="
+            absolute
+            right-4
+            top-[42px]
+            text-xs
+            font-semibold
+            text-slate-400
+          ">
+                  Searching...
+                </div>
+              )}
+
+              {/* CUSTOMER SEARCH RESULTS */}
+              {showCustomerResults &&
+                customerResults.length > 0 && (
+
+                  <div className="
+            absolute
+            left-0
+            right-0
+            top-full
+            mt-2
+            bg-white
+            border
+            border-slate-200
+            rounded-2xl
+            shadow-xl
+            overflow-hidden
+            z-50
+          ">
+
+                    {customerResults.map((customer) => (
+
+                      <button
+                        type="button"
+                        key={customer.id}
+                        onClick={() => selectCustomer(customer)}
+                        className="
+                  w-full
+                  text-left
+                  px-4
+                  py-4
+                  hover:bg-indigo-50
+                  border-b
+                  border-slate-100
+                  last:border-b-0
+                  transition-colors
+                  cursor-pointer
+                "
+                      >
+
+                        <div className="
+                  flex
+                  items-center
+                  justify-between
+                  gap-3
+                ">
+
+                          <div>
+
+                            <p className="
+                      text-sm
+                      font-bold
+                      text-slate-800
+                    ">
+                              {customer.name}
+                            </p>
+
+                            <p className="
+                      text-xs
+                      text-slate-400
+                      mt-1
+                    ">
+                              {customer.phone_number}
+                            </p>
+
+                          </div>
+
+                          <span className="
+                    shrink-0
+                    text-[10px]
+                    font-black
+                    text-indigo-600
+                    bg-indigo-50
+                    px-2
+                    py-1
+                    rounded-lg
+                  ">
+                            {customer.visit_count} visits
+                          </span>
+
+                        </div>
+
+                      </button>
+
+                    ))}
+
+                  </div>
+                )}
+
+            </div>
+
+            {/* CUSTOMER RESULT */}
+            {customerPhone && (
+
+              <div className="mt-4">
+
+                {selectedCustomer ? (
+
+                  <div className="
+              flex
+              items-center
+              justify-between
+              gap-3
+              bg-indigo-50
+              border
+              border-indigo-100
+              rounded-2xl
+              px-4
+              py-4
+            ">
+
+                    <div>
+
+                      <p className="
+                  text-sm
+                  font-black
+                  text-indigo-900
+                ">
+                        {selectedCustomer.name}
+                      </p>
+
+                      <p className="
+                  text-xs
+                  text-indigo-500
+                  mt-1
+                ">
+                        {selectedCustomer.visit_count}
+                        {" "}
+                        previous visits
+                      </p>
+
+                    </div>
+
+                    <span className="
+                text-[10px]
+                font-black
+                uppercase
+                text-emerald-600
+                bg-emerald-50
+                px-3
+                py-1.5
+                rounded-lg
+              ">
+                      Existing
+                    </span>
+
+                  </div>
+
+                ) : (
+
+                  <div>
+
+                    <label className="
+                block
+                text-xs
+                font-bold
+                text-slate-500
+                mb-2
+              ">
+                      Customer Name
+                    </label>
+
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) =>
+                        setCustomerName(e.target.value)
+                      }
+                      placeholder="Enter customer name"
+                      className="
+                  w-full
+                  border
+                  border-slate-200
+                  bg-slate-50
+                  rounded-2xl
+                  px-4
+                  py-4
+                  text-sm
+                  font-semibold
+                  outline-none
+                  focus:bg-white
+                  focus:border-indigo-500
+                  transition-all
+                "
+                    />
+
+                    <p className="
+                text-[10px]
+                text-slate-400
+                mt-2
+              ">
+                      New customer — name is optional.
+                    </p>
+
+                  </div>
+
+                )}
+
+              </div>
+
+            )}
+
+            {/* WALK-IN */}
+            {!customerPhone && (
+
+              <div
+                className="
+      mt-4
+      flex
+      items-center
+      gap-3
+      bg-slate-50
+      border
+      border-slate-200
+      rounded-2xl
+      px-4
+      py-4
+    "
+              >
+
+                <div
+                  className="
+        w-2.5
+        h-2.5
+        rounded-full
+        bg-slate-400
+      "
+                />
+
+                <div>
+
+                  <p
+                    className="
+          text-xs
+          font-bold
+          text-slate-600
+        "
+                  >
+                    Walk-in Customer
+                  </p>
+
+                  <p
+                    className="
+          text-[10px]
+          text-slate-400
+          mt-0.5
+        "
+                  >
+                    No customer details provided
+                  </p>
+
+                </div>
+
+              </div>
+
+            )}
+
+            {/* ACTIONS */}
+            <div className="
+        flex
+        gap-3
+        mt-7
+        pt-5
+        border-t
+        border-slate-100
+      ">
+
+              <button
+                type="button"
+                onClick={() => setShowCustomerModal(false)}
+                className="
+            flex-1
+            py-3.5
+            rounded-2xl
+            border-2
+            border-slate-200
+            bg-white
+            text-slate-500
+            text-sm
+            font-black
+            hover:bg-slate-50
+            transition-all
+            cursor-pointer
+          "
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={continueToPayment}
+                className="
+            flex-[1.5]
+            py-3.5
+            rounded-2xl
+            bg-gradient-to-r
+            from-orange-500
+            to-indigo-600
+            text-white
+            text-sm
+            font-black
+            shadow-md
+            hover:opacity-95
+            active:scale-[0.98]
+            transition-all
+            cursor-pointer
+          "
+              >
+                Continue to Payment →
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>,
+        document.body
+      )}
       {showPaymentModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/20 backdrop-blur-xs animate-fade-in">
           <div className="
@@ -1771,6 +2351,7 @@ function Billing() {
                 </div>
 
               </div>
+
               {/* Brand Method Grid (Massive, Tactical Grid Buttons) */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                 {[
@@ -2497,6 +3078,8 @@ text-sm
         />
 
       )}
+
+
     </MainLayout>
   );
 }

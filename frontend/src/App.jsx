@@ -13,6 +13,9 @@ import InvoicePreview from "./pages/InvoicePreview";
 import Ingredients from "./pages/Ingredients";
 import DashboardExpenses from "./pages/DashboardExpenses";
 import Discounts from "./pages/Discounts";
+import Engagement from "./pages/Engagement";
+import WhatsApp from "./pages/WhatsApp";
+import PublicInvoice from "./pages/PublicInvoice";
 import { recoverPendingInventory } from "./utils/inventoryRecovery";
 import { useState, useEffect, useRef } from "react";
 function App() {
@@ -40,7 +43,12 @@ function App() {
         <Route path="/invoice/:id" element={<ProtectedRoute><InvoicePreview /></ProtectedRoute>}/>
         <Route path="/ingredients" element={<ProtectedRoute><Ingredients /></ProtectedRoute>}/>
         <Route path="/dashboard/expenses" element={<ProtectedRoute><DashboardExpenses /></ProtectedRoute>}/>
-        <Route path="/discounts" element={<ProtectedRoute><Discounts /></ProtectedRoute> }/>
+        <Route path="/engagement" element={<ProtectedRoute><Engagement /></ProtectedRoute>}/>
+        <Route path="/engagement/whatsapp" element={<ProtectedRoute><WhatsApp /></ProtectedRoute>}/>
+        <Route path="/engagement/discounts" element={<ProtectedRoute><Discounts  /></ProtectedRoute>}/>
+        <Route path="/invoice/public/:token" element={<PublicInvoice />}/>
+
+
         </Routes>
     </BrowserRouter>
   );

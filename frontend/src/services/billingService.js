@@ -12,7 +12,8 @@ export const createBill = async (
   items,
   payments,
   productDiscountId = null,
-  directDiscountPercentage = 0
+  directDiscountPercentage = 0,
+  customer = null
 ) => {
 
   const response = await api.post(
@@ -26,6 +27,8 @@ export const createBill = async (
 
       direct_discount_percentage:
         directDiscountPercentage,
+
+      customer,
     }
   );
 
@@ -190,4 +193,12 @@ export const deductBillInventoryWithRetry = async (
       );
     }
   }
+};
+
+export const searchCustomers = async (phone) => {
+  const response = await api.get(
+    `/billing/customers/search/?phone=${encodeURIComponent(phone)}`
+  );
+
+  return response.data;
 };

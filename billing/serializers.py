@@ -31,6 +31,29 @@ class PaymentSerializer(serializers.Serializer):
     )
 
 
+# ============================================================
+# CUSTOMER DETAILS DURING BILLING
+# ============================================================
+
+class CustomerBillingSerializer(serializers.Serializer):
+
+    name = serializers.CharField(
+        max_length=100,
+        required=False,
+        allow_blank=True
+    )
+
+    phone_number = serializers.CharField(
+        max_length=20,
+        required=False,
+        allow_blank=True
+    )
+
+
+# ============================================================
+# BILLING
+# ============================================================
+
 class BillingSerializer(serializers.Serializer):
 
     items = BillingItemSerializer(
@@ -55,8 +78,20 @@ class BillingSerializer(serializers.Serializer):
         max_value=100
     )
 
+    customer = CustomerBillingSerializer(
+        required=False,
+        allow_null=True
+    )
+
+
+# ============================================================
+# DISCOUNT
+# ============================================================
+
 class DiscountSerializer(serializers.ModelSerializer):
 
     class Meta:
+
         model = Discount
+
         fields = "__all__"

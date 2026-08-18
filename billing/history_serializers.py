@@ -104,6 +104,8 @@ class TransactionDetailSerializer(
 
     product_discount_display = serializers.SerializerMethodField()
 
+    customer = serializers.SerializerMethodField()
+
     class Meta:
 
         model = Transaction
@@ -111,6 +113,8 @@ class TransactionDetailSerializer(
         fields = (
             "id",
             "bill_number",
+
+            "customer",
 
             "subtotal_amount",
             "subtotal_display",
@@ -129,6 +133,30 @@ class TransactionDetailSerializer(
             "items",
             "payments",
         )
+
+    def get_customer(self, obj):
+
+        customer = getattr(
+            obj,
+            "customer",
+            None
+        )
+
+        if not customer:
+
+            return {
+                "id": None,
+                "name": "Walk-in Customer",
+                "phone_number": None,
+                "visit_count": 0,
+            }
+
+        return {
+            "id": customer.id,
+            "name": customer.name,
+            "phone_number": customer.phone_number,
+            "visit_count": customer.visit_count,
+        }
 
     def get_subtotal_display(self, obj):
 

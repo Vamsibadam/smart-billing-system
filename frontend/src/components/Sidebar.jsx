@@ -11,6 +11,7 @@ import {
   Settings,
   UtensilsCrossed,
   BadgePercent,
+  Megaphone,
 } from "lucide-react";
 
 function Sidebar({ onNavigate }) {
@@ -54,10 +55,10 @@ function Sidebar({ onNavigate }) {
       icon: <Boxes size={22} />,
     },
     {
-      name: "Discounts",
-      path: "/discounts",
-      icon: <BadgePercent size={22} />,
-    },
+    name: "Engagement",
+    path: "/engagement",
+    icon: <Megaphone size={22} />,
+  },
     {
       name: "Reports",
       path: "/reports",

@@ -41,6 +41,38 @@ DEBUG = config(
     cast=bool,
     default=False
 )
+# ============================================================
+# WHATSAPP CONFIGURATION
+# ============================================================
+
+PUBLIC_FRONTEND_URL = config(
+    "PUBLIC_FRONTEND_URL",
+    default="http://localhost:5173"
+)
+
+WHATSAPP_ACCESS_TOKEN = config(
+    "WHATSAPP_ACCESS_TOKEN",
+    default=""
+)
+
+WHATSAPP_PHONE_NUMBER_ID = config(
+    "WHATSAPP_PHONE_NUMBER_ID",
+    default=""
+)
+
+WHATSAPP_API_VERSION = config(
+    "WHATSAPP_API_VERSION",
+    default=""
+)
+WHATSAPP_VERIFY_TOKEN = config(
+    "WHATSAPP_VERIFY_TOKEN",
+    default=""
+)
+
+WHATSAPP_APP_SECRET = config(
+    "WHATSAPP_APP_SECRET",
+    default=""
+)
 
 
 ALLOWED_HOSTS = config(

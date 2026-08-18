@@ -1,26 +1,342 @@
 from decimal import Decimal, ROUND_HALF_UP
+
+from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 
 from products.models import Product
 from ingredients.services import validate_inventory
+
 from .utils import generate_bill_number
+
 from .models import (
     Transaction,
     TransactionItem,
     Payment,
     Discount,
+    Customer,
+    WhatsAppMessage
 )
 
+from .whatsapp_service import (
+    send_invoice_whatsapp_message
+)
+# ============================================================
+# PHONE NORMALIZATION
+# ============================================================
+
+def normalize_phone(phone):
+    """
+    Normalize Indian phone numbers into:
+
+    +919876543210
+
+    Accepts examples such as:
+
+    9876543210
+    +91 9876543210
+    +919876543210
+    09876543210
+    """
+
+    if not phone:
+        return None
+
+    phone = str(phone).strip()
+
+    # Keep digits only
+    digits = "".join(
+        character
+        for character in phone
+        if character.isdigit()
+    )
+
+    # Indian number with leading 0
+    if len(digits) == 11 and digits.startswith("0"):
+        digits = digits[1:]
+
+    # Indian number with country code
+    elif len(digits) == 12 and digits.startswith("91"):
+        digits = digits[2:]
+
+    # Normal 10 digit Indian number
+    if len(digits) != 10:
+
+        raise ValueError(
+            "Please enter a valid 10-digit phone number."
+        )
+
+    if not digits.startswith(
+        ("6", "7", "8", "9")
+    ):
+
+        raise ValueError(
+            "Please enter a valid Indian phone number."
+        )
+
+    return f"+91{digits}"
 
 
+# ============================================================
+# GET / CREATE CUSTOMER
+# ============================================================
+
+def get_or_create_customer(customer_data):
+    """
+    Handles optional customer information.
+
+    No phone:
+        → Walk-in Customer
+
+    Existing phone:
+        → Existing customer
+
+    New phone:
+        → Create customer
+    """
+
+    # --------------------------------------------------------
+    # No customer information
+    # --------------------------------------------------------
+
+    if not customer_data:
+
+        customer = Customer.objects.filter(
+            is_default=True
+        ).first()
+
+        if not customer:
+
+            customer = Customer.objects.create(
+                name="Walk-in Customer",
+                phone_number=None,
+                visit_count=0,
+                whatsapp_opt_in=False,
+                is_default=True,
+            )
+
+        return customer
+
+    # --------------------------------------------------------
+    # Normalize phone
+    # --------------------------------------------------------
+
+    phone = normalize_phone(
+        customer_data.get("phone_number")
+    )
+
+    name = (
+        str(
+            customer_data.get("name") or ""
+        ).strip()
+    )
+
+    # --------------------------------------------------------
+    # No phone supplied
+    # --------------------------------------------------------
+
+    if not phone:
+
+        customer = Customer.objects.filter(
+            is_default=True
+        ).first()
+
+        if not customer:
+
+            customer = Customer.objects.create(
+                name="Walk-in Customer",
+                phone_number=None,
+                visit_count=0,
+                whatsapp_opt_in=False,
+                is_default=True,
+            )
+
+        return customer
+
+    # --------------------------------------------------------
+    # Existing customer
+    # --------------------------------------------------------
+
+    customer = Customer.objects.filter(
+        phone_number=phone
+    ).first()
+
+    if customer:
+
+        # If the customer previously had no name
+        # and a name is provided now, update it.
+        if (
+            name
+            and not customer.name
+            and not customer.is_default
+        ):
+
+            customer.name = name
+
+            customer.save(
+                update_fields=[
+                    "name",
+                    "updated_at",
+                ]
+            )
+
+        return customer
+
+    # --------------------------------------------------------
+    # New customer
+    # --------------------------------------------------------
+
+    if not name:
+
+        name = "Customer"
+
+    customer = Customer.objects.create(
+        name=name,
+        phone_number=phone,
+        visit_count=0,
+        whatsapp_opt_in=False,
+        is_default=False,
+    )
+
+    return customer
+
+# ============================================================
+# CREATE WHATSAPP INVOICE MESSAGE
+# ============================================================
+
+def create_pending_invoice_message(bill):
+
+    customer = bill.customer
+
+    # --------------------------------------------------------
+    # No customer
+    # --------------------------------------------------------
+
+    if not customer:
+        return None
+
+    # --------------------------------------------------------
+    # No phone number
+    # --------------------------------------------------------
+
+    if not customer.phone_number:
+        return None
+    if not customer.whatsapp_opt_in:
+        return None
+
+    # --------------------------------------------------------
+    # Prevent duplicate invoice messages
+    # --------------------------------------------------------
+
+    existing_message = (
+        WhatsAppMessage.objects.filter(
+            transaction=bill,
+            message_type="INVOICE"
+        )
+        .first()
+    )
+
+    if existing_message:
+        return existing_message
+
+    # --------------------------------------------------------
+    # PUBLIC INVOICE URL
+    # --------------------------------------------------------
+
+    frontend_url = (
+        settings.PUBLIC_FRONTEND_URL
+    )
+
+    invoice_url = (
+        f"{frontend_url.rstrip('/')}"
+        f"/invoice/public/"
+        f"{bill.invoice_token}"
+    )
+
+    # --------------------------------------------------------
+    # CREATE MESSAGE RECORD
+    # --------------------------------------------------------
+
+    message = WhatsAppMessage.objects.create(
+        customer=customer,
+        transaction=bill,
+        phone_number=customer.phone_number,
+        message_type="INVOICE",
+        status="PENDING",
+        invoice_url=invoice_url,
+    )
+
+    return message
+
+# ============================================================
+# SEND WHATSAPP AFTER BILL COMMIT
+# ============================================================
+
+def _send_invoice_after_commit(
+    message_id
+):
+
+    try:
+
+        message = (
+            WhatsAppMessage.objects.get(
+                id=message_id
+            )
+        )
+
+        send_invoice_whatsapp_message(
+            message
+        )
+
+    except Exception as e:
+
+        # ----------------------------------------------------
+        # IMPORTANT:
+        # WhatsApp failure must NEVER break the bill.
+        # ----------------------------------------------------
+
+        try:
+
+            message = (
+                WhatsAppMessage.objects.get(
+                    id=message_id
+                )
+            )
+
+            message.status = "FAILED"
+            message.error_message = str(e)
+
+            message.save(
+                update_fields=[
+                    "status",
+                    "error_message",
+                    "updated_at",
+                ]
+            )
+
+        except Exception:
+            pass
+
+# ============================================================
+# CREATE BILL
+# ============================================================
 
 @transaction.atomic
 def create_bill(
     items,
     payments,
     product_discount_id=None,
-    direct_discount_percentage=None
+    direct_discount_percentage=None,
+    customer_data=None,
 ):
+
+    # ============================================================
+    # CUSTOMER
+    # ============================================================
+
+    customer = get_or_create_customer(
+        customer_data
+    )
 
     # ============================================================
     # TOTALS
@@ -52,9 +368,10 @@ def create_bill(
                 "Selected product discount does not exist "
                 "or is inactive."
             )
-    # ==========================================================
+
+    # ============================================================
     # INVENTORY VALIDATION
-    # ==========================================================
+    # ============================================================
 
     for item in items:
 
@@ -74,6 +391,7 @@ def create_bill(
                 []
             )
         )
+
     # ============================================================
     # CREATE BILL
     # ============================================================
@@ -82,13 +400,19 @@ def create_bill(
         bill_number=generate_bill_number(),
         total_amount=0,
         subtotal_amount=0,
+
+        customer=customer,
+
         product_discount=product_discount,
+
         product_discount_name=(
             product_discount.name
             if product_discount
             else None
         ),
+
         product_discount_amount=0,
+
         discount_percentage=(
             Decimal(
                 str(
@@ -97,10 +421,16 @@ def create_bill(
                 )
             )
         ),
+
         direct_discount_amount=0,
+
         payment_method=None,
-        inventory_status=Transaction.INVENTORY_PENDING,
+
+        inventory_status=(
+            Transaction.INVENTORY_PENDING
+        ),
     )
+
     # ============================================================
     # PREPARE PRODUCTS
     # ============================================================
@@ -125,9 +455,12 @@ def create_bill(
 
         product_id = item["product_id"]
 
-        product = product_map.get(product_id)
+        product = product_map.get(
+            product_id
+        )
 
         if not product:
+
             raise ValueError(
                 f"Product with id {product_id} does not exist."
             )
@@ -137,6 +470,7 @@ def create_bill(
         )
 
         if quantity <= 0:
+
             raise ValueError(
                 "Quantity must be greater than zero."
             )
@@ -146,6 +480,7 @@ def create_bill(
             "product": product,
             "quantity": quantity,
         })
+
     # ============================================================
     # CALCULATE ORIGINAL SUBTOTAL
     # ============================================================
@@ -156,8 +491,8 @@ def create_bill(
         quantity = prepared["quantity"]
 
         subtotal_amount += (
-            Decimal(str(product.price)) *
-            quantity
+            Decimal(str(product.price))
+            * quantity
         )
 
     # ============================================================
@@ -182,8 +517,8 @@ def create_bill(
         ):
 
             group_size = (
-                buy_quantity +
-                free_quantity
+                buy_quantity
+                + free_quantity
             )
 
             units = []
@@ -193,16 +528,13 @@ def create_bill(
                 product = prepared["product"]
                 quantity = prepared["quantity"]
 
-                # ------------------------------------------------
-                # Specific product offer
-                # ------------------------------------------------
-
                 if (
                     product_discount.product_id
                     and
-                    product.id !=
-                    product_discount.product_id
+                    product.id
+                    != product_discount.product_id
                 ):
+
                     continue
 
                 for _ in range(quantity):
@@ -229,8 +561,8 @@ def create_bill(
             )
 
             number_of_free_items = (
-                number_of_groups *
-                free_quantity
+                number_of_groups
+                * free_quantity
             )
 
             # ----------------------------------------------------
@@ -243,17 +575,42 @@ def create_bill(
 
                 product_id = unit["product_id"]
 
-                free_quantities[product_id] = (
+                free_quantities[
+                    product_id
+                ] = (
                     free_quantities.get(
                         product_id,
                         0
-                    ) + 1
+                    )
+                    + 1
                 )
 
                 product_discount_amount += (
                     unit["price"]
                 )
+        # ============================================================
+    # CHECK WHETHER PRODUCT DISCOUNT WAS ACTUALLY APPLIED
+    # ============================================================
 
+    product_discount_applied = (
+        product_discount_amount > Decimal("0.00")
+    )
+
+    if not product_discount_applied:
+
+        product_discount = None
+
+        bill.product_discount = None
+        bill.product_discount_name = None
+        bill.product_discount_amount = Decimal("0.00")
+
+        bill.save(
+            update_fields=[
+                "product_discount",
+                "product_discount_name",
+                "product_discount_amount",
+            ]
+        )
     # ============================================================
     # CREATE TRANSACTION ITEMS
     # ============================================================
@@ -264,9 +621,11 @@ def create_bill(
         product = prepared["product"]
         quantity = prepared["quantity"]
 
-        free_quantity = free_quantities.get(
-            product.id,
-            0
+        free_quantity = (
+            free_quantities.get(
+                product.id,
+                0
+            )
         )
 
         paid_quantity = max(
@@ -275,40 +634,35 @@ def create_bill(
         )
 
         subtotal = (
-            Decimal(str(product.price)) *
-            paid_quantity
+            Decimal(str(product.price))
+            * paid_quantity
         )
 
-        # This remains the existing TransactionItem behavior.
-        transaction_item = TransactionItem.objects.create(
+        TransactionItem.objects.create(
             transaction=bill,
             product=product,
             quantity=quantity,
             unit_price=product.price,
             subtotal=subtotal,
+
             ingredient_overrides=item.get(
                 "ingredient_overrides",
                 []
             ),
+
             combo_overrides=item.get(
                 "combo_overrides",
                 []
             )
         )
 
-        # ========================================================
-        # INVENTORY
-        # ========================================================
-
-        
-
     # ============================================================
     # AFTER PRODUCT OFFER
     # ============================================================
 
     total_amount = (
-        subtotal_amount -
-        product_discount_amount
+        subtotal_amount
+        - product_discount_amount
     )
 
     # ============================================================
@@ -318,7 +672,9 @@ def create_bill(
     if direct_discount_percentage is not None:
 
         direct_discount_percentage = Decimal(
-            str(direct_discount_percentage)
+            str(
+                direct_discount_percentage
+            )
         )
 
         if direct_discount_percentage < 0:
@@ -328,9 +684,9 @@ def create_bill(
             direct_discount_percentage = Decimal("100")
 
         direct_discount_amount = (
-            total_amount *
-            direct_discount_percentage /
-            Decimal("100")
+            total_amount
+            * direct_discount_percentage
+            / Decimal("100")
         )
 
         direct_discount_amount = min(
@@ -338,13 +694,14 @@ def create_bill(
             total_amount
         )
 
-        total_amount -= direct_discount_amount
+        total_amount -= (
+            direct_discount_amount
+        )
 
-  # ============================================================
+    # ============================================================
     # ROUND OFF FINAL BILL AMOUNT
     # ============================================================
 
-    # Keep discount values accurate to paise
     product_discount_amount = (
         product_discount_amount.quantize(
             Decimal("0.01"),
@@ -359,10 +716,11 @@ def create_bill(
         )
     )
 
-    # Round ONLY the final payable amount
-    total_amount = total_amount.quantize(
-        Decimal("1"),
-        rounding=ROUND_HALF_UP
+    total_amount = (
+        total_amount.quantize(
+            Decimal("1"),
+            rounding=ROUND_HALF_UP
+        )
     )
 
     # ============================================================
@@ -374,10 +732,11 @@ def create_bill(
         for payment in payments
     )
 
-    # Payment must match the rounded final bill
-    payment_total = payment_total.quantize(
-        Decimal("1"),
-        rounding=ROUND_HALF_UP
+    payment_total = (
+        payment_total.quantize(
+            Decimal("1"),
+            rounding=ROUND_HALF_UP
+        )
     )
 
     if payment_total != total_amount:
@@ -385,6 +744,7 @@ def create_bill(
         raise ValueError(
             "Payment total must equal bill amount."
         )
+
     # ============================================================
     # SAVE PAYMENTS
     # ============================================================
@@ -401,12 +761,23 @@ def create_bill(
     # SAVE DISCOUNT INFORMATION
     # ============================================================
 
-    bill.subtotal_amount = subtotal_amount
+    bill.subtotal_amount = (
+        subtotal_amount
+    )
 
     bill.product_discount_amount = (
         product_discount_amount
     )
+    bill.product_discount = (
+        product_discount
+    )
 
+    bill.product_discount_name = (
+        product_discount.name
+        if product_discount
+        and product_discount_amount > Decimal("0.00")
+        else None
+    )
     bill.direct_discount_amount = (
         direct_discount_amount
     )
@@ -425,12 +796,53 @@ def create_bill(
     bill.save(
         update_fields=[
             "subtotal_amount",
+            "product_discount",
+            "product_discount_name",
             "product_discount_amount",
             "direct_discount_amount",
             "discount_percentage",
             "total_amount",
         ]
     )
-    
+
+    # ============================================================
+    # CUSTOMER VISIT
+    # ============================================================
+
+    customer.visit_count += 1
+
+    customer.last_visit = timezone.now()
+
+    customer.save(
+        update_fields=[
+            "visit_count",
+            "last_visit",
+            "updated_at",
+        ]
+    )
+
+    # ============================================================
+    # WHATSAPP INVOICE
+    # ============================================================
+
+    whatsapp_message = (
+        create_pending_invoice_message(
+            bill
+        )
+    )
+
+    if whatsapp_message:
+
+        transaction.on_commit(
+            lambda message_id=whatsapp_message.id:
+            _send_invoice_after_commit(
+                message_id
+            ),
+            robust=True
+        )
+
+    # ============================================================
+    # RETURN
+    # ============================================================
 
     return bill

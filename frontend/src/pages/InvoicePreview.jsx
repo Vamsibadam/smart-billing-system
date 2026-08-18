@@ -202,6 +202,118 @@ const roundOffAmount =
     </div>
 
     {/* Line Items Transaction Table */}
+    {/* ============================================================
+    CUSTOMER DETAILS
+============================================================ */}
+
+<div className="
+  w-full
+  bg-indigo-50/50
+  border
+  border-indigo-100/70
+  rounded-2xl
+  p-5
+  mb-6
+">
+
+  <div className="
+    flex
+    items-center
+    justify-between
+    mb-4
+  ">
+
+    <h3 className="
+      text-xs
+      font-black
+      text-indigo-500
+      uppercase
+      tracking-wider
+    ">
+      Customer Details
+    </h3>
+
+    {bill?.customer?.visit_count != null && (
+      <span className="
+        text-[10px]
+        font-bold
+        text-indigo-600
+        bg-white
+        border
+        border-indigo-100
+        px-2.5
+        py-1
+        rounded-lg
+      ">
+        {bill.customer.visit_count} visits
+      </span>
+    )}
+
+  </div>
+
+  <div className="
+    grid
+    grid-cols-1
+    sm:grid-cols-2
+    gap-4
+  ">
+
+    {/* Customer Name */}
+
+    <div>
+
+      <p className="
+        text-[10px]
+        font-black
+        text-slate-400
+        uppercase
+        tracking-wider
+        mb-1
+      ">
+        Name
+      </p>
+
+      <p className="
+        text-sm
+        font-bold
+        text-slate-700
+      ">
+        {bill?.customer?.name ||
+          "Walk-in Customer"}
+      </p>
+
+    </div>
+
+
+    {/* Customer Phone */}
+
+    <div>
+
+      <p className="
+        text-[10px]
+        font-black
+        text-slate-400
+        uppercase
+        tracking-wider
+        mb-1
+      ">
+        Phone / WhatsApp
+      </p>
+
+      <p className="
+        text-sm
+        font-bold
+        text-slate-700
+      ">
+        {bill?.customer?.phone_number ||
+          "—"}
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
     <div className="overflow-x-auto max-w-full my-6">
       <table className="w-full text-sm border-separate border-spacing-y-2">
         <thead className="text-slate-400 font-bold text-[11px] tracking-wider uppercase">
