@@ -14,10 +14,23 @@ import {
   ExternalLink,
   Phone,
   UserCheck,
+  Link2,
 } from "lucide-react";
 
 import MainLayout from "../layouts/MainLayout";
 import api from "../api/axios";
+
+// ============================================================
+// META WHATSAPP EMBEDDED SIGNUP CONFIG
+// ============================================================
+
+const META_APP_ID = "1791143798551840";
+
+const META_CONFIG_ID = "2315445418863559";
+
+// ============================================================
+// WHATSAPP PAGE
+// ============================================================
 
 function WhatsApp() {
   // ============================================================
@@ -48,8 +61,22 @@ function WhatsApp() {
 
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+
   const [retryingId, setRetryingId] = useState(null);
+
   const [updatingOptIn, setUpdatingOptIn] = useState(null);
+
+  // ============================================================
+  // META EMBEDDED SIGNUP STATE
+  // ============================================================
+
+  const [metaReady, setMetaReady] = useState(false);
+
+  const [signupLoading, setSignupLoading] = useState(false);
+
+  const [signupStatus, setSignupStatus] = useState("");
+
+  const [signupResult, setSignupResult] = useState(null);
 
   // ============================================================
   // LOAD WHATSAPP DATA
@@ -64,11 +91,13 @@ function WhatsApp() {
         messagesResponse,
       ] = await Promise.all([
         api.get("/billing/whatsapp/stats/"),
+
         api.get("/billing/whatsapp/messages/", {
           params: {
             ...(statusFilter && {
               status: statusFilter,
             }),
+
             ...(typeFilter && {
               type: typeFilter,
             }),
@@ -130,13 +159,219 @@ function WhatsApp() {
         err
       );
 
-      /*
-       * Customer API may not exist yet.
-       * WhatsApp page should still work without it.
-       */
       setCustomers([]);
     }
   };
+
+  // ============================================================
+  // LOAD META FACEBOOK SDK
+  // ============================================================
+
+  useEffect(() => {
+    const initializeFacebookSDK = () => {
+      if (!window.FB) {
+        return;
+      }
+
+      window.FB.init({
+        appId: META_APP_ID,
+        cookie: true,
+        xfbml: true,
+        version: "v26.0",
+      });
+
+      setMetaReady(true);
+
+      setSignupStatus(
+        "Meta WhatsApp onboarding is ready."
+      );
+    };
+
+    // SDK already loaded
+    if (window.FB) {
+      initializeFacebookSDK();
+      return;
+    }
+
+    // SDK script already exists but is still loading
+    const existingScript = document.getElementById(
+      "facebook-jssdk"
+    );
+
+    if (existingScript) {
+      existingScript.addEventListener(
+        "load",
+        initializeFacebookSDK
+      );
+
+      return () => {
+        existingScript.removeEventListener(
+          "load",
+          initializeFacebookSDK
+        );
+      };
+    }
+
+    // Create SDK script
+    const script = document.createElement(
+      "script"
+    );
+
+    script.id = "facebook-jssdk";
+
+    script.async = true;
+    script.defer = true;
+    script.crossOrigin = "anonymous";
+
+    script.src =
+      "https://connect.facebook.net/en_US/sdk.js";
+
+    script.onload = initializeFacebookSDK;
+
+    document.body.appendChild(script);
+
+    return () => {
+      script.onload = null;
+    };
+  }, []);
+
+  // ============================================================
+  // META SESSION INFO LISTENER
+  // ============================================================
+
+  useEffect(() => {
+    const handleMetaMessage = (event) => {
+      if (
+        !event.origin ||
+        !event.origin.endsWith(
+          "facebook.com"
+        )
+      ) {
+        return;
+      }
+
+      let data;
+
+      try {
+        data =
+          typeof event.data === "string"
+            ? JSON.parse(event.data)
+            : event.data;
+      } catch {
+        return;
+      }
+
+      if (
+        !data ||
+        data.type !==
+          "WA_EMBEDDED_SIGNUP"
+      ) {
+        return;
+      }
+
+      console.log(
+        "WhatsApp Embedded Signup event:",
+        data
+      );
+
+      // --------------------------------------------------------
+      // COEXISTENCE COMPLETED
+      // --------------------------------------------------------
+
+      if (
+        data.event ===
+        "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING"
+      ) {
+        const result = {
+          event: data.event,
+
+          business_id:
+            data.data?.business_id || null,
+
+          waba_id:
+            data.data?.waba_id || null,
+
+          phone_number_id:
+            data.data?.phone_number_id || null,
+        };
+
+        setSignupResult(result);
+
+        setSignupStatus(
+          "WhatsApp Business App onboarding completed."
+        );
+
+        setSignupLoading(false);
+
+        return;
+      }
+
+      // --------------------------------------------------------
+      // NORMAL EMBEDDED SIGNUP FINISH
+      // --------------------------------------------------------
+
+      if (data.event === "FINISH") {
+        setSignupResult(
+          data.data || data
+        );
+
+        setSignupStatus(
+          "WhatsApp Embedded Signup completed."
+        );
+
+        setSignupLoading(false);
+
+        return;
+      }
+
+      // --------------------------------------------------------
+      // ERROR
+      // --------------------------------------------------------
+
+      if (data.event === "ERROR") {
+        console.error(
+          "WhatsApp Embedded Signup error:",
+          data.data
+        );
+
+        setSignupResult(
+          data.data || data
+        );
+
+        setSignupStatus(
+          "Meta returned an error during onboarding."
+        );
+
+        setSignupLoading(false);
+
+        return;
+      }
+
+      // --------------------------------------------------------
+      // OTHER EVENTS
+      // --------------------------------------------------------
+
+      setSignupStatus(
+        `Meta onboarding event: ${data.event}`
+      );
+    };
+
+    window.addEventListener(
+      "message",
+      handleMetaMessage
+    );
+
+    return () => {
+      window.removeEventListener(
+        "message",
+        handleMetaMessage
+      );
+    };
+  }, []);
+
+  // ============================================================
+  // INITIAL DATA LOAD
+  // ============================================================
 
   useEffect(() => {
     loadWhatsAppData();
@@ -145,6 +380,101 @@ function WhatsApp() {
   useEffect(() => {
     loadCustomers();
   }, []);
+
+  // ============================================================
+  // LAUNCH META WHATSAPP SIGNUP
+  // ============================================================
+
+  const launchWhatsAppSignup = () => {
+    setError("");
+
+    setSignupResult(null);
+
+    if (!window.FB) {
+      setSignupStatus(
+        "Meta SDK is not ready. Please refresh the page."
+      );
+
+      return;
+    }
+
+    if (!META_APP_ID) {
+      setSignupStatus(
+        "Meta App ID is missing."
+      );
+
+      return;
+    }
+
+    if (!META_CONFIG_ID) {
+      setSignupStatus(
+        "Meta Configuration ID is missing."
+      );
+
+      return;
+    }
+
+    setSignupLoading(true);
+
+    setSignupStatus(
+      "Opening WhatsApp Business onboarding..."
+    );
+
+    window.FB.login(
+      (response) => {
+        console.log(
+          "Meta Embedded Signup response:",
+          response
+        );
+
+        if (
+          response &&
+          response.authResponse
+        ) {
+          setSignupStatus(
+            "Meta authorization completed. Waiting for WhatsApp onboarding..."
+          );
+
+          console.log(
+            "Embedded Signup authorization received."
+          );
+
+          /*
+           * IMPORTANT:
+           *
+           * We intentionally do not put the access token
+           * into the UI or send it anywhere from here.
+           *
+           * The WA_EMBEDDED_SIGNUP postMessage event is
+           * handled above.
+           */
+        } else {
+          setSignupLoading(false);
+
+          setSignupStatus(
+            "WhatsApp onboarding was cancelled."
+          );
+        }
+      },
+
+      {
+        config_id: META_CONFIG_ID,
+
+        response_type: "code",
+
+        override_default_response_type: true,
+
+        extras: {
+          setup: {},
+
+          featureType:
+            "whatsapp_business_app_onboarding",
+
+          sessionInfoVersion: "3",
+        },
+      }
+    );
+  };
 
   // ============================================================
   // REFRESH
@@ -322,10 +652,14 @@ function WhatsApp() {
     },
   ];
 
+  // ============================================================
+  // RETRY MESSAGE
+  // ============================================================
+
   const handleRetry = async (messageId) => {
     try {
-
       setRetryingId(messageId);
+
       setError("");
 
       await api.post(
@@ -333,9 +667,7 @@ function WhatsApp() {
       );
 
       await loadWhatsAppData();
-
     } catch (err) {
-
       console.error(
         "Unable to retry WhatsApp message:",
         err
@@ -343,23 +675,25 @@ function WhatsApp() {
 
       setError(
         err.response?.data?.details ||
-        err.response?.data?.error ||
-        "Unable to retry WhatsApp message."
+          err.response?.data?.error ||
+          "Unable to retry WhatsApp message."
       );
-
     } finally {
-
       setRetryingId(null);
     }
   };
+
+  // ============================================================
+  // OPT-IN TOGGLE
+  // ============================================================
+
   const handleOptInToggle = async (
     customerId,
     currentValue
   ) => {
-
     try {
-
       setUpdatingOptIn(customerId);
+
       setError("");
 
       await api.patch(
@@ -370,9 +704,7 @@ function WhatsApp() {
       );
 
       await loadCustomers();
-
     } catch (err) {
-
       console.error(
         "Unable to update WhatsApp opt-in:",
         err
@@ -380,11 +712,9 @@ function WhatsApp() {
 
       setError(
         err.response?.data?.error ||
-        "Unable to update WhatsApp opt-in."
+          "Unable to update WhatsApp opt-in."
       );
-
     } finally {
-
       setUpdatingOptIn(null);
     }
   };
@@ -404,7 +734,6 @@ function WhatsApp() {
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-7">
 
           <div>
-
             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-emerald-600 mb-2">
               <MessageCircle size={15} />
               Customer Engagement
@@ -418,71 +747,225 @@ function WhatsApp() {
               Manage invoice delivery and WhatsApp
               communication with your customers.
             </p>
-
           </div>
 
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={refreshing}
+          <div className="flex flex-wrap items-center gap-2">
+
+            {/* =================================================
+                CONNECT WHATSAPP
+            ================================================== */}
+
+            <button
+              type="button"
+              onClick={
+                launchWhatsAppSignup
+              }
+              disabled={
+                signupLoading ||
+                !metaReady
+              }
+              className="
+                inline-flex
+                items-center
+                justify-center
+                gap-2
+                px-4
+                py-2.5
+                rounded-xl
+                border
+                border-emerald-200
+                bg-emerald-50
+                text-emerald-700
+                text-sm
+                font-bold
+                shadow-sm
+                hover:bg-emerald-100
+                hover:border-emerald-300
+                transition
+                disabled:opacity-50
+                disabled:cursor-not-allowed
+              "
+            >
+              {signupLoading ? (
+                <RefreshCw
+                  size={16}
+                  className="animate-spin"
+                />
+              ) : (
+                <Link2 size={16} />
+              )}
+
+              {signupLoading
+                ? "Connecting..."
+                : metaReady
+                  ? "Connect WhatsApp"
+                  : "Loading Meta..."}
+            </button>
+
+            {/* =================================================
+                REFRESH
+            ================================================== */}
+
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="
+                inline-flex
+                items-center
+                justify-center
+                gap-2
+                px-4
+                py-2.5
+                rounded-xl
+                border
+                border-slate-200
+                bg-white
+                text-slate-600
+                text-sm
+                font-bold
+                shadow-sm
+                hover:border-emerald-200
+                hover:text-emerald-600
+                transition
+                disabled:opacity-50
+              "
+            >
+              <RefreshCw
+                size={16}
+                className={
+                  refreshing
+                    ? "animate-spin"
+                    : ""
+                }
+              />
+
+              Refresh
+            </button>
+
+          </div>
+        </div>
+
+        {/* ================================================== */}
+        {/* META SIGNUP STATUS */}
+        {/* ================================================== */}
+
+        {signupStatus && (
+          <div
             className="
-              self-start
-              lg:self-auto
-              inline-flex
-              items-center
-              justify-center
-              gap-2
-              px-4
-              py-2.5
-              rounded-xl
+              mb-6
+              rounded-2xl
               border
-              border-slate-200
-              bg-white
-              text-slate-600
+              border-emerald-100
+              bg-emerald-50
+              px-4
+              py-3
+              flex
+              items-start
+              gap-3
               text-sm
-              font-bold
-              shadow-sm
-              hover:border-emerald-200
-              hover:text-emerald-600
-              transition
-              disabled:opacity-50
+              font-semibold
+              text-emerald-700
             "
           >
-            <RefreshCw
-              size={16}
-              className={
-                refreshing
-                  ? "animate-spin"
-                  : ""
-              }
+            <Link2
+              size={18}
+              className="mt-0.5 shrink-0"
             />
 
-            Refresh
-          </button>
+            <div className="min-w-0">
+              <p>
+                {signupStatus}
+              </p>
 
-        </div>
+              <p className="
+                mt-1
+                text-[11px]
+                font-medium
+                text-emerald-600
+              ">
+                Configuration ID:{" "}
+                {META_CONFIG_ID}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ================================================== */}
+        {/* META SIGNUP RESULT */}
+        {/* ================================================== */}
+
+        {signupResult && (
+          <div
+            className="
+              mb-6
+              rounded-2xl
+              border
+              border-indigo-100
+              bg-indigo-50
+              p-4
+            "
+          >
+            <div className="
+              flex
+              items-center
+              gap-2
+              text-sm
+              font-black
+              text-indigo-700
+            ">
+              <CheckCircle2 size={17} />
+
+              Meta onboarding response
+            </div>
+
+            <pre
+              className="
+                mt-3
+                overflow-x-auto
+                rounded-xl
+                border
+                border-indigo-100
+                bg-white
+                p-4
+                text-[11px]
+                font-mono
+                text-slate-600
+              "
+            >
+              {JSON.stringify(
+                signupResult,
+                null,
+                2
+              )}
+            </pre>
+          </div>
+        )}
 
         {/* ================================================== */}
         {/* ERROR */}
         {/* ================================================== */}
 
         {error && (
-          <div className="
-            mb-6
-            rounded-2xl
-            border
-            border-red-100
-            bg-red-50
-            px-4
-            py-3
-            flex
-            items-center
-            gap-3
-            text-sm
-            font-semibold
-            text-red-600
-          ">
+          <div
+            className="
+              mb-6
+              rounded-2xl
+              border
+              border-red-100
+              bg-red-50
+              px-4
+              py-3
+              flex
+              items-center
+              gap-3
+              text-sm
+              font-semibold
+              text-red-600
+            "
+          >
             <AlertCircle size={18} />
+
             {error}
           </div>
         )}
@@ -491,18 +974,18 @@ function WhatsApp() {
         {/* STATS */}
         {/* ================================================== */}
 
-        <div className="
-          grid
-          grid-cols-2
-          sm:grid-cols-3
-          xl:grid-cols-6
-          gap-3
-          sm:gap-4
-          mb-6
-        ">
-
+        <div
+          className="
+            grid
+            grid-cols-2
+            sm:grid-cols-3
+            xl:grid-cols-6
+            gap-3
+            sm:gap-4
+            mb-6
+          "
+        >
           {statCards.map((stat) => {
-
             const Icon = stat.icon;
 
             return (
@@ -517,7 +1000,6 @@ function WhatsApp() {
                   shadow-[0_4px_20px_-8px_rgba(0,0,0,0.10)]
                 "
               >
-
                 <div
                   className={`
                     w-10
@@ -534,50 +1016,69 @@ function WhatsApp() {
                 </div>
 
                 <div className="mt-4">
-
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                  <p className="
+                    text-[11px]
+                    font-bold
+                    uppercase
+                    tracking-wide
+                    text-slate-400
+                  ">
                     {stat.label}
                   </p>
 
-                  <p className="text-xl sm:text-2xl font-black text-slate-800 mt-1">
+                  <p className="
+                    text-xl
+                    sm:text-2xl
+                    font-black
+                    text-slate-800
+                    mt-1
+                  ">
                     {loading
                       ? "—"
                       : stat.value}
                   </p>
-
                 </div>
-
               </div>
             );
           })}
-
         </div>
 
         {/* ================================================== */}
         {/* MESSAGE TYPE SUMMARY */}
         {/* ================================================== */}
 
-        <div className="
-          grid
-          grid-cols-1
-          md:grid-cols-2
-          gap-4
-          mb-6
-        ">
+        <div
+          className="
+            grid
+            grid-cols-1
+            md:grid-cols-2
+            gap-4
+            mb-6
+          "
+        >
 
-          <div className="
-            bg-white
-            border
-            border-slate-200
-            rounded-2xl
-            p-5
-            shadow-[0_4px_20px_-8px_rgba(0,0,0,0.10)]
-          ">
+          {/* INVOICE */}
 
-            <div className="flex items-center justify-between">
-
-              <div className="flex items-center gap-3">
-
+          <div
+            className="
+              bg-white
+              border
+              border-slate-200
+              rounded-2xl
+              p-5
+              shadow-[0_4px_20px_-8px_rgba(0,0,0,0.10)]
+            "
+          >
+            <div className="
+              flex
+              items-center
+              justify-between
+            ">
+              <div className="
+                flex
+                items-center
+                gap-3
+              ">
                 <div className="
                   w-10
                   h-10
@@ -594,15 +1095,22 @@ function WhatsApp() {
                 </div>
 
                 <div>
-                  <h2 className="font-black text-slate-800">
+                  <h2 className="
+                    font-black
+                    text-slate-800
+                  ">
                     Invoice Messages
                   </h2>
 
-                  <p className="text-xs text-slate-400 font-medium mt-0.5">
+                  <p className="
+                    text-xs
+                    text-slate-400
+                    font-medium
+                    mt-0.5
+                  ">
                     Bills sent through WhatsApp
                   </p>
                 </div>
-
               </div>
 
               <span className="
@@ -612,24 +1120,31 @@ function WhatsApp() {
               ">
                 {stats.invoice_messages}
               </span>
-
             </div>
-
           </div>
 
-          <div className="
-            bg-white
-            border
-            border-slate-200
-            rounded-2xl
-            p-5
-            shadow-[0_4px_20px_-8px_rgba(0,0,0,0.10)]
-          ">
+          {/* MARKETING */}
 
-            <div className="flex items-center justify-between">
-
-              <div className="flex items-center gap-3">
-
+          <div
+            className="
+              bg-white
+              border
+              border-slate-200
+              rounded-2xl
+              p-5
+              shadow-[0_4px_20px_-8px_rgba(0,0,0,0.10)]
+            "
+          >
+            <div className="
+              flex
+              items-center
+              justify-between
+            ">
+              <div className="
+                flex
+                items-center
+                gap-3
+              ">
                 <div className="
                   w-10
                   h-10
@@ -646,15 +1161,22 @@ function WhatsApp() {
                 </div>
 
                 <div>
-                  <h2 className="font-black text-slate-800">
+                  <h2 className="
+                    font-black
+                    text-slate-800
+                  ">
                     Marketing Messages
                   </h2>
 
-                  <p className="text-xs text-slate-400 font-medium mt-0.5">
+                  <p className="
+                    text-xs
+                    text-slate-400
+                    font-medium
+                    mt-0.5
+                  ">
                     Promotional communication
                   </p>
                 </div>
-
               </div>
 
               <span className="
@@ -664,9 +1186,7 @@ function WhatsApp() {
               ">
                 {stats.marketing_messages}
               </span>
-
             </div>
-
           </div>
 
         </div>
@@ -675,114 +1195,153 @@ function WhatsApp() {
         {/* RECENT MESSAGES */}
         {/* ================================================== */}
 
-        <div className="
-          bg-white
-          border
-          border-slate-200
-          rounded-3xl
-          shadow-[0_4px_24px_-10px_rgba(0,0,0,0.12)]
-          overflow-hidden
-          mb-6
-        ">
-
-          <div className="
-            px-5
-            sm:px-6
-            py-5
-            border-b
-            border-slate-100
-            flex
-            flex-col
-            sm:flex-row
-            sm:items-center
-            sm:justify-between
-            gap-3
-          ">
-
+        <div
+          className="
+            bg-white
+            border
+            border-slate-200
+            rounded-3xl
+            shadow-[0_4px_24px_-10px_rgba(0,0,0,0.12)]
+            overflow-hidden
+            mb-6
+          "
+        >
+          <div
+            className="
+              px-5
+              sm:px-6
+              py-5
+              border-b
+              border-slate-100
+              flex
+              flex-col
+              sm:flex-row
+              sm:items-center
+              sm:justify-between
+              gap-3
+            "
+          >
             <div>
-
-              <h2 className="text-base font-black text-slate-800">
+              <h2 className="
+                text-base
+                font-black
+                text-slate-800
+              ">
                 Recent WhatsApp Messages
               </h2>
 
-              <p className="text-xs text-slate-400 font-medium mt-1">
+              <p className="
+                text-xs
+                text-slate-400
+                font-medium
+                mt-1
+              ">
                 Latest invoice and marketing activity
               </p>
-
             </div>
+
             <div className="
-  flex
-  flex-wrap
-  items-center
-  gap-2
-">
+              flex
+              flex-wrap
+              items-center
+              gap-2
+            ">
 
               <select
                 value={statusFilter}
                 onChange={(e) =>
-                  setStatusFilter(e.target.value)
+                  setStatusFilter(
+                    e.target.value
+                  )
                 }
                 className="
-      h-9
-      px-3
-      rounded-lg
-      border
-      border-slate-200
-      bg-white
-      text-xs
-      font-bold
-      text-slate-600
-      outline-none
-    "
+                  h-9
+                  px-3
+                  rounded-lg
+                  border
+                  border-slate-200
+                  bg-white
+                  text-xs
+                  font-bold
+                  text-slate-600
+                  outline-none
+                "
               >
-                <option value="">All Status</option>
-                <option value="PENDING">Pending</option>
-                <option value="SENT">Sent</option>
-                <option value="DELIVERED">Delivered</option>
-                <option value="READ">Read</option>
-                <option value="FAILED">Failed</option>
+                <option value="">
+                  All Status
+                </option>
+
+                <option value="PENDING">
+                  Pending
+                </option>
+
+                <option value="SENT">
+                  Sent
+                </option>
+
+                <option value="DELIVERED">
+                  Delivered
+                </option>
+
+                <option value="READ">
+                  Read
+                </option>
+
+                <option value="FAILED">
+                  Failed
+                </option>
               </select>
 
               <select
                 value={typeFilter}
                 onChange={(e) =>
-                  setTypeFilter(e.target.value)
+                  setTypeFilter(
+                    e.target.value
+                  )
                 }
                 className="
-      h-9
-      px-3
-      rounded-lg
-      border
-      border-slate-200
-      bg-white
-      text-xs
-      font-bold
-      text-slate-600
-      outline-none
-    "
+                  h-9
+                  px-3
+                  rounded-lg
+                  border
+                  border-slate-200
+                  bg-white
+                  text-xs
+                  font-bold
+                  text-slate-600
+                  outline-none
+                "
               >
-                <option value="">All Types</option>
-                <option value="INVOICE">Invoice</option>
-                <option value="MARKETING">Marketing</option>
+                <option value="">
+                  All Types
+                </option>
+
+                <option value="INVOICE">
+                  Invoice
+                </option>
+
+                <option value="MARKETING">
+                  Marketing
+                </option>
               </select>
 
-            </div>
-            <div className="
-              flex
-              items-center
-              gap-2
-              text-xs
-              font-bold
-              text-slate-400
-            ">
-              <MessageCircle size={14} />
-              {messages.length} messages
-            </div>
+              <div className="
+                flex
+                items-center
+                gap-2
+                text-xs
+                font-bold
+                text-slate-400
+              ">
+                <MessageCircle size={14} />
 
+                {messages.length} messages
+              </div>
+
+            </div>
           </div>
 
           {loading ? (
-
             <div className="
               px-6
               py-12
@@ -793,15 +1352,12 @@ function WhatsApp() {
             ">
               Loading WhatsApp messages...
             </div>
-
           ) : messages.length === 0 ? (
-
             <div className="
               px-6
               py-12
               text-center
             ">
-
               <div className="
                 mx-auto
                 w-12
@@ -818,18 +1374,26 @@ function WhatsApp() {
                 <MessageCircle size={21} />
               </div>
 
-              <p className="mt-4 text-sm font-black text-slate-700">
+              <p className="
+                mt-4
+                text-sm
+                font-black
+                text-slate-700
+              ">
                 No WhatsApp messages yet
               </p>
 
-              <p className="mt-1 text-xs font-medium text-slate-400">
-                Invoice messages will appear here after sending.
+              <p className="
+                mt-1
+                text-xs
+                font-medium
+                text-slate-400
+              ">
+                Invoice messages will appear here
+                after sending.
               </p>
-
             </div>
-
           ) : (
-
             <div className="overflow-x-auto">
 
               <table className="w-full min-w-[850px]">
@@ -950,8 +1514,11 @@ function WhatsApp() {
 
                           <td className="px-5 py-4">
 
-                            <div className="flex items-center gap-3">
-
+                            <div className="
+                              flex
+                              items-center
+                              gap-3
+                            ">
                               <div className="
                                 w-9
                                 h-9
@@ -973,7 +1540,6 @@ function WhatsApp() {
                               </div>
 
                               <div>
-
                                 <p className="
                                   text-sm
                                   font-black
@@ -993,18 +1559,16 @@ function WhatsApp() {
                                   mt-0.5
                                 ">
                                   <Phone size={11} />
+
                                   {message.phone_number ||
                                     "—"}
                                 </p>
-
                               </div>
-
                             </div>
 
                           </td>
 
                           <td className="px-5 py-4">
-
                             <span className="
                               text-xs
                               font-black
@@ -1013,7 +1577,6 @@ function WhatsApp() {
                               {message.bill_number ||
                                 "—"}
                             </span>
-
                           </td>
 
                           <td className="px-5 py-4">
@@ -1034,12 +1597,10 @@ function WhatsApp() {
                               tracking-wide
                               text-slate-500
                             ">
-
                               {message.message_type ===
-                                "INVOICE"
+                              "INVOICE"
                                 ? "Invoice"
                                 : "Marketing"}
-
                             </span>
 
                           </td>
@@ -1062,11 +1623,9 @@ function WhatsApp() {
                                 ${status.className}
                               `}
                             >
-
                               <StatusIcon size={12} />
 
                               {status.label}
-
                             </span>
 
                           </td>
@@ -1086,49 +1645,62 @@ function WhatsApp() {
                             {message.status ===
                               "FAILED" &&
                               message.error_message && (
-                                <p className="
-                                  mt-1
-                                  max-w-[220px]
-                                  truncate
-                                  text-[10px]
-                                  font-medium
-                                  text-red-500
-                                "
+                                <p
+                                  className="
+                                    mt-1
+                                    max-w-[220px]
+                                    truncate
+                                    text-[10px]
+                                    font-medium
+                                    text-red-500
+                                  "
                                   title={
                                     message.error_message
-                                  }>
-                                  {message.error_message}
+                                  }
+                                >
+                                  {
+                                    message.error_message
+                                  }
                                 </p>
                               )}
-                            {message.status === "FAILED" && (
+
+                            {message.status ===
+                              "FAILED" && (
                               <button
                                 type="button"
                                 onClick={() =>
-                                  handleRetry(message.id)
+                                  handleRetry(
+                                    message.id
+                                  )
                                 }
-                                disabled={retryingId === message.id}
+                                disabled={
+                                  retryingId ===
+                                  message.id
+                                }
                                 className="
-      inline-flex
-      items-center
-      gap-1.5
-      mr-3
-      text-xs
-      font-black
-      text-red-600
-      hover:text-red-700
-      disabled:opacity-50
-    "
+                                  inline-flex
+                                  items-center
+                                  gap-1.5
+                                  mr-3
+                                  text-xs
+                                  font-black
+                                  text-red-600
+                                  hover:text-red-700
+                                  disabled:opacity-50
+                                "
                               >
                                 <RefreshCw
                                   size={13}
                                   className={
-                                    retryingId === message.id
+                                    retryingId ===
+                                    message.id
                                       ? "animate-spin"
                                       : ""
                                   }
                                 />
 
-                                {retryingId === message.id
+                                {retryingId ===
+                                message.id
                                   ? "Retrying..."
                                   : "Retry"}
                               </button>
@@ -1143,7 +1715,6 @@ function WhatsApp() {
                           ">
 
                             {message.invoice_url ? (
-
                               <a
                                 href={
                                   message.invoice_url
@@ -1161,13 +1732,12 @@ function WhatsApp() {
                                 "
                               >
                                 View
+
                                 <ExternalLink
                                   size={13}
                                 />
                               </a>
-
                             ) : (
-
                               <span className="
                                 text-xs
                                 font-semibold
@@ -1175,7 +1745,6 @@ function WhatsApp() {
                               ">
                                 —
                               </span>
-
                             )}
 
                           </td>
@@ -1197,26 +1766,34 @@ function WhatsApp() {
         {/* INVOICE + MARKETING */}
         {/* ================================================== */}
 
-        <div className="
-          grid
-          grid-cols-1
-          lg:grid-cols-2
-          gap-5
-          mb-6
-        ">
+        <div
+          className="
+            grid
+            grid-cols-1
+            lg:grid-cols-2
+            gap-5
+            mb-6
+          "
+        >
 
           {/* INVOICE DELIVERY */}
 
-          <div className="
-            bg-white
-            border
-            border-slate-200
-            rounded-3xl
-            p-6
-            shadow-[0_4px_20px_-8px_rgba(0,0,0,0.10)]
-          ">
+          <div
+            className="
+              bg-white
+              border
+              border-slate-200
+              rounded-3xl
+              p-6
+              shadow-[0_4px_20px_-8px_rgba(0,0,0,0.10)]
+            "
+          >
 
-            <div className="flex items-start justify-between">
+            <div className="
+              flex
+              items-start
+              justify-between
+            ">
 
               <div className="
                 w-11
@@ -1339,16 +1916,22 @@ function WhatsApp() {
 
           {/* MARKETING */}
 
-          <div className="
-            bg-white
-            border
-            border-slate-200
-            rounded-3xl
-            p-6
-            shadow-[0_4px_20px_-8px_rgba(0,0,0,0.10)]
-          ">
+          <div
+            className="
+              bg-white
+              border
+              border-slate-200
+              rounded-3xl
+              p-6
+              shadow-[0_4px_20px_-8px_rgba(0,0,0,0.10)]
+            "
+          >
 
-            <div className="flex items-start justify-between">
+            <div className="
+              flex
+              items-start
+              justify-between
+            ">
 
               <div className="
                 w-11
@@ -1417,6 +2000,7 @@ function WhatsApp() {
                 text-slate-400
               ">
                 <Clock3 size={14} />
+
                 Campaign tools will be available later.
               </div>
 
@@ -1430,25 +2014,29 @@ function WhatsApp() {
         {/* CUSTOMERS */}
         {/* ================================================== */}
 
-        <div className="
-          bg-white
-          border
-          border-slate-200
-          rounded-3xl
-          p-5
-          sm:p-6
-          shadow-[0_4px_20px_-8px_rgba(0,0,0,0.10)]
-        ">
+        <div
+          className="
+            bg-white
+            border
+            border-slate-200
+            rounded-3xl
+            p-5
+            sm:p-6
+            shadow-[0_4px_20px_-8px_rgba(0,0,0,0.10)]
+          "
+        >
 
-          <div className="
-            flex
-            flex-col
-            sm:flex-row
-            sm:items-center
-            sm:justify-between
-            gap-4
-            mb-5
-          ">
+          <div
+            className="
+              flex
+              flex-col
+              sm:flex-row
+              sm:items-center
+              sm:justify-between
+              gap-4
+              mb-5
+            "
+          >
 
             <div>
 
@@ -1479,7 +2067,8 @@ function WhatsApp() {
                 text-slate-400
                 mt-1
               ">
-                Customers available for WhatsApp communication
+                Customers available for WhatsApp
+                communication
               </p>
 
             </div>
@@ -1505,7 +2094,9 @@ function WhatsApp() {
                 type="text"
                 value={search}
                 onChange={(e) =>
-                  setSearch(e.target.value)
+                  setSearch(
+                    e.target.value
+                  )
                 }
                 placeholder="Search customer..."
                 className="
@@ -1531,8 +2122,8 @@ function WhatsApp() {
 
           </div>
 
-          {filteredCustomers.length === 0 ? (
-
+          {filteredCustomers.length ===
+          0 ? (
             <div className="
               py-8
               text-center
@@ -1542,9 +2133,7 @@ function WhatsApp() {
             ">
               No customers found.
             </div>
-
           ) : (
-
             <div className="
               grid
               grid-cols-1
@@ -1556,7 +2145,6 @@ function WhatsApp() {
 
               {filteredCustomers.map(
                 (customer) => (
-
                   <div
                     key={customer.id}
                     className="
@@ -1652,57 +2240,63 @@ function WhatsApp() {
                           )
                         }
                         disabled={
-                          updatingOptIn === customer.id
+                          updatingOptIn ===
+                          customer.id
                         }
                         className={`
-    inline-flex
-    items-center
-    gap-1.5
-    px-2.5
-    py-1.5
-    rounded-lg
-    text-[10px]
-    font-black
-    border
-    transition
-    disabled:opacity-50
-    ${customer.whatsapp_opt_in
-                            ? `
-          bg-emerald-50
-          text-emerald-600
-          border-emerald-100
-        `
-                            : `
-          bg-slate-100
-          text-slate-500
-          border-slate-200
-        `
+                          inline-flex
+                          items-center
+                          gap-1.5
+                          px-2.5
+                          py-1.5
+                          rounded-lg
+                          text-[10px]
+                          font-black
+                          border
+                          transition
+                          disabled:opacity-50
+
+                          ${
+                            customer.whatsapp_opt_in
+                              ? `
+                                bg-emerald-50
+                                text-emerald-600
+                                border-emerald-100
+                              `
+                              : `
+                                bg-slate-100
+                                text-slate-500
+                                border-slate-200
+                              `
                           }
-  `}
+                        `}
                       >
-                        {updatingOptIn === customer.id ? (
+
+                        {updatingOptIn ===
+                        customer.id ? (
                           <RefreshCw
                             size={12}
                             className="animate-spin"
                           />
                         ) : (
-                          <UserCheck size={12} />
+                          <UserCheck
+                            size={12}
+                          />
                         )}
 
                         {customer.whatsapp_opt_in
                           ? "Opted in"
                           : "Opt in"}
+
                       </button>
 
                     </div>
 
                   </div>
-
                 )
               )}
 
             </div>
-
           )}
 
         </div>
