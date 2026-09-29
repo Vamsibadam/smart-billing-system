@@ -35,7 +35,7 @@ from reportlab.lib.styles import (
 from settings_app.models import (
     StoreSettings
 )
-
+from products.models import Product
 from reportlab.lib.styles import ParagraphStyle
 
 from reportlab.lib.enums import TA_RIGHT, TA_LEFT
@@ -495,7 +495,7 @@ class RangeReportAPIView(APIView):
             )
             .order_by(
                 "-quantity_sold"
-            )[:5]
+            )
         )
 
         details = []
@@ -570,8 +570,123 @@ class RangeReportAPIView(APIView):
             details,
             
         })
-    
 
+class ProductSalesReportAPIView(APIView):
+
+    def get(self, request):
+
+        product_id = request.GET.get("product_id")
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+
+        # -----------------------------------------
+        # Validate parameters
+        # -----------------------------------------
+
+        if not product_id or not start_date or not end_date:
+            return Response(
+                {
+                    "error": "product_id, start_date and end_date are required"
+                },
+                status=400
+            )
+
+        # -----------------------------------------
+        # Validate date range
+        # -----------------------------------------
+
+        if start_date > end_date:
+            return Response(
+                {
+                    "error": "Start date cannot be after end date"
+                },
+                status=400
+            )
+
+        # -----------------------------------------
+        # Get product
+        # -----------------------------------------
+
+        try:
+
+            product = Product.objects.get(
+                id=product_id
+            )
+
+        except Product.DoesNotExist:
+
+            return Response(
+                {
+                    "error": "Product not found"
+                },
+                status=404
+            )
+
+        # -----------------------------------------
+        # Get sold items
+        # -----------------------------------------
+
+        items = (
+            TransactionItem.objects
+            .filter(
+                product_id=product_id,
+                transaction__created_at__date__gte=start_date,
+                transaction__created_at__date__lte=end_date,
+                transaction__status="COMPLETED"
+            )
+        )
+
+        # -----------------------------------------
+        # Quantity sold
+        # -----------------------------------------
+
+        total_quantity_sold = (
+            items.aggregate(
+                total=Sum("quantity")
+            )["total"] or 0
+        )
+
+        # -----------------------------------------
+        # Revenue
+        # -----------------------------------------
+
+        total_revenue = (
+            items.aggregate(
+                total=Sum("subtotal")
+            )["total"] or 0
+        )
+
+        # -----------------------------------------
+        # Average selling price
+        # -----------------------------------------
+
+        average_price = (
+            total_revenue / total_quantity_sold
+            if total_quantity_sold > 0
+            else 0
+        )
+
+        # -----------------------------------------
+        # Response
+        # -----------------------------------------
+
+        return Response(
+            {
+                "product_id": product.id,
+                "product_name": product.name,
+                "start_date": start_date,
+                "end_date": end_date,
+                "total_quantity_sold": total_quantity_sold,
+                "total_revenue": round(
+                    float(total_revenue),
+                    2
+                ),
+                "average_price": round(
+                    float(average_price),
+                    2
+                )
+            }
+        )
 class ExportPDFAPIView(APIView):
 
     def get(self, request):

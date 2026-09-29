@@ -5,6 +5,7 @@ from .views import (
     MonthlyReportAPIView,
     CustomDateReportAPIView,
     RangeReportAPIView,
+    ProductSalesReportAPIView,
     ExportCSVAPIView,
     ExportExcelAPIView,
     ExportPDFAPIView
@@ -49,5 +50,9 @@ urlpatterns = [
     path(
     "export/pdf/",
     ExportPDFAPIView.as_view()
+),
+path(
+    "product/",
+    ProductSalesReportAPIView.as_view()
 ),
 ]

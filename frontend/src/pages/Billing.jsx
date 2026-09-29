@@ -33,6 +33,7 @@ import CashBook from "../components/billing/CashBook";
 
 
 function Billing() {
+  const [mobileTab, setMobileTab] = useState("products"); // 'products' | 'cart'
   const navigate =
     useNavigate();
 
@@ -1311,227 +1312,297 @@ function Billing() {
     showCustomerModal
   ]);
 
+const totalCartCount = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
+
   return (
     <MainLayout>
+      <div
+        className="
+          w-full
+          min-h-screen
+          bg-gradient-to-tr
+          from-indigo-200/70
+          via-slate-50
+          to-orange-200/40
+          p-2.5
+          sm:p-4
+          md:p-6
+          rounded-2xl
+          sm:rounded-[24px]
+          pb-36
+          lg:pb-8
+        "
+      >
+        {/* =========================================================
+            HEADER & ACTIONS BAR
+        ========================================================== */}
+        <div
+          className="
+            mb-3
+            sm:mb-6
+            relative
+            z-10
+            flex
+            flex-col
+            lg:flex-row
+            lg:justify-between
+            lg:items-center
+            gap-2.5
+            sm:gap-3
+          "
+        >
+          {/* Header Row */}
+          <div className="flex items-center justify-between w-full lg:w-auto">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-3xl font-black tracking-tight text-slate-800">
+                Billing
+              </h1>
+              <span className="lg:hidden text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-900 text-white">
+                {layout === "classic" ? "Classic" : "Touch"} POS
+              </span>
+            </div>
 
-      <div className="
-  w-full
-  min-h-screen
-  bg-gradient-to-tr
-  from-indigo-200/70
-  via-slate-50
-  to-orange-200/40
-  p-2
-  sm:p-4
-  md:p-6
-  rounded-2xl
-  sm:rounded-[24px]
-">
+            {/* Mobile Switcher (Items vs Cart) - Only in Classic View */}
+            {layout === "classic" && billingView === "classic" && (
+              <div className="flex lg:hidden p-1 bg-slate-900/10 rounded-xl text-xs font-black">
+                <button
+                  type="button"
+                  onClick={() => setMobileTab("products")}
+                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                    mobileTab === "products"
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "text-slate-600"
+                  }`}
+                >
+                  Items
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileTab("cart")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                    mobileTab === "cart"
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "text-slate-600"
+                  }`}
+                >
+                  <span>Cart</span>
+                  {totalCartCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[9px] flex items-center justify-center font-bold">
+                      {totalCartCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
 
-        <div className="
-  mb-4
-  sm:mb-6
-  relative
-  z-10
-  flex
-  flex-col
-  lg:flex-row
-  lg:justify-between
-  lg:items-start
-  gap-3
-">
-          <h1 className="text-3xl font-black tracking-tight text-slate-800">
-            Billing
-          </h1>
-          <div className="
-  flex
-  flex-wrap
-  items-center
-  gap-2
-  w-full
-  lg:w-auto
-">
+          {/* Action Button Track */}
+          <div
+            className="
+              flex
+              items-center
+              gap-2
+              w-full
+              lg:w-auto
+              overflow-x-auto
+              scrollbar-none
+              py-1
+              flex-nowrap
+              sm:flex-wrap
+            "
+          >
+            {/* Held Bills */}
             <button
               onClick={() => setShowHeldBills(true)}
               className="
-              bg-white
-              border
-              border-slate-200
-              px-5
-              py-3
-              rounded-2xl
-              text-sm
-              font-bold
-              shadow-sm
-              hover:bg-slate-50
-              transition-all
-              cursor-pointer
+                shrink-0
+                bg-white
+                border
+                border-slate-200/90
+                px-3.5
+                sm:px-5
+                py-2
+                sm:py-3
+                rounded-xl
+                sm:rounded-2xl
+                text-xs
+                sm:text-sm
+                font-bold
+                shadow-xs
+                hover:bg-slate-50
+                active:scale-95
+                transition-all
+                cursor-pointer
+                flex
+                items-center
+                gap-1.5
               "
             >
-
-              🧾 Held Bills
-
+              <span>🧾 Held Bills</span>
               {heldBills.length > 0 && (
-
-                <span
-                  className="
-                  ml-2
-                  inline-flex
-                  items-center
-                  justify-center
-                  w-6
-                  h-6
-                  rounded-full
-                  bg-orange-500
-                  text-white
-                  text-xs
-                  font-black
-                  "
-                >
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-black">
                   {heldBills.length}
                 </span>
-
               )}
-
             </button>
+
+            {/* Exit / Enter POS */}
             <button
               onClick={() => setPosMode(!posMode)}
               className="
-              bg-slate-900
-              hover:bg-slate-800
-              text-white
-              px-5
-              py-3
-              rounded-2xl
-              text-sm
-              font-bold
-              transition-all
-              cursor-pointer
+                hidden
+                sm:inline-flex
+                bg-slate-900
+                hover:bg-slate-800
+                text-white
+                px-5
+                py-3
+                rounded-2xl
+                text-sm
+                font-bold
+                transition-all
+                cursor-pointer
               "
             >
               {posMode ? "🡸 Exit POS" : "⛶ Enter POS"}
             </button>
 
+            {/* Layout Toggle */}
             <button
               onClick={() => {
-                const nextLayout =
-                  layout === "classic"
-                    ? "touch"
-                    : "classic";
+                const nextLayout = layout === "classic" ? "touch" : "classic";
                 setLayout(nextLayout);
                 setBillingView(nextLayout);
-
               }}
               className="
-              bg-gradient-to-r
-              from-orange-500
-              to-indigo-600
-              text-white
-              px-5
-              py-2.5
-              rounded-xl
-              font-bold
-              cursor-pointer
+                shrink-0
+                bg-gradient-to-r
+                from-orange-500
+                to-indigo-600
+                text-white
+                px-3.5
+                sm:px-5
+                py-2
+                sm:py-2.5
+                rounded-xl
+                text-xs
+                sm:text-sm
+                font-bold
+                active:scale-95
+                shadow-xs
+                cursor-pointer
               "
             >
-              {layout === "classic"
-                ? "Touch POS"
-                : "Classic POS"}
+              {layout === "classic" ? "Touch Mode" : "Classic Mode"}
             </button>
+
+            {/* Cash Book */}
             <button
               onClick={() => setBillingView("cashbook")}
               className={`
-            px-5
-            py-3
-            rounded-2xl
-            text-sm
-            font-bold
-            transition-all
-            cursor-pointer
-            ${billingView === "cashbook"
-                  ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white"
-                  : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                shrink-0
+                px-3.5
+                sm:px-5
+                py-2
+                sm:py-3
+                rounded-xl
+                sm:rounded-2xl
+                text-xs
+                sm:text-sm
+                font-bold
+                transition-all
+                active:scale-95
+                cursor-pointer
+                ${
+                  billingView === "cashbook"
+                    ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white shadow-xs"
+                    : "bg-white border border-slate-200/90 text-slate-700 hover:bg-slate-50"
                 }
-            `}
+              `}
             >
               💸 Cash Book
             </button>
+
+            {/* Shortcuts Toggle */}
             <button
-              onClick={() =>
-                setShowShortcuts(
-                  !showShortcuts
-                )
-              }
+              onClick={() => setShowShortcuts(!showShortcuts)}
               className="
-              bg-white
-              border
-              border-slate-200
-              px-4
-              py-2
-              rounded-xl
-              text-sm
-              font-semibold
-              shadow-sm
-              hover:bg-slate-50
-              transition
+                hidden
+                sm:inline-flex
+                bg-white
+                border
+                border-slate-200
+                px-4
+                py-2
+                rounded-xl
+                text-sm
+                font-semibold
+                shadow-sm
+                hover:bg-slate-50
+                transition
+                items-center
+                gap-2
               "
             >
-
-              <div className="flex items-center gap-2">
-                <Keyboard size={18} />
-                Shortcuts
-
-                {
-                  showShortcuts
-                    ?
-                    <ChevronUp size={16} />
-                    :
-                    <ChevronDown size={16} />
-                }
-
-              </div>
-
+              <Keyboard size={18} />
+              Shortcuts
+              {showShortcuts ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
           </div>
         </div>
 
-        <div className="
-  grid
-  grid-cols-1
-  lg:grid-cols-3
-  gap-3
-  sm:gap-4
-  lg:gap-6
-  max-w-full
-  overflow-hidden
-  pb-6
-  relative
-  z-10
-  items-start
-">
-
-          {/* Left Column Section: Dynamically stretches to full screen size if it is in touch mode */}
-          <div className={layout === "classic" ? "lg:col-span-1" : "lg:col-span-3"}>
+        {/* =========================================================
+            CORE WORKSPACE
+        ========================================================== */}
+        <div
+          className="
+            grid
+            grid-cols-1
+            lg:grid-cols-3
+            gap-3
+            sm:gap-4
+            lg:gap-6
+            max-w-full
+            overflow-hidden
+            relative
+            z-10
+            items-start
+          "
+        >
+          {/* Main Area: Classic List or Touch POS View */}
+          <div
+            className={`
+              ${layout === "classic" ? "lg:col-span-1" : "lg:col-span-3"}
+              ${mobileTab === "cart" && layout === "classic" ? "hidden lg:block" : "block"}
+            `}
+          >
             {billingView === "classic" ? (
-              <div className="
-  bg-slate-900
-  backdrop-blur-md
-  border
-  border-slate-800
-  rounded-2xl
-  sm:rounded-[24px]
-  p-3
-  sm:p-4
-  md:p-6
-  shadow-sm
-">
-                <h2 className="text-lg font-black tracking-tight text-white mb-4">
-                  Product Search
-                </h2>
+              <div
+                className="
+                  bg-slate-900
+                  backdrop-blur-md
+                  border
+                  border-slate-800
+                  rounded-2xl
+                  sm:rounded-[24px]
+                  p-3.5
+                  sm:p-4
+                  md:p-6
+                  shadow-sm
+                "
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm sm:text-lg font-black tracking-tight text-white">
+                    Product Search
+                  </h2>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {products.length} Items
+                  </span>
+                </div>
 
                 <div className="relative w-full">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                    <Search size={18} />
+                    <Search size={17} />
                   </div>
 
                   <input
@@ -1541,11 +1612,21 @@ function Billing() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={handleSearchKeyDown}
-                    className="w-full bg-white/20 border border-slate-800 text-white rounded-xl p-3.5 pl-11 text-sm font-semibold placeholder:text-slate-500 outline-none focus:bg-white/15 focus:border-indigo-500 transition-all"
+                    className="w-full bg-white/15 border border-slate-800 text-white rounded-xl p-3 pl-10 pr-9 text-xs sm:text-sm font-semibold placeholder:text-slate-500 outline-none focus:bg-white/20 focus:border-indigo-500 transition-all"
                   />
+
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch("")}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-white"
+                    >
+                      
+                    </button>
+                  )}
                 </div>
 
-                <div className="mt-4 max-h-[300px] overflow-y-auto pr-1 space-y-1.5 scrollbar-none">
+                <div className="mt-3 max-h-[380px] lg:max-h-[300px] overflow-y-auto pr-1 space-y-1.5 scrollbar-none">
                   {products.map((product, index) => (
                     <div
                       key={product.id}
@@ -1560,30 +1641,36 @@ function Billing() {
                         }
                         addToCart(product);
                       }}
-                      className={`flex justify-between items-center p-3 rounded-xl cursor-pointer transition-all duration-200 group border ${index === selectedProductIndex
-                        ? "bg-slate-600 border-indigo-400 shadow-lg"
-                        : "bg-slate-800/40 border-slate-800/60 hover:bg-slate-800 hover:border-slate-700"
-                        }`}
+                      className={`flex justify-between items-center p-3 rounded-xl cursor-pointer transition-all duration-150 border active:scale-[0.98] ${
+                        index === selectedProductIndex
+                          ? "bg-slate-600 border-indigo-400 shadow-md"
+                          : "bg-slate-800/40 border-slate-800/60 hover:bg-slate-800 hover:border-slate-700"
+                      }`}
                     >
-                      <span className="text-sm font-semibold text-slate-300 group-hover:text-white">
+                      <span className="text-xs sm:text-sm font-semibold text-slate-300 group-hover:text-white truncate pr-2">
                         {product.name}
                       </span>
 
-                      {!product.available && (
-                        <span className="text-[10px] text-red-400 font-bold">
-                          OUT OF STOCK
-                        </span>
-                      )}
-
-                      <strong className="text-sm font-bold text-slate-200 group-hover:text-orange-400">
-                        ₹{product.price}
-                      </strong>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {!product.available && (
+                          <span className="text-[9px] text-red-400 font-bold">
+                            OUT OF STOCK
+                          </span>
+                        )}
+                        <strong className="text-xs sm:text-sm font-bold text-slate-200 group-hover:text-orange-400">
+                          ₹{product.price}
+                        </strong>
+                      </div>
                     </div>
                   ))}
+                  {products.length === 0 && (
+                    <div className="py-8 text-center text-xs text-slate-500">
+                      No products matching search
+                    </div>
+                  )}
                 </div>
               </div>
             ) : billingView === "touch" ? (
-
               <BillingTouch
                 search={search}
                 setSearch={setSearch}
@@ -1611,17 +1698,19 @@ function Billing() {
                   setShowComboCustomize,
                 }}
               />
-
             ) : (
-
               <CashBook />
-
             )}
           </div>
 
-          {/* Right Column Section: Only displays during classic view to match your precise requirements */}
+          {/* Desktop Only Right Cart Panel */}
           {layout === "classic" && (
-            <div className="lg:col-span-2">
+            <div
+              className={`
+                lg:col-span-2
+                ${mobileTab === "products" ? "hidden lg:block" : "block"}
+              `}
+            >
               <CartPanel
                 cart={cart}
                 totalAmount={paymentTotalAmount}
@@ -1638,1377 +1727,675 @@ function Billing() {
               />
             </div>
           )}
-
-
         </div>
+
+        {/* =========================================================
+            CLASSIC POS MOBILE FLOATING CHECKOUT BAR (Hidden in Modals)
+        ========================================================== */}
+        {layout === "classic" &&
+          cart.length > 0 &&
+          !showPaymentModal &&
+          !showCustomerModal &&
+          !showBillModal && (
+            <div className="lg:hidden fixed bottom-[84px] inset-x-3 z-30 pointer-events-none">
+              <div className="pointer-events-auto flex items-center justify-between p-3 rounded-2xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 shadow-[0_12px_36px_rgba(0,0,0,0.5)] text-white">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center font-bold">
+                    🧾
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      {totalCartCount} {totalCartCount === 1 ? "Item" : "Items"}
+                    </p>
+                    <p className="text-base font-black text-white">
+                      ₹{paymentTotalAmount}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMobileTab("cart")}
+                    className="px-3 py-2 rounded-xl bg-white/10 text-xs font-bold text-slate-200 active:scale-95"
+                  >
+                    Edit Cart
+                  </button>
+                  <button
+                    type="button"
+                    onClick={generateBill}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-indigo-600 text-white text-xs font-black shadow-md active:scale-95 transition"
+                  >
+                    Pay Now →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
-      {showCustomerModal && createPortal(
-        <div className="
-    fixed
-    inset-0
-    z-50
-    flex
-    items-center
-    justify-center
-    p-4
-    bg-slate-950/20
-    backdrop-blur-sm
-    animate-fade-in
-  ">
 
-          <div className="
-      w-full
-      max-w-lg
-      bg-white
-      border
-      border-slate-200
-      rounded-[28px]
-      shadow-2xl
-      p-5
-      sm:p-7
-    ">
-
-            {/* HEADER */}
-            <div className="flex items-start justify-between mb-6">
-
-              <div>
-                <p className="
-            text-[10px]
-            font-black
-            text-indigo-500
-            uppercase
-            tracking-[0.18em]
-            mb-1
-          ">
-                  Step 1 of 2
-                </p>
-
-                <h2 className="
-            text-2xl
-            font-black
-            text-slate-800
-          ">
-                  Customer Details
-                </h2>
-
-                <p className="
-            text-xs
-            font-semibold
-            text-slate-400
-            mt-1
-          ">
-                  Optional — enter details for WhatsApp billing
-                  and future offers.
-                </p>
+      {/* Customer Modal */}
+      {showCustomerModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/65 backdrop-blur-xs">
+            <div className="w-full max-w-lg bg-white border border-slate-200 rounded-t-[32px] sm:rounded-[28px] shadow-2xl p-5 sm:p-7">
+              <div className="flex items-start justify-between mb-4 sm:mb-6">
+                <div>
+                  <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.18em] mb-1">
+                    Step 1 of 2
+                  </p>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-800">
+                    Customer Details
+                  </h2>
+                  <p className="text-xs font-semibold text-slate-400 mt-0.5">
+                    Optional — WhatsApp billing and receipt updates.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomerModal(false)}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50"
+                >
+                  ✕
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowCustomerModal(false)}
-                className="
-            w-9
-            h-9
-            rounded-xl
-            flex
-            items-center
-            justify-center
-            text-slate-400
-            hover:text-red-500
-            hover:bg-red-50
-            transition-all
-            cursor-pointer
-          "
-              >
-                ✕
-              </button>
-
-            </div>
-
-            {/* PHONE */}
-            <div className="relative">
-
-              <label className="
-          block
-          text-xs
-          font-bold
-          text-slate-500
-          mb-2
-        ">
-                Phone / WhatsApp Number
-              </label>
-
-              <input
-                type="tel"
-                inputMode="numeric"
-                maxLength={10}
-                autoFocus
-                value={customerPhone}
-                onChange={(e) => {
-
-                  const value =
-                    e.target.value.replace(/\D/g, "");
-
-                  setCustomerPhone(value);
-
-                  if (
-                    selectedCustomer &&
-                    value !==
-                    selectedCustomer.phone_number
-                      ?.replace(/\D/g, "")
-                      .replace(/^91/, "")
-                  ) {
-                    setSelectedCustomer(null);
-                    setCustomerName("");
-                  }
-
-                }}
-                onFocus={() => {
-
-                  if (customerResults.length > 0) {
-                    setShowCustomerResults(true);
-                  }
-
-                }}
-                placeholder="Enter phone number"
-                className="
-            w-full
-            border
-            border-slate-200
-            bg-slate-50
-            rounded-2xl
-            px-4
-            py-4
-            text-sm
-            font-semibold
-            text-slate-800
-            outline-none
-            focus:bg-white
-            focus:border-indigo-500
-            focus:ring-4
-            focus:ring-indigo-500/10
-            transition-all
-          "
-              />
-
-              {customerSearching && (
-                <div className="
-            absolute
-            right-4
-            top-[42px]
-            text-xs
-            font-semibold
-            text-slate-400
-          ">
-                  Searching...
-                </div>
-              )}
-
-              {/* CUSTOMER SEARCH RESULTS */}
-              {showCustomerResults &&
-                customerResults.length > 0 && (
-
-                  <div className="
-            absolute
-            left-0
-            right-0
-            top-full
-            mt-2
-            bg-white
-            border
-            border-slate-200
-            rounded-2xl
-            shadow-xl
-            overflow-hidden
-            z-50
-          ">
-
+              <div className="relative">
+                <label className="block text-xs font-bold text-slate-500 mb-2">
+                  Phone / WhatsApp Number
+                </label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  autoFocus
+                  value={customerPhone}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    setCustomerPhone(value);
+                    if (
+                      selectedCustomer &&
+                      value !==
+                        selectedCustomer.phone_number
+                          ?.replace(/\D/g, "")
+                          .replace(/^91/, "")
+                    ) {
+                      setSelectedCustomer(null);
+                      setCustomerName("");
+                    }
+                  }}
+                  onFocus={() => {
+                    if (customerResults.length > 0) setShowCustomerResults(true);
+                  }}
+                  placeholder="Enter 10-digit number"
+                  className="w-full border border-slate-200 bg-slate-50 rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 outline-none focus:bg-white focus:border-indigo-500"
+                />
+                {customerSearching && (
+                  <div className="absolute right-4 top-[38px] text-xs font-semibold text-slate-400">
+                    Searching...
+                  </div>
+                )}
+                {showCustomerResults && customerResults.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-50 max-h-48 overflow-y-auto">
                     {customerResults.map((customer) => (
-
                       <button
                         type="button"
                         key={customer.id}
                         onClick={() => selectCustomer(customer)}
-                        className="
-                  w-full
-                  text-left
-                  px-4
-                  py-4
-                  hover:bg-indigo-50
-                  border-b
-                  border-slate-100
-                  last:border-b-0
-                  transition-colors
-                  cursor-pointer
-                "
+                        className="w-full text-left px-4 py-3 hover:bg-indigo-50 border-b border-slate-100 last:border-b-0"
                       >
-
-                        <div className="
-                  flex
-                  items-center
-                  justify-between
-                  gap-3
-                ">
-
+                        <div className="flex items-center justify-between gap-3">
                           <div>
-
-                            <p className="
-                      text-sm
-                      font-bold
-                      text-slate-800
-                    ">
+                            <p className="text-sm font-bold text-slate-800">
                               {customer.name}
                             </p>
-
-                            <p className="
-                      text-xs
-                      text-slate-400
-                      mt-1
-                    ">
+                            <p className="text-xs text-slate-400">
                               {customer.phone_number}
                             </p>
-
                           </div>
-
-                          <span className="
-                    shrink-0
-                    text-[10px]
-                    font-black
-                    text-indigo-600
-                    bg-indigo-50
-                    px-2
-                    py-1
-                    rounded-lg
-                  ">
+                          <span className="shrink-0 text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">
                             {customer.visit_count} visits
                           </span>
-
                         </div>
-
                       </button>
-
                     ))}
-
                   </div>
                 )}
+              </div>
 
-            </div>
-
-            {/* CUSTOMER RESULT */}
-            {customerPhone && (
-
-              <div className="mt-4">
-
-                {selectedCustomer ? (
-
-                  <div className="
-              flex
-              items-center
-              justify-between
-              gap-3
-              bg-indigo-50
-              border
-              border-indigo-100
-              rounded-2xl
-              px-4
-              py-4
-            ">
-
-                    <div>
-
-                      <p className="
-                  text-sm
-                  font-black
-                  text-indigo-900
-                ">
-                        {selectedCustomer.name}
-                      </p>
-
-                      <p className="
-                  text-xs
-                  text-indigo-500
-                  mt-1
-                ">
-                        {selectedCustomer.visit_count}
-                        {" "}
-                        previous visits
-                      </p>
-
+              {customerPhone && (
+                <div className="mt-3.5">
+                  {selectedCustomer ? (
+                    <div className="flex items-center justify-between gap-3 bg-indigo-50 border border-indigo-100 rounded-2xl p-3.5">
+                      <div>
+                        <p className="text-sm font-black text-indigo-900">
+                          {selectedCustomer.name}
+                        </p>
+                        <p className="text-xs text-indigo-500 mt-0.5">
+                          {selectedCustomer.visit_count} previous visits
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                        Existing
+                      </span>
                     </div>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                        Customer Name
+                      </label>
+                      <input
+                        type="text"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Enter name (optional)"
+                        className="w-full border border-slate-200 bg-slate-50 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:bg-white focus:border-indigo-500"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
 
-                    <span className="
-                text-[10px]
-                font-black
-                uppercase
-                text-emerald-600
-                bg-emerald-50
-                px-3
-                py-1.5
-                rounded-lg
-              ">
-                      Existing
-                    </span>
-
-                  </div>
-
-                ) : (
-
+              {!customerPhone && (
+                <div className="mt-3.5 flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                  <div className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
                   <div>
-
-                    <label className="
-                block
-                text-xs
-                font-bold
-                text-slate-500
-                mb-2
-              ">
-                      Customer Name
-                    </label>
-
-                    <input
-                      type="text"
-                      value={customerName}
-                      onChange={(e) =>
-                        setCustomerName(e.target.value)
-                      }
-                      placeholder="Enter customer name"
-                      className="
-                  w-full
-                  border
-                  border-slate-200
-                  bg-slate-50
-                  rounded-2xl
-                  px-4
-                  py-4
-                  text-sm
-                  font-semibold
-                  outline-none
-                  focus:bg-white
-                  focus:border-indigo-500
-                  transition-all
-                "
-                    />
-
-                    <p className="
-                text-[10px]
-                text-slate-400
-                mt-2
-              ">
-                      New customer — name is optional.
+                    <p className="text-xs font-bold text-slate-600">
+                      Walk-in Customer
                     </p>
-
+                    <p className="text-[10px] text-slate-400">
+                      Receipt will be generated without profile sync
+                    </p>
                   </div>
-
-                )}
-
-              </div>
-
-            )}
-
-            {/* WALK-IN */}
-            {!customerPhone && (
-
-              <div
-                className="
-      mt-4
-      flex
-      items-center
-      gap-3
-      bg-slate-50
-      border
-      border-slate-200
-      rounded-2xl
-      px-4
-      py-4
-    "
-              >
-
-                <div
-                  className="
-        w-2.5
-        h-2.5
-        rounded-full
-        bg-slate-400
-      "
-                />
-
-                <div>
-
-                  <p
-                    className="
-          text-xs
-          font-bold
-          text-slate-600
-        "
-                  >
-                    Walk-in Customer
-                  </p>
-
-                  <p
-                    className="
-          text-[10px]
-          text-slate-400
-          mt-0.5
-        "
-                  >
-                    No customer details provided
-                  </p>
-
                 </div>
+              )}
 
-              </div>
-
-            )}
-
-            {/* ACTIONS */}
-            <div className="
-        flex
-        gap-3
-        mt-7
-        pt-5
-        border-t
-        border-slate-100
-      ">
-
-              <button
-                type="button"
-                onClick={() => setShowCustomerModal(false)}
-                className="
-            flex-1
-            py-3.5
-            rounded-2xl
-            border-2
-            border-slate-200
-            bg-white
-            text-slate-500
-            text-sm
-            font-black
-            hover:bg-slate-50
-            transition-all
-            cursor-pointer
-          "
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                onClick={continueToPayment}
-                className="
-            flex-[1.5]
-            py-3.5
-            rounded-2xl
-            bg-gradient-to-r
-            from-orange-500
-            to-indigo-600
-            text-white
-            text-sm
-            font-black
-            shadow-md
-            hover:opacity-95
-            active:scale-[0.98]
-            transition-all
-            cursor-pointer
-          "
-              >
-                Continue to Payment →
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>,
-        document.body
-      )}
-      {showPaymentModal && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/20 backdrop-blur-xs animate-fade-in">
-          <div className="
-  w-full
-  max-w-2xl
-  max-h-[95vh]
-  overflow-y-auto
-  bg-white
-  border
-  border-slate-200/80
-  rounded-2xl
-  sm:rounded-[32px]
-  shadow-2xl
-  p-4
-  sm:p-6
-  md:p-8
-  flex
-  flex-col
-  justify-between
-">
-
-            {/* Header Block */}
-            <div>
-              <div className="
-  flex
-  flex-col
-  sm:flex-row
-  sm:justify-between
-  sm:items-start
-  gap-3
-  mb-5
-  sm:mb-6
-">
-                <div>
-                  <h2 className="text-2xl font-black tracking-tight text-slate-800">
-                    Choose Payment Method
-                  </h2>
-                  <p className="text-xs font-semibold text-slate-400 mt-1">
-                    Select one or more channels to break down and settle this bill.
-                  </p>
-                </div>
-                {/* Main Balance Display Badge */}
-                <div className="text-right">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Total Bill
-                  </span>
-                  <span className="text-2xl font-black text-slate-950 block mt-0.5">
-                    ₹{paymentTotalAmount}
-                  </span>
-                </div>
-              </div>
-              {/* Product Offer + Discount */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-
-                {/* Product Offer */}
-                <div>
-
-                  <div className="flex justify-between items-center mb-2">
-                    <span
-                      className="
-          text-xs
-          font-bold
-          text-slate-400
-          uppercase
-          tracking-wider
-        "
-                    >
-                      Product Offer
-                    </span>
-
-                    {paymentProductDiscountAmount > 0 && (
-                      <span
-                        className="
-            text-xs
-            font-black
-            text-emerald-600
-          "
-                      >
-                        -₹{paymentProductDiscountAmount.toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-
-                  <select
-                    value={selectedProductDiscountId || ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-
-                      setSelectedProductDiscountId(
-                        value ? Number(value) : null
-                      );
-                    }}
-                    className="
-        w-full
-        bg-white
-        border
-        border-slate-200
-        rounded-xl
-        p-3
-        text-sm
-        font-bold
-        text-slate-700
-        outline-none
-        focus:border-indigo-500
-        focus:ring-2
-        focus:ring-indigo-100
-      "
-                  >
-
-                    <option value="">
-                      No Product Offer
-                    </option>
-
-                    {discounts
-                      .filter(
-                        (discount) =>
-                          discount.discount_type === "PRODUCT" &&
-                          discount.is_active
-                      )
-                      .map((discount) => (
-
-                        <option
-                          key={discount.id}
-                          value={discount.id}
-                        >
-                          {discount.name}
-                          {discount.product === null
-                            ? " - All Products"
-                            : ""}
-                        </option>
-
-                      ))}
-
-                  </select>
-
-                </div>
-
-
-                {/* Percentage Discount */}
-                <div>
-
-                  <div className="flex justify-between items-center mb-2">
-
-                    <span
-                      className="
-          text-xs
-          font-bold
-          text-slate-400
-          uppercase
-          tracking-wider
-        "
-                    >
-                      Discount
-                    </span>
-
-                    {paymentDiscountAmount > 0 && (
-                      <span
-                        className="
-            text-xs
-            font-black
-            text-emerald-600
-          "
-                      >
-                        -₹{paymentDiscountAmount.toFixed(2)}
-                      </span>
-                    )}
-
-                  </div>
-
-                  <div className="relative">
-
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.01"
-                      value={discountPercentage}
-                      onChange={(e) => {
-
-                        let value =
-                          Number(e.target.value);
-
-                        if (value < 0) {
-                          value = 0;
-                        }
-
-                        if (value > 100) {
-                          value = 100;
-                        }
-
-                        setDiscountPercentage(value);
-
-                      }}
-                      className="
-          w-full
-          bg-white
-          border
-          border-slate-200
-          rounded-xl
-          p-3
-          pr-10
-          text-sm
-          font-bold
-          text-slate-700
-          outline-none
-          focus:border-indigo-500
-          focus:ring-2
-          focus:ring-indigo-100
-        "
-                      placeholder="Enter discount percentage"
-                    />
-
-                    <span
-                      className="
-          absolute
-          right-4
-          top-1/2
-          -translate-y-1/2
-          text-sm
-          font-black
-          text-slate-400
-        "
-                    >
-                      %
-                    </span>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* Brand Method Grid (Massive, Tactical Grid Buttons) */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-                {[
-                  { id: 'upi', label: '⚡ UPI ', color: 'peer-checked:border-indigo-600 peer-checked:bg-indigo-50/40 text-indigo-600' },
-                  { id: 'cash', label: '💵 Cash ', color: 'peer-checked:border-slate-800 peer-checked:bg-slate-50 text-slate-800' },
-                  { id: 'card', label: '💳 Swipe Card', color: 'peer-checked:border-indigo-600 peer-checked:bg-indigo-50/40 text-indigo-600' },
-                  { id: 'swiggy', label: '🧡 Swiggy Order', color: 'peer-checked:border-orange-500 peer-checked:bg-orange-50/40 text-orange-500' },
-                  { id: 'zomato', label: '❤️ Zomato Order', color: 'peer-checked:border-red-500 peer-checked:bg-red-50/40 text-red-500' },
-                ].map((item) => {
-                  // Evaluates if this method is currently added inside your payments state array
-                  const isActive = payments.some(p => p.method === item.id);
-
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-
-                        const updated = [...payments];
-
-                        updated[selectedPaymentIndex] = {
-                          ...updated[selectedPaymentIndex],
-                          method: item.id,
-                        };
-
-                        setPayments(updated);
-
-                      }}
-                      className={`
-                  w-full
-                  h-20
-                  flex
-                  flex-col
-                  items-center
-                  justify-center
-                  gap-1.5
-                  border-2
-                  rounded-2xl
-                  font-black
-                  text-sm
-                  transition-all
-                  active:scale-[0.97]
-                  cursor-pointer
-                  ${isActive
-                          ? `border-indigo-600 bg-indigo-50/30 text-indigo-700 shadow-xs`
-                          : `border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50`
-                        }
-                `}
-                    >
-                      <span className="text-base">{item.label.split(' ')[0]}</span>
-                      <span className="text-xs tracking-tight">{item.label.split(' ').slice(1).join(' ')}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="flex justify-end mb-3">
+              <div className="flex gap-2.5 mt-5 sm:mt-7 pt-4 sm:pt-5 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() =>
-                    setPayments((prev) => [
-                      ...prev,
-                      {
-                        method: "cash",
-                        amount: "",
-                      },
-                    ])
-                  }
-                  className="
-                  px-4
-                  py-2
-                  rounded-xl
-                  bg-indigo-50
-                  text-indigo-600
-                  text-xs
-                  font-bold
-                  hover:bg-indigo-100
-                  transition-all
-                  cursor-pointer
-                  "
+                  onClick={() => setShowCustomerModal(false)}
+                  className="flex-1 py-3 sm:py-3.5 rounded-2xl border-2 border-slate-200 bg-white text-slate-500 text-xs sm:text-sm font-black"
                 >
-                  + Split Payment
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={continueToPayment}
+                  className="flex-[1.5] py-3 sm:py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-indigo-600 text-white text-xs sm:text-sm font-black shadow-md"
+                >
+                  Continue →
                 </button>
               </div>
-              {/* Contextual Input Fields Stack */}
-              <div className="space-y-2.5 max-h-[180px] overflow-y-auto pr-1">
-                {payments.map((payment, index) => (
-                  <div
-                    key={index}
-                    onClick={() => setSelectedPaymentIndex(index)}
-                    className={`
-                    flex
-                    items-center
-                    justify-between
-                    rounded-2xl
-                    p-4
-                    border
-                    transition-all
-                    cursor-pointer
-                    ${selectedPaymentIndex === index
-                        ? "border-indigo-500 bg-indigo-50"
-                        : "border-slate-200 bg-slate-50"
-                      }
-                  `}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                      <span className="text-sm font-black text-slate-700 uppercase tracking-wider">
-                        {payment.method}
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* Payment Settlement Modal */}
+      {showPaymentModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/65 backdrop-blur-xs">
+            <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-white border border-slate-200/80 rounded-t-[32px] sm:rounded-[32px] shadow-2xl p-4 sm:p-6 md:p-8 flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-start gap-3 mb-4 sm:mb-6">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-800">
+                      Payment Settlement
+                    </h2>
+                    <p className="text-[11px] sm:text-xs font-semibold text-slate-400 mt-0.5">
+                      Select channel to balance and generate bill
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Total Due
+                    </span>
+                    <span className="text-xl sm:text-2xl font-black text-slate-950 block mt-0.5">
+                      ₹{paymentTotalAmount}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                  <div>
+                    <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                      Product Offer
+                    </span>
+                    <select
+                      value={selectedProductDiscountId || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedProductDiscountId(val ? Number(val) : null);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs sm:text-sm font-bold text-slate-700 outline-none"
+                    >
+                      <option value="">No Product Offer</option>
+                      {discounts
+                        .filter(
+                          (discount) =>
+                            discount.discount_type === "PRODUCT" &&
+                            discount.is_active
+                        )
+                        .map((discount) => (
+                          <option key={discount.id} value={discount.id}>
+                            {discount.name}
+                            {discount.product === null ? " - All Items" : ""}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Discount %
                       </span>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="relative flex items-center">
-                        <span className="absolute left-3.5 text-xs font-black text-slate-400">₹</span>
-                        <input
-                          type="number"
-                          placeholder="0.00"
-                          value={payment.amount}
-                          onChange={(e) => updatePayment(index, "amount", e.target.value)}
-                          className="
-                    w-28 sm:w-40
-                    bg-white
-                    border border-slate-200
-                    text-slate-900
-                    rounded-xl
-                    p-3
-                    pl-7
-                    text-sm
-                    font-black
-                    outline-none
-                    text-right
-                    focus:border-indigo-500
-                    focus:ring-2
-                    focus:ring-indigo-100
-                    transition-all
-                    "
-                        />
-                      </div>
-
-                      {payments.length > 1 && (
-                        <button
-                          onClick={() => removePayment(index)}
-                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
-                        >
-                          ✕
-                        </button>
+                      {paymentDiscountAmount > 0 && (
+                        <span className="text-xs font-black text-emerald-600">
+                          -₹{paymentDiscountAmount.toFixed(2)}
+                        </span>
                       )}
                     </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={discountPercentage}
+                        onChange={(e) => {
+                          let val = Number(e.target.value);
+                          if (val < 0) val = 0;
+                          if (val > 100) val = 100;
+                          setDiscountPercentage(val);
+                        }}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 pr-8 text-xs sm:text-sm font-bold text-slate-700 outline-none"
+                        placeholder="0"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
+                        %
+                      </span>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Footer & Balancing Computations Block */}
-            <div className="mt-6">
-              {/* Dynamic Status Bar Card */}
-              <div className={`p-4 rounded-2xl border flex justify-between items-center transition-all ${Math.abs(remainingAmount) <= 0.01
-                ? "bg-emerald-50/50 border-emerald-200/60 text-emerald-900"
-                : "bg-red-50/50 border-red-200/60 text-red-900"
-                }`}>
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Remaining Balance Status
-                  </span>
-                  <span className="text-xs font-bold text-slate-600 block mt-0.5">
-                    Collected Paid Total: <strong className="text-slate-800">₹{paidAmount}</strong>
-                  </span>
                 </div>
-                <span className={`text-xl font-black ${Math.abs(remainingAmount) <= 0.01 ? "text-emerald-600" : "text-red-500"
-                  }`}>
-                  {Math.abs(remainingAmount) <= 0.01 ? "✓ Fully Balanced" : `₹${remainingAmount}`}
-                </span>
-              </div>
 
-              {/* Main Action Large Button Bar */}
-              <div className="
-  flex
-  flex-col
-  sm:flex-row
-  gap-3
-  mt-5
-  sm:mt-6
-">
-                <button
-                  onClick={() => setShowPaymentModal(false)}
-                  className="
-            flex-1
-            bg-white
-            border-2
-            border-slate-200
-            text-slate-500
-            p-4
-            rounded-2xl
-            text-sm
-            font-black
-            tracking-wide
-            hover:bg-slate-50
-            hover:border-slate-300
-            active:scale-95
-            transition-all
-            cursor-pointer
-            "
-                >
-                  Cancel Order
-                </button>
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
+                  {[
+                    { id: "upi", label: "⚡ UPI" },
+                    { id: "cash", label: "💵 Cash" },
+                    { id: "card", label: "💳 Card" },
+                    { id: "swiggy", label: "🧡 Swiggy" },
+                    { id: "zomato", label: "❤️ Zomato" },
+                  ].map((item) => {
+                    const isActive = payments.some((p) => p.method === item.id);
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          const updated = [...payments];
+                          updated[selectedPaymentIndex] = {
+                            ...updated[selectedPaymentIndex],
+                            method: item.id,
+                          };
+                          setPayments(updated);
+                        }}
+                        className={`
+                          h-14
+                          sm:h-20
+                          flex
+                          flex-col
+                          items-center
+                          justify-center
+                          border-2
+                          rounded-xl
+                          sm:rounded-2xl
+                          font-black
+                          text-xs
+                          sm:text-sm
+                          transition-all
+                          active:scale-95
+                          ${
+                            isActive
+                              ? "border-indigo-600 bg-indigo-50/40 text-indigo-700 shadow-xs"
+                              : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                          }
+                        `}
+                      >
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
 
-                <button
-                  ref={confirmButtonRef}
-                  onClick={confirmPayment}
-                  disabled={Math.abs(remainingAmount) > 0.01}
-                  className={`
-              flex-1
-              p-4
-              rounded-2xl
-              text-sm
-              font-black
-              tracking-wide
-              shadow-md
-              transition-all
-              ${Math.abs(remainingAmount) <= 0.01
-                      ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white hover:opacity-95 active:scale-95 cursor-pointer"
-                      : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPayments((prev) => [
+                        ...prev,
+                        { method: "cash", amount: "" },
+                      ])
                     }
-            `}
-                >
-                  Confirm Bill
-                </button>
-              </div>
-            </div>
+                    className="h-14 sm:h-20 flex flex-col items-center justify-center border-2 border-dashed border-indigo-200 rounded-xl sm:rounded-2xl font-bold text-xs text-indigo-600 bg-indigo-50/20 active:scale-95"
+                  >
+                    <span>+ Split</span>
+                  </button>
+                </div>
 
-          </div>
-        </div>, document.body
-      )}
-
-      {showBillModal && generatedBill && createPortal(
-        <div
-          className="
-    fixed
-    inset-0
-    bg-slate-950/20
-    backdrop-blur-xs
-    flex
-    items-center
-    justify-center
-    z-50
-    p-4
-    "
-        >
-          {/* Glassmorphic Modal Box */}
-          <div
-            className="
-      bg-white
-      border border-slate-200/80
-      rounded-[24px]
-      shadow-xl
-      w-full
-      max-w-xl
-      p-8
-      relative
-      overflow-hidden
-      "
-          >
-            {/* Structural Headers Style Override (Less Intense Bold) */}
-            <h2 className="text-2xl font-bold tracking-normal text-slate-800 mb-6">
-              Bill Generated Successfully
-            </h2>
-
-            <div className="space-y-4">
-              {/* Core Invoice Summary Row */}
-              <div className="bg-slate-50/60 border border-slate-200/60 rounded-xl p-4 space-y-2 text-sm">
-                <p className="flex justify-between items-center">
-                  <span className="font-bold text-slate-400 uppercase tracking-wider text-xs">Bill Number:</span>
-                  <span className="font-bold text-slate-700">{generatedBill.bill_number}</span>
-                </p>
-                <p className="flex justify-between items-center">
-                  <span className="font-bold text-slate-400 uppercase tracking-wider text-xs">Total Amount:</span>
-                  <span className="font-black text-slate-800">₹{generatedBill.total_amount}</span>
-                </p>
-              </div>
-
-              {/* Payment Metadata Segment Tree */}
-              <div className="border-t border-slate-200/60 pt-5">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 pl-0.5">
-                  Payment Details
-                </h3>
-
-                <div className="space-y-3 max-h-40 overflow-y-auto pr-1 scrollbar-none">
-                  {generatedBill?.payments?.map((payment, index) => (
+                <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                  {payments.map((payment, index) => (
                     <div
                       key={index}
-                      className="flex justify-between items-center text-sm"
+                      onClick={() => setSelectedPaymentIndex(index)}
+                      className={`flex items-center justify-between rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 border transition-all ${
+                        selectedPaymentIndex === index
+                          ? "border-indigo-500 bg-indigo-50/60"
+                          : "border-slate-200 bg-slate-50"
+                      }`}
                     >
-                      <span className="capitalize font-semibold text-slate-500">
-                        {payment.method}
-                      </span>
-                      <span className="font-bold text-slate-800">
-                        ₹ {payment.amount}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                        <span className="text-xs sm:text-sm font-black uppercase text-slate-700">
+                          {payment.method}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex items-center">
+                          <span className="absolute left-2.5 text-xs font-black text-slate-400">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            placeholder="0.00"
+                            value={payment.amount}
+                            onChange={(e) =>
+                              updatePayment(index, "amount", e.target.value)
+                            }
+                            className="w-24 sm:w-36 bg-white border border-slate-200 rounded-lg p-2 pl-6 text-right text-xs sm:text-sm font-black outline-none focus:border-indigo-500"
+                          />
+                        </div>
+
+                        {payments.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removePayment(index);
+                            }}
+                            className="p-1 text-slate-400 hover:text-red-500"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
+              </div>
 
-                {/* Aggregate Paid Summary Banner */}
-                <div className="border-t border-slate-200/60 mt-4 pt-4 flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Total Paid
+              <div className="mt-4 pt-3 border-t border-slate-100">
+                <div
+                  className={`p-3 rounded-xl border flex justify-between items-center mb-3 sm:mb-4 ${
+                    Math.abs(remainingAmount) <= 0.01
+                      ? "bg-emerald-50/60 border-emerald-200/80 text-emerald-900"
+                      : "bg-red-50/60 border-red-200/80 text-red-900"
+                  }`}
+                >
+                  <span className="text-[11px] font-bold">
+                    Paid: ₹{paidAmount}
                   </span>
-                  <span className="text-lg font-black text-indigo-600">
-                    ₹ {generatedBill.total_amount}
+                  <span
+                    className={`text-sm sm:text-base font-black ${
+                      Math.abs(remainingAmount) <= 0.01
+                        ? "text-emerald-600"
+                        : "text-red-500"
+                    }`}
+                  >
+                    {Math.abs(remainingAmount) <= 0.01
+                      ? "✓ Balanced"
+                      : `Due: ₹${remainingAmount}`}
                   </span>
+                </div>
+
+                <div className="flex gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowPaymentModal(false)}
+                    className="flex-1 py-3 sm:py-3.5 rounded-xl border-2 border-slate-200 bg-white text-slate-600 text-xs sm:text-sm font-black active:scale-95"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    ref={confirmButtonRef}
+                    onClick={confirmPayment}
+                    disabled={Math.abs(remainingAmount) > 0.01}
+                    className={`flex-[1.5] py-3 sm:py-3.5 rounded-xl text-xs sm:text-sm font-black tracking-wide shadow-md transition-all ${
+                      Math.abs(remainingAmount) <= 0.01
+                        ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white hover:opacity-95 active:scale-95"
+                        : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+                    }`}
+                  >
+                    Confirm Bill
+                  </button>
                 </div>
               </div>
             </div>
+          </div>,
+          document.body
+        )}
 
-            {/* Embedded Navigation Direct Shortcut Action */}
-            <button
-              onClick={() => navigate(`/invoice/${generatedBill.id}`)}
-              className="
-        w-full
-        bg-white
-        border border-slate-200
-        text-slate-600
-        mt-5
-        py-2.5
-        px-4
-        rounded-xl
-        text-s
-        font-bold
-        tracking-wide
-        shadow-3xs
-        hover:bg-slate-50
-        hover:text-slate-800
-        transition-all
-        cursor-pointer
-        "
-            >
-              View Invoice
-            </button>
-
-            {/* Master Action Grid Hub Buttons Suite */}
-            <div className="flex gap-3 mt-6 pt-5 border-t border-slate-100">
-              <a
-                href={`${import.meta.env.VITE_API_URL}/billing/history/${generatedBill.id}/pdf/`}
-                target="_blank"
-                rel="noreferrer"
-                className="
-          flex-1
-          text-center
-          bg-white
-          border border-slate-200
-          text-slate-600
-          py-3
-          rounded-xl
-          text-xs
-          font-bold
-          tracking-wide
-          shadow-3xs
-          hover:bg-slate-50
-          hover:text-slate-800
-          transition-all
-          "
-              >
-                Download PDF
-              </a>
-
-              <button
-                onClick={() => window.open(`${import.meta.env.VITE_API_URL}/billing/history/${generatedBill.id}/pdf/`, "_blank")}
-                className="
-          flex-1
-          bg-gradient-to-r from-orange-500 to-indigo-600
-          text-white
-          py-3
-          rounded-xl
-          text-xs
-          font-bold
-          tracking-wide
-          shadow-sm
-          hover:opacity-95
-          transition-all
-          cursor-pointer
-          "
-              >
-                Print
-              </button>
-
-              <button
-                ref={closeButtonRef}
-                onClick={() => {
-                  setShowBillModal(false);
-                  setGeneratedBill(null);
-                  setSearch("");
-                  setProducts([]);
-                  setTimeout(() => {
-                    searchInputRef.current?.focus();
-                  }, 100);
-                }}
-                className="
-          flex-1
-          bg-slate-800
-          text-white
-          py-3
-          rounded-xl
-          text-xs
-          font-bold
-          tracking-wide
-          shadow-sm
-          hover:bg-slate-900
-          transition-all
-          cursor-pointer
-          "
-              >
-                Close
-              </button>
-            </div>
-
-          </div>
-        </div>, document.body
-      )}
-
-
-      {
-        showShortcuts && (
-
-          <div
-            className="
-absolute
-right-8
-top-20
-z-50
-w-80
-bg-white
-rounded-2xl
-shadow-xl
-border
-border-slate-200
-p-4
-"
-          >
-
-            <h3 className="
-font-bold
-text-slate-800
-mb-3
-">
-              Keyboard Shortcuts
-            </h3>
-
-
-            <div className="
-space-y-2
-text-sm
-">
-
-              <div className="flex justify-between">
-                <span>↑ ↓</span>
-                <span>Navigate Products</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Enter</span>
-                <span>Add Product</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Ctrl + H</span>
-                <span>Hold Bill</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Ctrl + B</span>
-                <span>Held Bills</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Ctrl + Enter</span>
-                <span>Generate Bill</span>
-              </div>
-
-
-
-              <div className="flex justify-between">
-                <span>Backspace</span>
-                <span>Remove Product</span>
-              </div>
-
-            </div>
-
-          </div>
-
-        )
-      }
-
-      {showHeldBills && createPortal(
-        <div
-          className="
-    fixed
-    inset-0
-    bg-slate-950/20
-    backdrop-blur-sm
-    flex
-    items-center
-    justify-center
-    z-50
-    p-4
-    "
-        >
-          <div
-            className="
-      bg-white
-      border border-slate-200/80
-      rounded-[24px]
-      shadow-xl
-      w-full
-      max-w-2xl
-      p-8      
-      "
-          >
-            {/* Modal Header */}
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold tracking-normal text-slate-800">
-                Held Bills
+      {/* Bill Generated Success Modal */}
+      {showBillModal &&
+        generatedBill &&
+        createPortal(
+          <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+            <div className="bg-white border border-slate-200/80 rounded-t-[32px] sm:rounded-[28px] shadow-2xl w-full max-w-lg p-5 sm:p-7 relative overflow-hidden">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-800 mb-4 sm:mb-6">
+                Bill Generated Successfully
               </h2>
 
-              <button
-                onClick={() => setShowHeldBills(false)}
-                className="
-          text-slate-400
-          hover:text-red-500
-          text-lg
-          font-bold
-          transition-colors
-          cursor-pointer
-          "
-              >
-                ✕
-              </button>
-            </div>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="bg-slate-50 border border-slate-200/70 rounded-xl p-3.5 space-y-2 text-xs sm:text-sm">
+                  <p className="flex justify-between items-center">
+                    <span className="font-bold text-slate-400 uppercase text-[10px]">
+                      Bill Number:
+                    </span>
+                    <span className="font-bold text-slate-700">
+                      {generatedBill.bill_number}
+                    </span>
+                  </p>
+                  <p className="flex justify-between items-center">
+                    <span className="font-bold text-slate-400 uppercase text-[10px]">
+                      Total Paid:
+                    </span>
+                    <span className="font-black text-slate-800 text-sm sm:text-base">
+                      ₹{generatedBill.total_amount}
+                    </span>
+                  </p>
+                </div>
 
-            {/* Held Bills Content Body */}
-            {heldBills.length === 0 ? (
-              <div className="text-center py-16 text-base font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
-                No held bills
-              </div>
-            ) : (
-              <div className="space-y-3.5 max-h-[450px] overflow-y-auto pr-1 scrollbar-none">
-                {heldBills.map((bill) => (
-                  <div
-                    key={bill.id}
-                    className="
-              bg-slate-50/40
-              border border-slate-200/60
-              rounded-2xl
-              p-5 /* Increased internal item padding for a medium row presence */
-              flex
-              justify-between
-              items-center
-              hover:bg-slate-50
-              transition-all
-              duration-150
-              shadow-sm
-              "
-                  >
-                    <div>
-                      <h3 className="text-base font-bold text-slate-700">
-                        Hold #{bill.billNumber}
-                      </h3>
-                      <p className="text-sm font-semibold text-slate-400 mt-1.5">
-                        <span className="font-extrabold text-slate-700 text-base">₹ {bill.total}</span>
-                        {" • "}{bill.items.length} items{" • "}{bill.createdAt}
-                      </p>
-                    </div>
-
-                    {/* Action Trigger Buttons Container */}
-                    <div className="flex gap-2.5 text-sm font-bold">
-                      <button
-                        onClick={() => {
-                          resumeBill(bill.id);
-                          setShowHeldBills(false);
-                        }}
-                        className="
-                  text-indigo-600 
-                  px-4 
-                  py-2 /* Increased vertical button padding for a solid layout presence */
-                  rounded-xl 
-                  hover:bg-indigo-200 
-                  hover:scale-[1.05]
-                  transition-all 
-                  cursor-pointer
-                  "
+                <div className="border-t border-slate-100 pt-3">
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">
+                    Settlement Details
+                  </h3>
+                  <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                    {generatedBill?.payments?.map((payment, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center text-xs font-medium"
                       >
-                        Resume
-                      </button>
-
-                      <button
-                        onClick={() => deleteHeldBill(bill.id)}
-                        className="
-                  text-red-500 
-                  px-4 
-                  py-2 /* Increased vertical button padding for a solid layout presence */
-                  rounded-xl 
-                  hover:bg-red-100 
-                  hover:scale-[1.05]
-                  transition-all 
-                  cursor-pointer
-                  "
-                      >
-                        Delete
-                      </button>
-                    </div>
+                        <span className="capitalize text-slate-500">
+                          {payment.method}
+                        </span>
+                        <span className="font-bold text-slate-800">
+                          ₹{payment.amount}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-            )}
-          </div>
-        </div>, document.body
-      )}
-      {showComboCustomize &&
-        comboCartItem && (
-          <ComboCustomizationModal
-            product={comboCartItem}
-            comboItems={comboCartItem.recipe}
-            onClose={() => {
-              setShowComboCustomize(false);
-            }}
-            onContinue={async (selectedProducts) => {
-              try {
-                const recipeGroups = await Promise.all(
-                  selectedProducts.map(async (item) => {
-                    const recipe = await getCustomization(
-                      item.product_id
-                    );
-                    return recipe[0];
-                  })
-                );
-                const updatedCart = cart.map((cartItem) =>
-                  cartItem.id === comboCartItem.id
-                    ? {
+
+              <button
+                type="button"
+                onClick={() => navigate(`/invoice/${generatedBill.id}`)}
+                className="w-full bg-indigo-50 border border-indigo-100 text-indigo-600 mt-4 py-2.5 px-4 rounded-xl text-xs font-bold hover:bg-indigo-100"
+              >
+                View Full Invoice
+              </button>
+
+              <div className="flex gap-2 sm:gap-3 mt-4 pt-3 border-t border-slate-100">
+                <a
+                  href={`${import.meta.env.VITE_API_URL}/billing/history/${generatedBill.id}/pdf/`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 text-center bg-white border border-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-50"
+                >
+                  PDF
+                </a>
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.open(
+                      `${import.meta.env.VITE_API_URL}/billing/history/${generatedBill.id}/pdf/`,
+                      "_blank"
+                    )
+                  }
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-indigo-600 text-white py-2.5 rounded-xl text-xs font-bold"
+                >
+                  Print
+                </button>
+                <button
+                  type="button"
+                  ref={closeButtonRef}
+                  onClick={() => {
+                    setShowBillModal(false);
+                    setGeneratedBill(null);
+                    setSearch("");
+                    setProducts([]);
+                    setTimeout(() => {
+                      searchInputRef.current?.focus();
+                    }, 100);
+                  }}
+                  className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* Held Bills Modal */}
+      {showHeldBills &&
+        createPortal(
+          <div className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+            <div className="bg-white border border-slate-200/80 rounded-t-[32px] sm:rounded-[24px] shadow-xl w-full max-w-2xl p-5 sm:p-7 max-h-[85vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-black text-slate-800">
+                  Held Bills
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowHeldBills(false)}
+                  className="text-slate-400 hover:text-red-500 font-bold p-1 text-sm"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {heldBills.length === 0 ? (
+                <div className="text-center py-12 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                  No held bills
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                  {heldBills.map((bill) => (
+                    <div
+                      key={bill.id}
+                      className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3"
+                    >
+                      <div>
+                        <h3 className="text-sm sm:text-base font-bold text-slate-800">
+                          Hold #{bill.billNumber}
+                        </h3>
+                        <p className="text-xs font-semibold text-slate-400 mt-1">
+                          <span className="font-black text-slate-800">
+                            ₹ {bill.total}
+                          </span>
+                          {" • "}
+                          {bill.items.length} items
+                          {" • "}
+                          {bill.createdAt}
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2 text-xs font-bold">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            resumeBill(bill.id);
+                            setShowHeldBills(false);
+                          }}
+                          className="flex-1 sm:flex-none text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-2 rounded-xl active:scale-95"
+                        >
+                          Resume
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteHeldBill(bill.id)}
+                          className="flex-1 sm:flex-none text-red-500 bg-red-50 hover:bg-red-100 px-3.5 py-2 rounded-xl active:scale-95"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* Auxiliary Dialogs */}
+      {showComboCustomize && comboCartItem && (
+        <ComboCustomizationModal
+          product={comboCartItem}
+          comboItems={comboCartItem.recipe}
+          onClose={() => setShowComboCustomize(false)}
+          onContinue={async (selectedProducts) => {
+            try {
+              const recipeGroups = await Promise.all(
+                selectedProducts.map(async (item) => {
+                  const recipe = await getCustomization(item.product_id);
+                  return recipe[0];
+                })
+              );
+              const updatedCart = cart.map((cartItem) =>
+                cartItem.id === comboCartItem.id
+                  ? {
                       ...cartItem,
                       recipe: recipeGroups,
                       combo_overrides: selectedProducts,
                     }
-                    : cartItem
-                );
-                setCart(updatedCart);
-                const updatedItem = updatedCart.find(
-                  (i) => i.id === comboCartItem.id
-                );
-                setSelectedCartItem(updatedItem);
-                setShowComboCustomize(false);
-                setShowCustomize(true);
-              } catch (error) {
-                console.error(error);
-              }
-            }}
-          />
-        )
-      }
+                  : cartItem
+              );
+              setCart(updatedCart);
+              const updatedItem = updatedCart.find(
+                (i) => i.id === comboCartItem.id
+              );
+              setSelectedCartItem(updatedItem);
+              setShowComboCustomize(false);
+              setShowCustomize(true);
+            } catch (error) {
+              console.error(error);
+            }
+          }}
+        />
+      )}
 
       {showCustomize && (
         <IngredientCustomizationModal
@@ -3022,6 +2409,7 @@ text-sm
           }}
         />
       )}
+
       <Notification
         show={notification.show}
         type={notification.type}
@@ -3033,6 +2421,7 @@ text-sm
           })
         }
       />
+
       <QuantityDialog
         product={selectedQuantityItem}
         quantity={selectedQuantityItem?.quantity || 0}
@@ -3045,11 +2434,11 @@ text-sm
           setSelectedQuantityItem(null);
         }}
       />
+
       <TouchCartDrawer
         open={showTouchCart}
         onClose={() => setShowTouchCart(false)}
       >
-
         <CartPanel
           cart={cart}
           totalAmount={paymentTotalAmount}
@@ -3067,19 +2456,22 @@ text-sm
           setComboCartItem={setComboCartItem}
           setShowComboCustomize={setShowComboCustomize}
         />
-
       </TouchCartDrawer>
-      {layout === "touch" && (
 
-        <FloatingCheckoutButton
-          visible={cart.length > 0}
-          total={subtotalAmount}
-          onClick={() => setShowTouchCart(true)}
-        />
-
-      )}
-
-
+      {/* Floating Checkout Button for Touch Mode: Clamped so it doesn't overlap modals or footer capsule */}
+      {layout === "touch" &&
+        !showTouchCart &&
+        !showPaymentModal &&
+        !showCustomerModal &&
+        !showBillModal && (
+          <div className="fixed bottom-[88px] inset-x-4 z-30 pointer-events-none">
+            <FloatingCheckoutButton
+              visible={cart.length > 0}
+              total={subtotalAmount}
+              onClick={() => setShowTouchCart(true)}
+            />
+          </div>
+        )}
     </MainLayout>
   );
 }

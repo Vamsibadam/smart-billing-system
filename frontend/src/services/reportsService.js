@@ -46,3 +46,16 @@ export const exportCsv =
       `${import.meta.env.VITE_API_URL}/reports/export/csv/?start_date=${startDate}&end_date=${endDate}`
     );
 };
+
+export const getProductSalesReport = async (
+  productId,
+  startDate,
+  endDate
+) => {
+
+  const response = await api.get(
+    `/reports/product/?product_id=${productId}&start_date=${startDate}&end_date=${endDate}`
+  );
+
+  return response.data;
+};
