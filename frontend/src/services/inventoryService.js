@@ -1,32 +1,23 @@
 import api from "../api/axios";
 
 export const getInventory = async () => {
-  const response = await api.get(
-    "/inventory/"
-  );
-
+  const response = await api.get("/inventory/");
   return response.data;
 };
 
-export const getInventoryLogs =
-  async () => {
+export const getInventoryLogs = async (
+  startDate,
+  endDate
+) => {
+  const response = await api.get(
+    "/inventory/logs/",
+    {
+      params: {
+        start_date: startDate,
+        end_date: endDate,
+      },
+    }
+  );
 
-    const response =
-      await api.get(
-        "/inventory/logs/"
-      );
-
-    return response.data;
-};
-
-export const addStock =
-  async (data) => {
-
-    const response =
-      await api.post(
-        "/inventory/add-stock/",
-        data
-      );
-
-    return response.data;
+  return response.data;
 };

@@ -1,62 +1,24 @@
 import { useState } from "react";
 
-
-import {
-  adjustIngredientStock
-} from "../services/ingredientService";
-
 function StockAdjustmentModal({
   ingredient,
   onSave,
   onClose,
 }) {
   const [quantity, setQuantity] = useState("");
-
   const [transactionType, setTransactionType] =
     useState("PURCHASE");
 
-    const [showStockModal, setShowStockModal] =
-  useState(false);
-
-const [selectedStockIngredient, setSelectedStockIngredient] =
-  useState(null);
-
-  const handleStockAdjustment = async (
-  data
-) => {
-
-  await adjustIngredientStock(
-
-    selectedStockIngredient.id,
-
-    data
-
-  );
-
-  fetchIngredients();
-
-  setShowStockModal(false);
-
-};
-
   const handleSubmit = () => {
-
     if (!quantity || Number(quantity) <= 0) {
-
       alert("Enter valid quantity.");
-
       return;
-
     }
 
     onSave({
-
       quantity,
-
       transaction_type: transactionType,
-
     });
-
   };
 
   return (
@@ -72,99 +34,86 @@ const [selectedStockIngredient, setSelectedStockIngredient] =
           {ingredient.name}
         </p>
 
+        {/* Current Stock */}
         <div className="mb-4">
-
           <label className="text-sm font-semibold">
             Current Stock
           </label>
 
           <div className="mt-2 text-xl font-black text-indigo-600">
-
             {ingredient.stock} {ingredient.unit}
-
           </div>
-
         </div>
 
+        {/* Transaction Type */}
         <div className="mb-4">
-
           <label className="text-sm font-semibold">
-
             Transaction
-
           </label>
 
           <select
             value={transactionType}
-            onChange={(e)=>
-              setTransactionType(
-                e.target.value
-              )
+            onChange={(e) =>
+              setTransactionType(e.target.value)
             }
             className="w-full border rounded-xl p-3 mt-2"
           >
-
             <option value="PURCHASE">
-
               Purchase
-
             </option>
 
             <option value="ADJUSTMENT">
-
               Adjustment
-
             </option>
 
             <option value="WASTAGE">
-
               Wastage
-
             </option>
-
           </select>
-
         </div>
 
+        {/* Quantity */}
         <div>
-
           <label className="text-sm font-semibold">
-
             Quantity
-
           </label>
 
           <input
             type="number"
+            min="0"
+            step="0.01"
             value={quantity}
-            onChange={(e)=>
-              setQuantity(
-                e.target.value
-              )
+            onChange={(e) =>
+              setQuantity(e.target.value)
             }
             className="w-full border rounded-xl p-3 mt-2"
+            placeholder="Enter quantity"
           />
-
         </div>
 
+        {/* Actions */}
         <div className="flex gap-3 mt-8">
 
           <button
             onClick={onClose}
             className="flex-1 border rounded-xl py-3"
           >
-
             Cancel
-
           </button>
 
           <button
             onClick={handleSubmit}
-            className="flex-1 bg-gradient-to-r from-orange-500 to-indigo-600 text-white rounded-xl py-3"
+            className="
+              flex-1
+              bg-gradient-to-r
+              from-orange-500
+              to-indigo-600
+              text-white
+              rounded-xl
+              py-3
+            "
           >
-
             Update Stock
-
           </button>
 
         </div>

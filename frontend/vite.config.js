@@ -4,32 +4,59 @@ import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+
   plugins: [
+
     react(),
+
     tailwindcss(),
+
     VitePWA({
+
       registerType: "autoUpdate",
+
+      strategies: "injectManifest",
+
+      srcDir: "src",
+
+      filename: "sw.js",
+
       manifest: {
+
         name: "Mumbai Kulfi Billing",
+
         short_name: "Billing",
-        description: "Mumbai Kulfi Billing System",
+
+        description:
+          "Mumbai Kulfi Billing System",
+
         start_url: "/",
+
         display: "standalone",
+
         background_color: "#ffffff",
+
         theme_color: "#4f46e5",
+
         icons: [
+
           {
             src: "/mklogo.png",
             sizes: "192x192",
-            type: "image/png"
+            type: "image/png",
           },
+
           {
             src: "/mklogo.png",
             sizes: "512x512",
-            type: "image/png"
-          }
-        ]
-      }
-    })
-  ]
+            type: "image/png",
+          },
+
+        ],
+      },
+
+    }),
+
+  ],
+
 });

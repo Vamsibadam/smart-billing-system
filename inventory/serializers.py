@@ -1,15 +1,30 @@
 from rest_framework import serializers
-from .models import InventoryLog
+from ingredients.models import IngredientStockLog
 
 
-class InventoryLogSerializer(
+class IngredientInventoryLogSerializer(
     serializers.ModelSerializer
 ):
-    product_name = serializers.CharField(
-        source="product.name",
+    ingredient_name = serializers.CharField(
+        source="ingredient.name",
+        read_only=True
+    )
+
+    ingredient_unit = serializers.CharField(
+        source="ingredient.unit",
         read_only=True
     )
 
     class Meta:
-        model = InventoryLog
-        fields = "__all__"
+        model = IngredientStockLog
+        fields = [
+            "id",
+            "ingredient",
+            "ingredient_name",
+            "ingredient_unit",
+            "previous_stock",
+            "quantity_changed",
+            "new_stock",
+            "transaction_type",
+            "created_at",
+        ]

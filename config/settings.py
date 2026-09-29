@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     'authentication',
     "settings_app",
     "expenses",
+    "notifications",
 ]
 
 MIDDLEWARE = [
@@ -225,4 +226,21 @@ STORAGES = {
     },
 }
 
+# ============================================================
+# WEB PUSH / VAPID
+# ============================================================
 
+VAPID_PUBLIC_KEY = config(
+    "VAPID_PUBLIC_KEY",
+    default=""
+)
+
+VAPID_PRIVATE_KEY = config(
+    "VAPID_PRIVATE_KEY",
+    default=""
+)
+
+VAPID_EMAIL = config(
+    "VAPID_EMAIL",
+    default="mailto:vamsibadam2218@gmail.com"
+)

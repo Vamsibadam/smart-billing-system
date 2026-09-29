@@ -19,7 +19,7 @@ from .whatsapp_serializers import (
 from .whatsapp_service import (
     send_invoice_whatsapp_message
 )
-
+from notifications.services import send_bill_notification
 from django.db.models import Count
 from django.db import transaction,models
 
@@ -64,6 +64,13 @@ class CreateBillAPIView(APIView):
                 )
             )
             create_pending_invoice_message(bill)
+            # ============================================================
+            # WEB PUSH NOTIFICATION
+            # ============================================================
+
+            transaction.on_commit(
+                lambda: send_bill_notification(bill)
+            )
 
             return Response(
                 {

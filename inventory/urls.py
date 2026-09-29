@@ -1,10 +1,10 @@
 from django.urls import path
 
 from .views import (
-    InventoryLogListAPIView,
     InventoryListAPIView,
-    AddStockAPIView,
+    InventoryLogListAPIView,
 )
+
 
 urlpatterns = [
 
@@ -18,8 +18,4 @@ urlpatterns = [
         InventoryLogListAPIView.as_view()
     ),
 
-    path(
-        "add-stock/",
-        AddStockAPIView.as_view()
-    ),
 ]

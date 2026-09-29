@@ -57,16 +57,12 @@ class Ingredient(models.Model):
 class IngredientStockLog(models.Model):
 
     TRANSACTION_TYPES = [
-
-        ("SALE", "Sale"),
-
-        ("PURCHASE", "Purchase"),
-
-        ("ADJUSTMENT", "Adjustment"),
-
-        ("WASTAGE", "Wastage"),
-
-    ]
+    ("SALE", "Sale"),
+    ("PURCHASE", "Purchase"),
+    ("ADJUSTMENT", "Adjustment"),
+    ("WASTAGE", "Wastage"),
+    ("RETURN", "Return"),
+]
 
     ingredient = models.ForeignKey(
         Ingredient,

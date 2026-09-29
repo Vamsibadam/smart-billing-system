@@ -1,3 +1,5 @@
+import React from "react";
+
 function DashboardCards({
   icon,
   title,
@@ -8,848 +10,308 @@ function DashboardCards({
 }) {
   const name = title?.toLowerCase() || "";
 
+  // Dynamic Theme Definitions (Liquid VisionOS Palette)
   let theme = {
     accent: "text-indigo-400",
+    orbGradient: "radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.35) 0%, rgba(99, 102, 241, 0.08) 50%, transparent 75%)",
+    iconOrb: "from-indigo-500/25 to-indigo-600/10 border-indigo-400/30 text-indigo-300",
+    badgeBg: "bg-indigo-500/10 text-indigo-300 border-indigo-400/20",
+    activeGlow: "rgba(99, 102, 241, 0.4)",
     dot: "bg-indigo-400",
-    glow: "bg-indigo-500",
-    line: "bg-indigo-400",
-    rgb: "129, 140, 248",
   };
 
   if (name.includes("today")) {
     theme = {
       accent: "text-orange-400",
+      orbGradient: "radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.38) 0%, rgba(251, 146, 60, 0.08) 50%, transparent 75%)",
+      iconOrb: "from-orange-500/25 to-amber-600/10 border-orange-400/30 text-orange-300",
+      badgeBg: "bg-orange-500/10 text-orange-300 border-orange-400/20",
+      activeGlow: "rgba(249, 115, 22, 0.45)",
       dot: "bg-orange-400",
-      glow: "bg-orange-500",
-      line: "bg-orange-400",
-      rgb: "251, 146, 60",
     };
   } else if (name.includes("weekly")) {
     theme = {
-      accent: "text-blue-400",
-      dot: "bg-blue-400",
-      glow: "bg-blue-500",
-      line: "bg-blue-400",
-      rgb: "96, 165, 250",
+      accent: "text-sky-400",
+      orbGradient: "radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.35) 0%, rgba(14, 165, 233, 0.08) 50%, transparent 75%)",
+      iconOrb: "from-sky-500/25 to-blue-600/10 border-sky-400/30 text-sky-300",
+      badgeBg: "bg-sky-500/10 text-sky-300 border-sky-400/20",
+      activeGlow: "rgba(56, 189, 248, 0.4)",
+      dot: "bg-sky-400",
     };
   } else if (name.includes("monthly sales")) {
     theme = {
       accent: "text-violet-400",
+      orbGradient: "radial-gradient(circle at 80% 20%, rgba(167, 139, 250, 0.35) 0%, rgba(139, 92, 246, 0.08) 50%, transparent 75%)",
+      iconOrb: "from-violet-500/25 to-purple-600/10 border-violet-400/30 text-violet-300",
+      badgeBg: "bg-violet-500/10 text-violet-300 border-violet-400/20",
+      activeGlow: "rgba(167, 139, 250, 0.4)",
       dot: "bg-violet-400",
-      glow: "bg-violet-500",
-      line: "bg-violet-400",
-      rgb: "167, 139, 250",
     };
   } else if (name.includes("transaction")) {
     theme = {
-      accent: "text-cyan-400",
-      dot: "bg-cyan-400",
-      glow: "bg-cyan-500",
-      line: "bg-cyan-400",
-      rgb: "34, 211, 238",
+      accent: "text-emerald-400",
+      orbGradient: "radial-gradient(circle at 80% 20%, rgba(52, 211, 153, 0.35) 0%, rgba(16, 185, 129, 0.08) 50%, transparent 75%)",
+      iconOrb: "from-emerald-500/25 to-teal-600/10 border-emerald-400/30 text-emerald-300",
+      badgeBg: "bg-emerald-500/10 text-emerald-300 border-emerald-400/20",
+      activeGlow: "rgba(52, 211, 153, 0.4)",
+      dot: "bg-emerald-400",
     };
-  } else if (
-    name.includes("expense") ||
-    name.includes("expenses")
-  ) {
+  } else if (name.includes("expense")) {
     theme = {
       accent: "text-rose-400",
+      orbGradient: "radial-gradient(circle at 80% 20%, rgba(251, 113, 133, 0.38) 0%, rgba(244, 63, 94, 0.08) 50%, transparent 75%)",
+      iconOrb: "from-rose-500/25 to-red-600/10 border-rose-400/30 text-rose-300",
+      badgeBg: "bg-rose-500/10 text-rose-300 border-rose-400/20",
+      activeGlow: "rgba(251, 113, 133, 0.45)",
       dot: "bg-rose-400",
-      glow: "bg-rose-500",
-      line: "bg-rose-400",
-      rgb: "251, 113, 133",
     };
   }
 
-  /*
-   * Different cards start at different times.
-   * This makes the dashboard feel alive instead of
-   * making every card move simultaneously.
-   */
-  const animationDelay = name.includes("today")
+  const delay = name.includes("today")
     ? "0s"
     : name.includes("weekly")
-    ? "0.8s"
+    ? "0.6s"
     : name.includes("monthly sales")
-    ? "1.6s"
+    ? "1.2s"
     : name.includes("transaction")
-    ? "2.4s"
-    : "3.2s";
+    ? "1.8s"
+    : "2.4s";
 
   return (
     <div
       onClick={onClick}
       style={{
-        "--card-rgb": theme.rgb,
-        "--animation-delay": animationDelay,
+        "--card-delay": delay,
+        "--card-glow": theme.activeGlow,
       }}
       className={`
-        dashboard-stat-card
-
+        liquid-glass-card
         group
         relative
-        overflow-hidden
-
-        h-[112px]
         w-full
-
-        rounded-[22px]
-
-        bg-[#111827]!
-
-        border
-        border-white/[0.10]
-
-        shadow-[0_10px_30px_-15px_rgba(0,0,0,0.65)]
-
-        transition-all
-        duration-300
-
-        ${
-          onClick
-            ? `
-              cursor-pointer
-
-              hover:-translate-y-1
-
-              hover:border-white/[0.18]
-
-              hover:shadow-[0_18px_40px_-15px_rgba(0,0,0,0.8)]
-
-              active:scale-[0.98]
-            `
-            : ""
-        }
-
+        h-[104px] sm:h-[114px]
+        rounded-[24px]
+        bg-[#0D1322]/90
+        backdrop-blur-2xl
+        border border-white/[0.08]
+        border-t-white/[0.22]
+        shadow-[0_16px_36px_-12px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.12)]
+        overflow-hidden
+        p-4 sm:p-5
+        flex items-center justify-between
+        transition-all duration-300 ease-out
+        ${onClick ? "cursor-pointer active:scale-[0.98] hover:border-white/[0.25] hover:-translate-y-1" : ""}
         ${className}
       `}
     >
+      {/* =========================================================
+          1. LIQUID RADIAL AMBIENCE (Zero-lag Background Canvas)
+      ========================================================== */}
+      <div
+        className="pointer-events-none absolute inset-0 transition-opacity duration-500 opacity-90 group-hover:opacity-100"
+        style={{ background: theme.orbGradient }}
+      />
 
-      {/* =====================================================
-          MOVING LIGHT BEAM
-      ====================================================== */}
-
+      {/* Fluid Subtle Corner Halo */}
       <div
         className="
-          dashboard-light-beam
-
+          liquid-ambient-orb
           pointer-events-none
-
           absolute
-          -top-20
-          -left-1/2
-
-          h-72
-          w-32
-
-          rotate-[25deg]
-
-          opacity-0
-
+          -right-8 -top-8
+          w-32 h-32
+          rounded-full
           blur-2xl
-
-          bg-white/[0.12]
+          opacity-30
         "
+        style={{ backgroundColor: theme.activeGlow }}
       />
 
-
-      {/* =====================================================
-          MAIN COLORED GLOW
-      ====================================================== */}
-
-      <div
-        className={`
-          dashboard-main-glow
-
-          pointer-events-none
-
-          absolute
-
-          -right-14
-          -top-14
-
-          h-36
-          w-36
-
-          rounded-full
-
-          ${theme.glow}
-
-          opacity-[0.10]
-
-          blur-3xl
-        `}
-      />
-
-
-      {/* =====================================================
-          SECONDARY GLOW
-      ====================================================== */}
-
-      <div
-        className={`
-          dashboard-secondary-glow
-
-          pointer-events-none
-
-          absolute
-
-          -bottom-16
-          -left-12
-
-          h-32
-          w-32
-
-          rounded-full
-
-          ${theme.glow}
-
-          opacity-[0.05]
-
-          blur-3xl
-        `}
-      />
-
-
-      {/* =====================================================
-          TOP GLASS HIGHLIGHT
-      ====================================================== */}
-
+      {/* Surface Liquid Shimmer Reflex */}
       <div
         className="
+          liquid-shimmer
           pointer-events-none
-
           absolute
-          top-0
-          left-5
-          right-5
-
-          h-px
-
+          inset-y-0
+          w-16
           bg-gradient-to-r
           from-transparent
-          via-white/20
+          via-white/[0.09]
           to-transparent
+          -skew-x-20
         "
       />
 
-
-      {/* =====================================================
-          CONTENT
-      ====================================================== */}
-
-      <div
-        className="
-          relative
-          z-10
-
-          flex
-          h-full
-          w-full
-
-          items-center
-          justify-between
-
-          px-5
-          sm:px-6
-        "
-      >
-
-        {/* ===================================================
-            LEFT CONTENT
-        ==================================================== */}
-
-        <div className="min-w-0">
-
-          {/* TITLE */}
-
-          <div
+      {/* =========================================================
+          2. METRIC TYPOGRAPHY & HEADER TAG
+      ========================================================== */}
+      <div className="relative z-10 min-w-0 pr-2">
+        {/* Title row with live dot badge */}
+        <div className="flex items-center gap-1.5">
+          <span
+            className={`
+              w-1.5 h-1.5
+              rounded-full
+              ${theme.dot}
+              shadow-[0_0_8px_currentColor]
+              animate-pulse
+            `}
+          />
+          <span
             className="
-              flex
-              items-center
-              gap-2
+              text-[9.5px] sm:text-[10px]
+              font-extrabold
+              uppercase
+              tracking-[0.16em]
+              text-slate-400
+              group-hover:text-slate-200
+              transition-colors
+              truncate
+              max-w-[130px] sm:max-w-[170px]
             "
           >
+            {title}
+          </span>
+        </div>
 
+        {/* Value Display */}
+        <h2
+          className="
+            mt-1.5
+            text-xl sm:text-[25px]
+            font-black
+            tracking-tight
+            leading-none
+            text-white
+            group-hover:translate-x-0.5
+            transition-transform duration-200
+            truncate
+          "
+        >
+          {value}
+        </h2>
+
+        {/* Action Hint / Footnote Tag */}
+        {hint && (
+          <div className="mt-1.5 flex items-center">
             <span
               className={`
-                dashboard-stat-dot
-
-                h-1.5
-                w-1.5
-
-                flex-shrink-0
-
-                rounded-full
-
-                ${theme.dot}
-
-                shadow-[0_0_8px_currentColor]
-              `}
-            />
-
-            <span
-              className="
-                block
-
-                max-w-[180px]
-
-                truncate
-
-                text-[10px]
-
+                text-[8.5px] sm:text-[9px]
                 font-black
-
                 uppercase
-                tracking-[0.16em]
-
-                text-slate-300
-
-                transition-colors
-                duration-300
-
-                group-hover:text-white
-              "
-            >
-              {title}
-            </span>
-
-          </div>
-
-
-          {/* VALUE */}
-
-          <h2
-            className="
-              mt-2
-
-              text-[22px]
-              sm:text-[23px]
-
-              font-black
-
-              leading-none
-
-              tracking-tight
-
-              text-white
-
-              transition-transform
-              duration-300
-
-              group-hover:translate-x-0.5
-            "
-          >
-            {value}
-          </h2>
-
-
-          {/* HINT */}
-
-          {hint && (
-            <p
-              className={`
-                mt-2
-
-                text-[10px]
-
-                font-bold
-
-                ${theme.accent}
+                tracking-wider
+                px-2 py-0.5
+                rounded-md
+                border
+                ${theme.badgeBg}
+                shadow-xs
               `}
             >
               {hint}
-            </p>
-          )}
-
-        </div>
-
-
-        {/* ===================================================
-            ICON
-        ==================================================== */}
-
-        <div
-          className={`
-            dashboard-stat-icon
-
-            relative
-
-            flex
-            h-11
-            w-11
-
-            flex-shrink-0
-
-            items-center
-            justify-center
-
-            rounded-[15px]
-
-            border
-            border-white/[0.10]
-
-            bg-white/[0.06]
-
-            ${theme.accent}
-
-            transition-all
-            duration-500
-
-            group-hover:scale-110
-            group-hover:rotate-3
-            group-hover:bg-white/[0.10]
-          `}
-        >
-
-          {/* Icon Glow */}
-
-          <div
-            className={`
-              absolute
-              inset-0
-
-              rounded-[15px]
-
-              ${theme.glow}
-
-              opacity-0
-
-              blur-xl
-
-              transition-opacity
-              duration-500
-
-              group-hover:opacity-30
-            `}
-          />
-
-          <div className="relative z-10">
-            {icon}
+            </span>
           </div>
-
-        </div>
-
+        )}
       </div>
 
-
-      {/* =====================================================
-          BOTTOM PROGRESS LIGHT
-      ====================================================== */}
-
+      {/* =========================================================
+          3. LIQUID MERCURY ICON ORB (Frosted Sphere Pod)
+      ========================================================== */}
       <div
-        className="
-          pointer-events-none
-
-          absolute
-          bottom-0
-          left-5
-          right-5
-
-          h-[2px]
-
-          overflow-hidden
-
-          rounded-full
-
-          bg-white/[0.06]
-        "
+        className={`
+          liquid-icon-pod
+          relative
+          z-10
+          shrink-0
+          w-11 sm:w-12
+          h-11 sm:h-12
+          rounded-2xl
+          bg-gradient-to-br
+          ${theme.iconOrb}
+          backdrop-blur-md
+          border
+          shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.3),0_6px_16px_rgba(0,0,0,0.3)]
+          flex items-center justify-center
+          transition-transform duration-300
+          group-hover:scale-110
+          group-hover:rotate-2
+        `}
       >
-
-        <div
-          className={`
-            dashboard-stat-line
-
-            h-full
-
-            w-[30%]
-
-            rounded-full
-
-            ${theme.line}
-          `}
-        />
-
+        <div className="relative z-10 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+          {icon}
+        </div>
       </div>
 
-
-      {/* =====================================================
-          ANIMATIONS
+      {/* =========================================================
+          GPU-ACCELERATED TRANSITIONS (Zero Layout Reflows)
       ====================================================== */}
-
-      <style>
-        {`
-
-          /* ================================================
-             FLOATING CARD
-          ================================================= */
-
-          @keyframes dashboardCardFloat {
-
-            0%,
-            100% {
-              transform: translateY(0px);
-            }
-
-            50% {
-              transform: translateY(-4px);
-            }
-
+      <style>{`
+        /* 1. Fluid Ambient Corner Halo Breathing */
+        @keyframes orbBreathe {
+          0%, 100% {
+            transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+            opacity: 0.25;
           }
-
-
-          /* ================================================
-             MOVING LIGHT
-          ================================================= */
-
-          @keyframes dashboardLightSweep {
-
-            0% {
-              left: -45%;
-              opacity: 0;
-            }
-
-            12% {
-              opacity: 0.35;
-            }
-
-            35% {
-              opacity: 0.12;
-            }
-
-            55% {
-              opacity: 0;
-            }
-
-            100% {
-              left: 135%;
-              opacity: 0;
-            }
-
+          50% {
+            transform: scale3d(1.2, 1.2, 1) translate3d(-4px, 4px, 0);
+            opacity: 0.45;
           }
+        }
 
-
-          /* ================================================
-             MAIN GLOW
-          ================================================= */
-
-          @keyframes dashboardMainGlow {
-
-            0%,
-            100% {
-              transform:
-                scale(1)
-                translate(0px, 0px);
-
-              opacity: 0.08;
-            }
-
-            50% {
-              transform:
-                scale(1.35)
-                translate(-10px, 8px);
-
-              opacity: 0.20;
-            }
-
+        /* 2. Micro Icon Floating Animation */
+        @keyframes iconFloat {
+          0%, 100% {
+            transform: translate3d(0, 0, 0);
           }
-
-
-          /* ================================================
-             SECONDARY GLOW
-          ================================================= */
-
-          @keyframes dashboardSecondaryGlow {
-
-            0%,
-            100% {
-              transform:
-                scale(1)
-                translate(0px, 0px);
-
-              opacity: 0.035;
-            }
-
-            50% {
-              transform:
-                scale(1.3)
-                translate(10px, -8px);
-
-              opacity: 0.10;
-            }
-
+          50% {
+            transform: translate3d(0, -2px, 0);
           }
+        }
 
-
-          /* ================================================
-             ICON PULSE
-          ================================================= */
-
-          @keyframes dashboardIconPulse {
-
-            0%,
-            100% {
-              transform: scale(1);
-
-              box-shadow:
-                0 0 0 rgba(
-                  var(--card-rgb),
-                  0
-                );
-            }
-
-            50% {
-              transform: scale(1.06);
-
-              box-shadow:
-                0 0 22px rgba(
-                  var(--card-rgb),
-                  0.20
-                );
-            }
-
+        /* 3. Surface Light Reflection Sweep */
+        @keyframes shimmerSweep {
+          0% {
+            transform: translate3d(-250%, 0, 0);
+            opacity: 0;
           }
-
-
-          /* ================================================
-             DOT PULSE
-          ================================================= */
-
-          @keyframes dashboardDotPulse {
-
-            0%,
-            100% {
-              transform: scale(1);
-              opacity: 0.7;
-            }
-
-            50% {
-              transform: scale(1.5);
-              opacity: 1;
-            }
-
+          12% {
+            opacity: 0.5;
           }
-
-
-          /* ================================================
-             BOTTOM LINE
-          ================================================= */
-
-          @keyframes dashboardLineMove {
-
-            0%,
-            100% {
-              width: 28%;
-              opacity: 0.45;
-            }
-
-            50% {
-              width: 65%;
-              opacity: 1;
-            }
-
+          25% {
+            opacity: 0.15;
           }
-
-
-          /* =================================================
-             MOBILE ANIMATIONS
-          ================================================= */
-
-          @media (max-width: 767px) {
-
-            .dashboard-stat-card {
-              animation:
-                dashboardCardFloat
-                4.5s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-
-            .dashboard-light-beam {
-              animation:
-                dashboardLightSweep
-                5s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-
-            .dashboard-main-glow {
-              animation:
-                dashboardMainGlow
-                3.8s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-
-            .dashboard-secondary-glow {
-              animation:
-                dashboardSecondaryGlow
-                5s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-
-            .dashboard-stat-icon {
-              animation:
-                dashboardIconPulse
-                3.2s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-
-            .dashboard-stat-dot {
-              animation:
-                dashboardDotPulse
-                2.8s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-
-            .dashboard-stat-line {
-              animation:
-                dashboardLineMove
-                4s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
+          40%, 100% {
+            transform: translate3d(450%, 0, 0);
+            opacity: 0;
           }
+        }
 
+        .liquid-ambient-orb {
+          animation: orbBreathe 4.2s ease-in-out infinite;
+          animation-delay: var(--card-delay);
+          will-change: transform, opacity;
+        }
 
-          /* =================================================
-             TOUCH DEVICES
-          ================================================= */
+        .liquid-icon-pod {
+          animation: iconFloat 3.2s ease-in-out infinite;
+          animation-delay: var(--card-delay);
+          will-change: transform;
+        }
 
-          @media (hover: none) and (pointer: coarse) {
+        .liquid-shimmer {
+          animation: shimmerSweep 6.5s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+          animation-delay: var(--card-delay);
+          will-change: transform, opacity;
+        }
 
-            .dashboard-stat-card {
-              animation:
-                dashboardCardFloat
-                4.5s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-            .dashboard-light-beam {
-              animation:
-                dashboardLightSweep
-                5s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-            .dashboard-main-glow {
-              animation:
-                dashboardMainGlow
-                3.8s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-            .dashboard-secondary-glow {
-              animation:
-                dashboardSecondaryGlow
-                5s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-            .dashboard-stat-icon {
-              animation:
-                dashboardIconPulse
-                3.2s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-            .dashboard-stat-dot {
-              animation:
-                dashboardDotPulse
-                2.8s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
-            .dashboard-stat-line {
-              animation:
-                dashboardLineMove
-                4s
-                ease-in-out
-                infinite;
-
-              animation-delay:
-                var(--animation-delay);
-            }
-
+        @media (prefers-reduced-motion: reduce) {
+          .liquid-ambient-orb,
+          .liquid-icon-pod,
+          .liquid-shimmer {
+            animation: none !important;
           }
-
-
-          /* =================================================
-             ACCESSIBILITY
-          ================================================= */
-
-          @media (prefers-reduced-motion: reduce) {
-
-            .dashboard-stat-card,
-            .dashboard-light-beam,
-            .dashboard-main-glow,
-            .dashboard-secondary-glow,
-            .dashboard-stat-icon,
-            .dashboard-stat-dot,
-            .dashboard-stat-line {
-              animation: none !important;
-            }
-
-          }
-
-        `}
-      </style>
-
+        }
+      `}</style>
     </div>
   );
 }
