@@ -348,12 +348,7 @@ from .models import (
 
 @transaction.atomic
 def adjust_stock(ingredient, quantity, transaction_type):
-
     quantity = Decimal(str(quantity))
-
-    print("Stock before:", ingredient.stock)
-    print("Quantity received:", quantity)
-    print("Transaction:", transaction_type)
 
     previous_stock = ingredient.stock
 
@@ -362,11 +357,9 @@ def adjust_stock(ingredient, quantity, transaction_type):
     else:
         ingredient.stock += quantity
 
-    print("Stock after calculation:", ingredient.stock)
-
-    ingredient.save()
-
-    print("Stock after save:", Ingredient.objects.get(id=ingredient.id).stock)
+    ingredient.save(
+        update_fields=["stock"]
+    )
 
     update_product_availability()
 
@@ -375,8 +368,59 @@ def adjust_stock(ingredient, quantity, transaction_type):
         previous_stock=previous_stock,
         quantity_changed=quantity,
         new_stock=ingredient.stock,
-        transaction_type=transaction_type
+        transaction_type=transaction_type,
     )
+
+    # ---------------------------------------------------------
+    # PUSH NOTIFICATION
+    # ---------------------------------------------------------
+    # Register this only after the database transaction
+    # successfully commits.
+    if transaction_type in ["PURCHASE", "WASTAGE", "ADJUSTMENT"]:
+        from notifications.services import send_push_notification
+
+        if transaction_type == "PURCHASE":
+            title = "Stock Purchased"
+            body = (
+                f"{ingredient.name}: +{quantity} "
+                f"{ingredient.unit} added. "
+                f"Current stock: {ingredient.stock} "
+                f"{ingredient.unit}."
+            )
+
+        elif transaction_type == "WASTAGE":
+            title = "Stock Wastage"
+            body = (
+                f"{ingredient.name}: {quantity} "
+                f"{ingredient.unit} marked as wastage. "
+                f"Current stock: {ingredient.stock} "
+                f"{ingredient.unit}."
+            )
+
+        else:
+            title = "Stock Updated"
+            body = (
+                f"{ingredient.name}: stock adjusted by "
+                f"{quantity} {ingredient.unit}. "
+                f"Current stock: {ingredient.stock} "
+                f"{ingredient.unit}."
+            )
+
+        transaction.on_commit(
+            lambda: send_push_notification(
+                title=title,
+                body=body,
+                url="/inventory",
+                data={
+                    "type": "STOCK_UPDATED",
+                    "ingredient_id": ingredient.id,
+                    "ingredient_name": ingredient.name,
+                    "transaction_type": transaction_type,
+                    "quantity": str(quantity),
+                    "new_stock": str(ingredient.stock),
+                },
+            )
+        )
 
     return ingredient
 

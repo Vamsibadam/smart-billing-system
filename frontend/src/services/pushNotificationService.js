@@ -2,7 +2,7 @@ import api from "../api/axios";
 
 
 // ============================================================
-// CONVERT VAPID KEY
+// BASE64URL → UINT8ARRAY
 // ============================================================
 
 function urlBase64ToUint8Array(base64String) {
@@ -14,8 +14,7 @@ function urlBase64ToUint8Array(base64String) {
 
   const base64 =
     (
-      base64String +
-      padding
+      base64String + padding
     )
       .replace(/-/g, "+")
       .replace(/_/g, "/");
@@ -32,114 +31,119 @@ function urlBase64ToUint8Array(base64String) {
 
 
 // ============================================================
-// REGISTER PUSH NOTIFICATIONS
+// REGISTER / SYNC PUSH SUBSCRIPTION
 // ============================================================
 
-export const registerPushNotifications =
-  async () => {
+export const registerPushNotifications = async (
+  requestPermission = false
+) => {
 
-    try {
+  try {
 
-      if (
-        !("serviceWorker" in navigator)
-      ) {
-        console.log(
-          "Service workers are not supported."
-        );
+    if (
+      !("serviceWorker" in navigator) ||
+      !("PushManager" in window) ||
+      !("Notification" in window)
+    ) {
+      return {
+        success: false,
+        reason: "unsupported",
+      };
+    }
 
-        return;
-      }
 
-      if (
-        !("PushManager" in window)
-      ) {
-        console.log(
-          "Push notifications are not supported."
-        );
+    // --------------------------------------------------------
+    // Permission
+    // --------------------------------------------------------
 
-        return;
-      }
+    let permission =
+      Notification.permission;
 
-      // ------------------------------------------------------
-      // Notification permission
-      // ------------------------------------------------------
+    if (
+      permission === "default" &&
+      requestPermission
+    ) {
 
-      let permission =
-        Notification.permission;
+      permission =
+        await Notification.requestPermission();
+    }
 
-      if (permission === "default") {
+    if (permission !== "granted") {
 
-        permission =
-          await Notification.requestPermission();
-      }
+      return {
+        success: false,
+        reason: permission,
+      };
+    }
 
-      if (permission !== "granted") {
 
-        console.log(
-          "Notification permission denied."
-        );
+    // --------------------------------------------------------
+    // Service worker
+    // --------------------------------------------------------
 
-        return;
-      }
+    const registration =
+      await navigator.serviceWorker.ready;
 
-      // ------------------------------------------------------
-      // Existing PWA service worker
-      // ------------------------------------------------------
 
-      const registration =
-        await navigator.serviceWorker.ready;
+    // --------------------------------------------------------
+    // VAPID public key
+    // --------------------------------------------------------
 
-      // ------------------------------------------------------
-      // Get VAPID public key
-      // ------------------------------------------------------
+    const response =
+      await api.get(
+        "/notifications/vapid-public-key/"
+      );
 
-      const response =
-        await api.get(
-          "/notifications/vapid-public-key/"
-        );
+    const publicKey =
+      response.data.public_key;
 
-      const publicKey =
-        response.data.public_key;
+    if (!publicKey) {
 
-      if (!publicKey) {
+      console.error(
+        "VAPID public key is missing."
+      );
 
-        console.error(
-          "VAPID public key missing."
-        );
+      return {
+        success: false,
+        reason: "missing-vapid-key",
+      };
+    }
 
-        return;
-      }
 
-      // ------------------------------------------------------
-      // Existing subscription
-      // ------------------------------------------------------
+    // --------------------------------------------------------
+    // Existing subscription
+    // --------------------------------------------------------
 
-      let subscription =
-        await registration.pushManager.getSubscription();
+    let subscription =
+      await registration.pushManager
+        .getSubscription();
 
-      // ------------------------------------------------------
-      // Create subscription
-      // ------------------------------------------------------
 
-      if (!subscription) {
+    // --------------------------------------------------------
+    // Create subscription if required
+    // --------------------------------------------------------
 
-        subscription =
-          await registration.pushManager.subscribe({
+    if (!subscription) {
 
-            userVisibleOnly: true,
+      subscription =
+        await registration.pushManager.subscribe({
 
-            applicationServerKey:
-              urlBase64ToUint8Array(
-                publicKey
-              ),
+          userVisibleOnly: true,
 
-          });
-      }
+          applicationServerKey:
+            urlBase64ToUint8Array(
+              publicKey
+            ),
 
-      // ------------------------------------------------------
-      // Send subscription to Django
-      // ------------------------------------------------------
+        });
+    }
 
+
+    // --------------------------------------------------------
+    // ALWAYS sync subscription with Django
+    // --------------------------------------------------------
+
+    const result =
       await api.post(
         "/notifications/subscribe/",
         {
@@ -148,22 +152,36 @@ export const registerPushNotifications =
         }
       );
 
-      console.log(
-        "Push notifications registered."
-      );
 
-    } catch (error) {
+    console.log(
+      "Push subscription synced:",
+      result.data
+    );
 
-      console.error(
-        "Push registration failed:",
-        error
-      );
-    }
-  };
+
+    return {
+      success: true,
+      subscription,
+    };
+
+  } catch (error) {
+
+    console.error(
+      "Push registration failed:",
+      error
+    );
+
+    return {
+      success: false,
+      reason: "error",
+      error,
+    };
+  }
+};
 
 
 // ============================================================
-// UNSUBSCRIBE
+// REMOVE PUSH SUBSCRIPTION
 // ============================================================
 
 export const unregisterPushNotifications =
@@ -193,6 +211,10 @@ export const unregisterPushNotifications =
       );
 
       await subscription.unsubscribe();
+
+      console.log(
+        "Push subscription removed."
+      );
 
     } catch (error) {
 

@@ -7,17 +7,16 @@ export const getInventory = async () => {
 
 export const getInventoryLogs = async (
   startDate,
-  endDate
+  endDate,
+  ingredientId = ""
 ) => {
-  const response = await api.get(
-    "/inventory/logs/",
-    {
-      params: {
-        start_date: startDate,
-        end_date: endDate,
-      },
-    }
-  );
+  const response = await api.get("/inventory/logs/", {
+    params: {
+      start_date: startDate,
+      end_date: endDate,
+      ingredient: ingredientId || undefined,
+    },
+  });
 
   return response.data;
 };

@@ -1,11 +1,5 @@
-import {
-  useEffect,
-  useState,
-} from "react";
-import {
-  Search
-
-} from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Search, X, FileText, Trash2, Calendar, Sparkles } from "lucide-react";
 import MainLayout from "../layouts/MainLayout";
 
 import {
@@ -14,147 +8,148 @@ import {
   deleteBill,
 } from "../services/billingService";
 
-import { useNavigate }
-  from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Loader from "../components/Loader";
 import { createPortal } from "react-dom";
 
 function BillHistory() {
-
-  const [bills, setBills] =
-    useState([]);
-
-  const [search, setSearch] =
-    useState("");
+  const [bills, setBills] = useState([]);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef(null);
 
   const getTodayDate = () => {
     const today = new Date();
-
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, "0");
     const day = String(today.getDate()).padStart(2, "0");
-
     return `${year}-${month}-${day}`;
   };
 
-  const [selectedDate, setSelectedDate] =
-    useState(getTodayDate());
+  // Persistent Date Filter
+  const [selectedDate, setSelectedDate] = useState(() => {
+    return sessionStorage.getItem("bill_history_date") || getTodayDate();
+  });
 
-  const [selectedBill,
-    setSelectedBill] =
-    useState(null);
+  // Persistent Payment Filter ('all' | 'upi' | 'cash' | 'card' | 'swiggy' | 'zomato')
+  const [selectedPaymentFilter, setSelectedPaymentFilter] = useState(() => {
+    return sessionStorage.getItem("bill_history_payment_filter") || "all";
+  });
 
-  const [showModal,
-    setShowModal] =
-    useState(false);
-
+  const [selectedBill, setSelectedBill] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  useEffect(() => {
-
-    fetchBills(getTodayDate());
-
-  }, []);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [billToDelete, setBillToDelete] = useState(null);
 
-  const fetchBills = async (date = "") => {
+  const navigate = useNavigate();
 
-    try {
+  // 1. Initial Fetch using persisted date
+  useEffect(() => {
+    const initialDate = sessionStorage.getItem("bill_history_date") || getTodayDate();
+    fetchBills(initialDate);
+  }, []);
 
-      setLoading(true);
-
-      const data =
-        await getBillHistory(date);
-
-      setBills(data);
-
-    } catch (error) {
-
-      console.error(error);
-
-    } finally {
-
-      setLoading(false);
-
+  // 2. Guaranteed Scroll Restoration
+  useEffect(() => {
+    if (!loading && bills.length > 0) {
+      const savedScroll = sessionStorage.getItem("bill_history_scroll");
+      if (savedScroll !== null && savedScroll !== "0") {
+        const targetY = parseInt(savedScroll, 10);
+        const timer = setTimeout(() => {
+          window.scrollTo({ top: targetY, behavior: "instant" });
+          if (containerRef.current) {
+            containerRef.current.scrollTop = targetY;
+          }
+        }, 80);
+        return () => clearTimeout(timer);
+      }
     }
-  };
+  }, [loading, bills]);
 
-  const handleDateFilter =
-    () => {
-
-      fetchBills(
-        selectedDate
-      );
-    };
-
-  const handleView =
-    async (id) => {
-
-      try {
-
-        const data =
-          await getBillDetail(
-            id
-          );
-
-        setSelectedBill(
-          data
-        );
-
-        setShowModal(
-          true
-        );
-
-      } catch (error) {
-
-        console.error(error);
+  // 3. Keep scroll offset fresh in storage
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPos = window.scrollY || document.documentElement.scrollTop || 0;
+      if (scrollPos > 0) {
+        sessionStorage.setItem("bill_history_scroll", String(scrollPos));
       }
     };
 
-  const handleDelete = async () => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
+  const fetchBills = async (date = "") => {
     try {
-
-      setDeleteLoading(true);
-
-      await deleteBill(
-        billToDelete.id
-      );
-
-      await fetchBills(
-        selectedDate
-      );
-
-      setShowDeleteModal(false);
-      setBillToDelete(null);
-
+      setLoading(true);
+      const data = await getBillHistory(date);
+      setBills(data || []);
     } catch (error) {
-
       console.error(error);
-
     } finally {
-
-      setDeleteLoading(false);
-
+      setLoading(false);
     }
   };
 
-  const filteredBills =
-    bills.filter(bill =>
-      bill.bill_number
-        .toLowerCase()
-        .includes(
-          search.toLowerCase()
-        )
-    );
+  const handleDateFilter = () => {
+    sessionStorage.setItem("bill_history_date", selectedDate);
+    sessionStorage.setItem("bill_history_scroll", "0");
+    fetchBills(selectedDate);
+  };
 
+  const handleNavigateInvoice = (billId) => {
+    const currentY = window.scrollY || document.documentElement.scrollTop || 0;
+    sessionStorage.setItem("bill_history_scroll", String(currentY));
+    sessionStorage.setItem("bill_history_date", selectedDate);
+    sessionStorage.setItem("bill_history_payment_filter", selectedPaymentFilter);
+    navigate(`/invoice/${billId}`);
+  };
 
-  const navigate = useNavigate();
+  const handlePaymentFilterChange = (filterId) => {
+    setSelectedPaymentFilter(filterId);
+    sessionStorage.setItem("bill_history_payment_filter", filterId);
+  };
+
+  const handleDelete = async () => {
+    try {
+      setDeleteLoading(true);
+      await deleteBill(billToDelete.id);
+      await fetchBills(selectedDate);
+      setShowDeleteModal(false);
+      setBillToDelete(null);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Payment Filter Tabs definition
+  const paymentTabs = [
+    { id: "all", label: "All Bills" },
+    { id: "upi", label: "⚡ UPI" },
+    { id: "cash", label: "💵 Cash" },
+    { id: "card", label: "💳 Card" },
+    { id: "swiggy", label: "🧡 Swiggy" },
+    { id: "zomato", label: "❤️️ Zomato" },
+  ];
+
+  // Multi-facet filtering: Search query + Payment channel
+  const filteredBills = bills.filter((bill) => {
+    const matchesSearch = bill.bill_number
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    if (!matchesSearch) return false;
+    if (selectedPaymentFilter === "all") return true;
+
+    const paymentStr = (bill.payment_display || "").toLowerCase();
+    return paymentStr.includes(selectedPaymentFilter.toLowerCase());
+  });
 
   if (loading) {
-
     return (
       <MainLayout>
         <Loader text="Loading bills..." />
@@ -162,19 +157,63 @@ function BillHistory() {
     );
   }
 
- return (
+  return (
     <MainLayout>
-      <div className="w-full pb-36 lg:pb-8">
+      <div ref={containerRef} className="w-full pb-36 lg:pb-8">
         {/* =========================================================
             PAGE HEADER
         ========================================================== */}
-        <div className="relative z-10 px-4 pt-2 sm:px-6 sm:pt-4 mb-3 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-800">
-            Bill History
-          </h1>
-          <p className="text-xs sm:text-sm font-semibold text-slate-400 mt-0.5 sm:mt-1">
-            View and manage bills
+        <div className="relative z-10 px-4 pt-2 sm:px-6 sm:pt-4 mb-3 sm:mb-5">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-800">
+              Bill History
+            </h1>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-200/60">
+              <Sparkles size={10} /> {filteredBills.length} Bills
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm font-semibold text-slate-400 mt-0.5">
+            View, filter by payment method, and manage billing records
           </p>
+        </div>
+
+        {/* =========================================================
+            PAYMENT METHOD RIBBON (Horizontally scrollable)
+        ========================================================== */}
+        <div className="px-3 sm:px-6 mb-3 sm:mb-4">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 -mx-1 px-1">
+            {paymentTabs.map((tab) => {
+              const isSelected = selectedPaymentFilter === tab.id;
+              const count = bills.filter((b) => {
+                if (tab.id === "all") return true;
+                return (b.payment_display || "").toLowerCase().includes(tab.id);
+              }).length;
+
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handlePaymentFilterChange(tab.id)}
+                  className={`shrink-0 flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all active:scale-95 cursor-pointer shadow-xs ${
+                    isSelected
+                      ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white shadow-md shadow-indigo-900/20"
+                      : "bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                      isSelected
+                        ? "bg-white/25 text-white"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* =========================================================
@@ -182,17 +221,18 @@ function BillHistory() {
         ========================================================== */}
         <div
           className="
-            bg-white
+            bg-white/85
+            backdrop-blur-md
             border border-slate-200/80
             rounded-2xl sm:rounded-[28px]
             p-3.5 sm:p-6
-            shadow-[0_4px_25px_-5px_rgba(0,0,0,0.02)]
+            shadow-xs
             relative
             z-10
             mx-3 sm:mx-6
           "
         >
-          {/* Filter Bar */}
+          {/* Search & Date Controls */}
           <div
             className="
               flex
@@ -209,19 +249,20 @@ function BillHistory() {
               </div>
               <input
                 type="text"
-                placeholder="Search Bill..."
+                placeholder="Search Bill No..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="
                   w-full
-                  bg-slate-50/60
-                  border border-slate-200
+                  bg-slate-50/70
+                  border border-slate-200/90
                   text-slate-800
-                  rounded-xl
-                  p-2.5 sm:p-3
+                  rounded-xl sm:rounded-2xl
+                  p-2.5 sm:p-3.5
                   pl-10 sm:pl-11
+                  pr-8 sm:pr-4
                   text-xs sm:text-sm
-                  font-medium
+                  font-semibold
                   placeholder:text-slate-400
                   outline-none
                   focus:bg-white
@@ -229,6 +270,15 @@ function BillHistory() {
                   transition-all
                 "
               />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-700"
+                >
+                  <X size={15} />
+                </button>
+              )}
             </div>
 
             {/* Date Picker + Filter Button Row */}
@@ -236,16 +286,19 @@ function BillHistory() {
               <input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  sessionStorage.setItem("bill_history_date", e.target.value);
+                }}
                 className="
                   flex-1 sm:flex-none
-                  bg-slate-50/60
-                  border border-slate-200
+                  bg-slate-50/70
+                  border border-slate-200/90
                   text-slate-800
-                  rounded-xl
-                  p-2.5 sm:p-3
+                  rounded-xl sm:rounded-2xl
+                  p-2.5 sm:p-3.5
                   text-xs sm:text-sm
-                  font-medium
+                  font-semibold
                   outline-none
                   focus:bg-white
                   focus:border-indigo-400
@@ -259,13 +312,13 @@ function BillHistory() {
                 className="
                   bg-gradient-to-r from-orange-500 to-indigo-600
                   text-white
-                  px-4 sm:px-5
-                  py-2.5 sm:py-3
-                  rounded-xl
+                  px-4 sm:px-6
+                  py-2.5 sm:py-3.5
+                  rounded-xl sm:rounded-2xl
                   text-xs sm:text-sm
-                  font-bold
+                  font-black
                   tracking-wide
-                  shadow-sm
+                  shadow-xs
                   hover:opacity-95
                   active:scale-95
                   transition-all
@@ -280,115 +333,164 @@ function BillHistory() {
           </div>
 
           {/* =========================================================
-              MOBILE BILL CARDS (Screen < sm)
+              CLEAN RESTYLED MOBILE BILL CARDS (Screen < sm)
           ========================================================== */}
-          <div className="block sm:hidden space-y-2.5">
-            {filteredBills.map((bill) => (
-              <div
-                key={bill.id}
-                className="
-                  p-3.5
-                  rounded-2xl
-                  border border-slate-200/80
-                  bg-slate-50/50
-                  hover:bg-slate-50
-                  transition-all
-                  space-y-3
-                "
-              >
-                {/* Top Row: Bill No & Total */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-                      Bill No
-                    </span>
-                    <span className="text-sm font-bold text-slate-800 block mt-0.5">
-                      {bill.bill_number}
-                    </span>
+          <div className="block sm:hidden space-y-3">
+            {filteredBills.map((bill) => {
+              const paymentMethod = bill.payment_display?.toLowerCase() || "";
+              const isCash = paymentMethod.includes("cash");
+              const isUPI = paymentMethod.includes("upi");
+              const isZomato = paymentMethod.includes("zomato");
+              const isSwiggy = paymentMethod.includes("swiggy");
+
+              return (
+                <div
+                  key={bill.id}
+                  className="
+                    relative
+                    overflow-hidden
+                    rounded-[22px]
+                    bg-white
+                    p-4
+                    border border-slate-200/70
+                    shadow-[0_4px_16px_-4px_rgba(15,23,42,0.06)]
+                    transition-all
+                    active:scale-[0.985]
+                    space-y-3.5
+                  "
+                >
+                  {/* Top Bar: Bill Number + Total Amount Capsule */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {/* Dynamic Payment Channel Chip */}
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-lg border ${
+                            isCash
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200/60"
+                              : isUPI
+                              ? "bg-indigo-50 text-indigo-700 border-indigo-200/60"
+                              : isZomato
+                              ? "bg-rose-50 text-rose-700 border-rose-200/60"
+                              : isSwiggy
+                              ? "bg-orange-50 text-orange-700 border-orange-200/60"
+                              : "bg-slate-100 text-slate-700 border-slate-200/60"
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isCash
+                                ? "bg-emerald-500"
+                                : isUPI
+                                ? "bg-indigo-500"
+                                : isZomato
+                                ? "bg-rose-500"
+                                : isSwiggy
+                                ? "bg-orange-500"
+                                : "bg-slate-500"
+                            }`}
+                          />
+                          {bill.payment_display}
+                        </span>
+
+                        <span className="text-[10px] font-mono font-semibold text-slate-400">
+                          #{bill.id}
+                        </span>
+                      </div>
+
+                      <h3 className="text-base font-black text-slate-800 mt-1.5 truncate leading-tight">
+                        {bill.bill_number}
+                      </h3>
+                    </div>
+
+                    {/* Total Amount Contrast Capsule */}
+                    <div className="shrink-0 px-3.5 py-1.5 rounded-xl bg-slate-900 text-white shadow-xs text-right">
+                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 block leading-none">
+                        Total
+                      </span>
+                      <span className="text-base font-black tracking-tight mt-0.5 block leading-none">
+                        ₹{bill.total_amount}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="text-right">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-                      Amount
-                    </span>
-                    <span className="text-base font-black text-slate-900 block mt-0.5">
-                      ₹{bill.total_amount}
-                    </span>
+                  {/* Metadata Row: Timestamp */}
+                  <div className="flex items-center justify-between text-[11px] font-medium text-slate-400 pt-1">
+                    <div className="flex items-center gap-1 text-slate-400">
+                      <Calendar size={13} className="text-slate-400" />
+                      <span>
+                        {new Date(bill.created_at).toLocaleString([], {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Action Button Deck */}
+                  <div className="flex items-center gap-2 pt-2.5 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => handleNavigateInvoice(bill.id)}
+                      className="
+                        flex-1
+                        py-2.5
+                        rounded-xl
+                        bg-indigo-50
+                        text-indigo-700
+                        hover:bg-indigo-100
+                        font-black
+                        text-xs
+                        active:scale-95
+                        transition-all
+                        cursor-pointer
+                        text-center
+                        flex items-center justify-center gap-1.5
+                      "
+                    >
+                      <FileText size={14} />
+                      <span>View Invoice</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBillToDelete(bill);
+                        setShowDeleteModal(true);
+                      }}
+                      className="
+                        px-4
+                        py-2.5
+                        rounded-xl
+                        bg-rose-50
+                        text-rose-600
+                        hover:bg-rose-100
+                        font-black
+                        text-xs
+                        active:scale-95
+                        transition-all
+                        cursor-pointer
+                        shrink-0
+                        flex items-center gap-1
+                      "
+                    >
+                      <Trash2 size={13} />
+                      <span>Delete</span>
+                    </button>
                   </div>
                 </div>
-
-                {/* Middle Row: Payment Tag & Timestamp */}
-                <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-200/60">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border bg-white text-slate-600 border-slate-200/80">
-                    {bill.payment_display}
-                  </span>
-                  <span className="text-[11px] font-medium text-slate-400">
-                    {new Date(bill.created_at).toLocaleString([], {
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    })}
-                  </span>
-                </div>
-
-                {/* Bottom Row: Actions */}
-                <div className="flex items-center gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/invoice/${bill.id}`)}
-                    className="
-                      flex-1
-                      py-2
-                      rounded-xl
-                      bg-indigo-50
-                      text-indigo-600
-                      font-bold
-                      text-xs
-                      hover:bg-indigo-100
-                      active:scale-95
-                      transition-all
-                      cursor-pointer
-                      text-center
-                    "
-                  >
-                    View Invoice
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setBillToDelete(bill);
-                      setShowDeleteModal(true);
-                    }}
-                    className="
-                      px-3.5
-                      py-2
-                      rounded-xl
-                      bg-red-50
-                      text-red-500
-                      font-bold
-                      text-xs
-                      hover:bg-red-100
-                      active:scale-95
-                      transition-all
-                      cursor-pointer
-                      shrink-0
-                    "
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             {filteredBills.length === 0 && (
-              <div className="py-12 text-center text-xs font-semibold text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+              <div className="py-14 text-center text-xs font-semibold text-slate-400 bg-white/70 rounded-2xl border border-dashed border-slate-200">
                 No bills found matching your filter.
               </div>
             )}
           </div>
 
           {/* =========================================================
-              DESKTOP TABLE (Screen >= sm) — 100% UNTOUCHED
+              DESKTOP DATA TABLE (Screen >= sm) — 100% UNTOUCHED
           ========================================================== */}
           <div className="hidden sm:block overflow-x-auto max-w-full">
             <table className="w-full text-sm border-separate border-spacing-y-2">
@@ -428,7 +530,7 @@ function BillHistory() {
 
                     <td className="py-3 px-3 text-right rounded-r-xl font-semibold">
                       <button
-                        onClick={() => navigate(`/invoice/${bill.id}`)}
+                        onClick={() => handleNavigateInvoice(bill.id)}
                         className="
                           text-indigo-600 
                           bg-indigo-50 

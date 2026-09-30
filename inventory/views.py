@@ -42,17 +42,30 @@ class InventoryLogListAPIView(generics.ListAPIView):
         queryset = (
             IngredientStockLog.objects
             .select_related("ingredient")
-            .all()
+            .filter(
+                transaction_type__in=[
+                    "PURCHASE",
+                    "WASTAGE",
+                ]
+            )
             .order_by("-created_at")
         )
 
-        start_date = (
-            self.request.query_params.get("start_date")
+        start_date = self.request.query_params.get(
+            "start_date"
         )
 
-        end_date = (
-            self.request.query_params.get("end_date")
+        end_date = self.request.query_params.get(
+            "end_date"
         )
+
+        ingredient_id = self.request.query_params.get(
+            "ingredient"
+        )
+
+        # ---------------------------------------------------------
+        # DATE RANGE
+        # ---------------------------------------------------------
 
         if start_date:
             queryset = queryset.filter(
@@ -62,6 +75,15 @@ class InventoryLogListAPIView(generics.ListAPIView):
         if end_date:
             queryset = queryset.filter(
                 created_at__date__lte=end_date
+            )
+
+        # ---------------------------------------------------------
+        # OPTIONAL INGREDIENT FILTER
+        # ---------------------------------------------------------
+
+        if ingredient_id:
+            queryset = queryset.filter(
+                ingredient_id=ingredient_id
             )
 
         return queryset

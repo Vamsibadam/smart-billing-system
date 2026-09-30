@@ -72,8 +72,9 @@ self.addEventListener(
       ],
 
       tag:
-        payload.data?.type ||
-        "nexbill-notification",
+        payload.data?.bill_id
+          ? `bill-${payload.data.bill_id}`
+          : `notification-${Date.now()}`,
 
       renotify: true,
 

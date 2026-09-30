@@ -1,7 +1,7 @@
 import React from "react";
 import CategoryRibbon from "./CategoryRibbon";
 import ProductCard from "./ProductCard";
-import { Search, Plus, X } from "lucide-react";
+import { Search, Plus, X, ShoppingBag } from "lucide-react";
 
 function BillingTouch({
   search,
@@ -26,7 +26,7 @@ function BillingTouch({
   }, [cart]);
 
   return (
-    <div className="w-full space-y-3 sm:space-y-6 pb-36 lg:pb-8">
+    <div className="w-full space-y-3.5 sm:space-y-6 pb-36 lg:pb-8">
       {/* =========================================================
           1. SEARCH BAR
       ========================================================== */}
@@ -71,7 +71,7 @@ function BillingTouch({
 
       {/* =========================================================
           2. CATEGORIES
-          - Mobile: Streamlined touch chips
+          - Mobile: Enlarged, tactile ribbon
           - Desktop: Untouched CategoryRibbon
       ========================================================== */}
       <div className="hidden md:block">
@@ -82,17 +82,17 @@ function BillingTouch({
         />
       </div>
 
-      <div className="md:hidden flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 -mx-1 px-1">
+      <div className="md:hidden flex items-center gap-2 overflow-x-auto scrollbar-none py-1 -mx-1 px-1">
         <button
           type="button"
           onClick={() => setSelectedCategory(null)}
-          className={`shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all active:scale-95 cursor-pointer ${
+          className={`shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all active:scale-95 cursor-pointer shadow-xs ${
             selectedCategory === null
-              ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white shadow-sm shadow-orange-500/20"
-              : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
+              ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white shadow-md shadow-orange-500/20"
+              : "bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50"
           }`}
         >
-          All
+          <span>All Items</span>
         </button>
 
         {categories.map((category) => {
@@ -102,13 +102,13 @@ function BillingTouch({
               key={category.id}
               type="button"
               onClick={() => setSelectedCategory(category.id)}
-              className={`shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer ${
+              className={`shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all active:scale-95 cursor-pointer shadow-xs ${
                 isSelected
-                  ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white shadow-sm shadow-orange-500/20"
-                  : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
+                  ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white shadow-md shadow-orange-500/20"
+                  : "bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50"
               }`}
             >
-              {category.name}
+              <span>{category.name}</span>
             </button>
           );
         })}
@@ -116,10 +116,10 @@ function BillingTouch({
 
       {/* =========================================================
           3. PRODUCT CARDS
-          - Mobile: 3 COLUMNS GRID
+          - Mobile: 2-Column Responsive High-Utility Cards
           - Desktop: Untouched ProductCard Grid
       ========================================================== */}
-      {/* Desktop View */}
+      {/* Desktop View (100% UNTOUCHED) */}
       <div className="hidden md:block">
         <div className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4">
           {filteredProducts.map((product) => (
@@ -134,11 +134,12 @@ function BillingTouch({
         </div>
       </div>
 
-      {/* Mobile View: 3 Columns Grid */}
-      <div className="md:hidden grid grid-cols-3 gap-2">
+      {/* Mobile View: High-Utility Tactile Cards */}
+      <div className="md:hidden grid grid-cols-2 gap-2.5">
         {filteredProducts.map((product) => {
           const qtyInCart = cartItemMap[product.id] || 0;
           const isOutOfStock = !product.available;
+          const isCombo = product.product_type === "COMBO";
 
           return (
             <div
@@ -150,104 +151,119 @@ function BillingTouch({
               className={`
                 group
                 relative
+                overflow-hidden
                 flex
                 flex-col
                 justify-between
-                min-h-[105px]
-                p-2.5
-                rounded-2xl
+                min-h-[128px]
+                p-3.5
+                rounded-[22px]
                 border
                 transition-all
                 duration-150
-                active:scale-[0.96]
-                cursor-pointer
+                active:scale-[0.97]
+                select-none
                 ${
                   isOutOfStock
-                    ? "bg-slate-100/60 border-slate-200/60 opacity-60 pointer-events-none"
+                    ? "bg-slate-50/70 border-slate-200/70 opacity-50 pointer-events-none cursor-not-allowed"
                     : qtyInCart > 0
-                    ? "bg-white border-orange-500 shadow-md ring-2 ring-orange-500/20"
-                    : "bg-white border-slate-200/90 shadow-xs hover:border-slate-300"
+                    ? "bg-white border-orange-400 shadow-md ring-2 ring-orange-500/20 cursor-pointer"
+                    : "bg-white border-slate-200/80 shadow-[0_4px_16px_-4px_rgba(15,23,42,0.06)] hover:border-slate-300 cursor-pointer"
                 }
               `}
             >
-              {/* Floating Quantity Pill Badge */}
-              {qtyInCart > 0 && (
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const itemInCart = cart.find((i) => i.id === product.id);
-                    if (itemInCart && openQuantityDialog) {
-                      openQuantityDialog(itemInCart);
-                    }
-                  }}
-                  className="
-                    absolute
-                    -top-2
-                    -right-1.5
-                    w-5
-                    h-5
-                    rounded-full
-                    bg-gradient-to-r
-                    from-orange-500
-                    to-indigo-600
-                    text-white
-                    font-black
-                    text-[10px]
-                    flex
-                    items-center
-                    justify-center
-                    shadow-sm
-                    border-2
-                    border-white
-                  "
-                >
-                  {qtyInCart}
-                </div>
-              )}
+              {/* Left Accent Spine */}
+              <div
+                className={`absolute left-0 inset-y-0 w-1 ${
+                  isOutOfStock
+                    ? "bg-rose-400"
+                    : isCombo
+                    ? "bg-gradient-to-b from-orange-400 to-amber-500"
+                    : qtyInCart > 0
+                    ? "bg-gradient-to-b from-indigo-500 to-indigo-600"
+                    : "bg-gradient-to-b from-orange-400 to-indigo-500"
+                }`}
+              />
 
-              {/* Title & Tag */}
-              <div>
-                <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 block truncate leading-none">
-                  {product.category_name || "Item"}
+              {/* Card Header: Category Chip + Live Qty Badge */}
+              <div className="flex items-center justify-between gap-1.5 pl-1">
+                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg bg-slate-100 text-slate-500 max-w-[90px] truncate leading-none">
+                  {product.category_name || (isCombo ? "Combo" : "Item")}
                 </span>
-                <h3 className="text-[11px] font-bold text-slate-800 line-clamp-2 leading-tight mt-1">
+
+                {qtyInCart > 0 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const itemInCart = cart.find((i) => i.id === product.id);
+                      if (itemInCart && openQuantityDialog) {
+                        openQuantityDialog(itemInCart);
+                      }
+                    }}
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1
+                      px-2
+                      py-0.5
+                      rounded-lg
+                      bg-gradient-to-r
+                      from-orange-500
+                      to-indigo-600
+                      text-white
+                      text-[10px]
+                      font-black
+                      shadow-xs
+                      active:scale-90
+                      transition-transform
+                    "
+                  >
+                    <span>Qty {qtyInCart}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Product Title */}
+              <div className="my-2 pl-1">
+                <h3 className="text-xs font-black text-slate-800 line-clamp-2 leading-snug">
                   {product.name}
                 </h3>
               </div>
 
-              {/* Bottom Price & Add Action */}
-              <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between">
+              {/* Bottom: Price + Quick Action Pill */}
+              <div className="pt-2 border-t border-slate-100/90 flex items-center justify-between pl-1">
                 <div>
-                  <span className="text-[7.5px] font-extrabold uppercase text-slate-400 block leading-none">
+                  <span className="text-[8px] font-extrabold uppercase tracking-widest text-slate-400 block leading-none">
                     Price
                   </span>
-                  <span className="text-xs font-black text-slate-900 mt-0.5 block leading-none">
-                    ₹{product.price}
+                  <span className="text-sm font-black text-slate-900 mt-0.5 block leading-none">
+                    ₹{Number(product.price).toFixed(2)}
                   </span>
                 </div>
 
                 {isOutOfStock ? (
-                  <span className="text-[8px] font-black uppercase text-red-500 bg-red-50 px-1 py-0.5 rounded">
+                  <span className="text-[9px] font-black uppercase text-red-500 bg-red-50 border border-red-100 px-2 py-0.5 rounded-md">
                     Out
                   </span>
                 ) : (
                   <div
                     className={`
-                      w-6
-                      h-6
-                      rounded-lg
+                      w-7
+                      h-7
+                      rounded-xl
                       flex
                       items-center
                       justify-center
-                      transition-colors
+                      transition-all
                       ${
                         qtyInCart > 0
-                          ? "bg-orange-500 text-white shadow-xs"
-                          : "bg-slate-100 text-slate-700"
+                          ? "bg-gradient-to-r from-orange-500 to-indigo-600 text-white shadow-xs"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                       }
                     `}
                   >
-                    <Plus size={13} strokeWidth={2.5} />
+                    <Plus size={14} strokeWidth={2.5} />
                   </div>
                 )}
               </div>

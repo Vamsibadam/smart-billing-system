@@ -24,12 +24,61 @@ import PublicInvoice from "./pages/PublicInvoice";
 import { recoverPendingInventory } from "./utils/inventoryRecovery";
 import {
   useEffect,
+  useState,
 } from "react";
 
 import {
   registerPushNotifications,
 } from "./services/pushNotificationService";
+
 function App() {
+  const [notificationPermission, setNotificationPermission] =
+  useState(
+    "Notification" in window
+      ? Notification.permission
+      : "unsupported"
+  );
+
+  useEffect(() => {
+
+  const token =
+    localStorage.getItem("access_token");
+
+  if (!token) {
+    return;
+  }
+
+  // If already allowed, silently sync.
+  if (
+    "Notification" in window &&
+    Notification.permission === "granted"
+  ) {
+
+    registerPushNotifications(false);
+
+  }
+
+}, []);
+const enableNotifications = async () => {
+
+  const result =
+    await registerPushNotifications(true);
+
+  if (result.success) {
+
+    setNotificationPermission(
+      "granted"
+    );
+
+  } else if (
+    "Notification" in window
+  ) {
+
+    setNotificationPermission(
+      Notification.permission
+    );
+  }
+};
   useEffect(() => {
 
     recoverPendingInventory();
@@ -100,6 +149,7 @@ useEffect(() => {
 
 
       </Routes>
+
     </BrowserRouter>
   );
 }
