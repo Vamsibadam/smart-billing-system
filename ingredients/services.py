@@ -329,21 +329,25 @@ def restore_inventory(transaction_item):
 
         )
 
-@transaction.atomic
-def restore_bill(transaction):
 
-    for item in transaction.items.all():
+@transaction.atomic
+def restore_bill(bill):
+
+    from billing.models import Transaction
+
+  
+    if bill.inventory_status != Transaction.INVENTORY_COMPLETED:
+        return
+
+    for item in bill.items.all():
 
         restore_inventory(item)
 
-from decimal import Decimal
+    bill.inventory_status = Transaction.INVENTORY_PENDING
 
-from django.db import transaction
-
-from .models import (
-    Ingredient,
-    IngredientStockLog
-)
+    bill.save(
+        update_fields=["inventory_status"]
+    )
 
 
 @transaction.atomic
@@ -377,7 +381,7 @@ def adjust_stock(ingredient, quantity, transaction_type):
     # Register this only after the database transaction
     # successfully commits.
     if transaction_type in ["PURCHASE", "WASTAGE", "ADJUSTMENT"]:
-        from notifications.services import send_push_notification
+        from notifications.services import send_push_notification_in_background
 
         if transaction_type == "PURCHASE":
             title = "Stock Purchased"
@@ -407,20 +411,27 @@ def adjust_stock(ingredient, quantity, transaction_type):
             )
 
         transaction.on_commit(
-            lambda: send_push_notification(
-                title=title,
-                body=body,
-                url="/inventory",
-                data={
-                    "type": "STOCK_UPDATED",
-                    "ingredient_id": ingredient.id,
-                    "ingredient_name": ingredient.name,
-                    "transaction_type": transaction_type,
-                    "quantity": str(quantity),
-                    "new_stock": str(ingredient.stock),
-                },
-            )
-        )
+    lambda title=title,
+    body=body,
+    ingredient_id=ingredient.id,
+    ingredient_name=ingredient.name,
+    transaction_type=transaction_type,
+    quantity=str(quantity),
+    new_stock=str(ingredient.stock):
+    send_push_notification_in_background(
+        title=title,
+        body=body,
+        url="/inventory",
+        data={
+            "type": "STOCK_UPDATED",
+            "ingredient_id": ingredient_id,
+            "ingredient_name": ingredient_name,
+            "transaction_type": transaction_type,
+            "quantity": quantity,
+            "new_stock": new_stock,
+        },
+    )
+)
 
     return ingredient
 

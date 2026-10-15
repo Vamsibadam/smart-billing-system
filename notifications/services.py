@@ -5,7 +5,10 @@ from django.conf import settings
 from pywebpush import webpush, WebPushException
 
 from .models import PushSubscription
+import threading
+import logging
 
+from django.db import close_old_connections
 
 def send_push_notification(
     title,
@@ -77,6 +80,38 @@ def send_push_notification(
                 error
             )
 
+def send_push_notification_in_background(
+    title,
+    body,
+    url="/dashboard",
+    data=None,
+):
+    def send():
+        close_old_connections()
+
+        try:
+            send_push_notification(
+                title=title,
+                body=body,
+                url=url,
+                data=data,
+            )
+
+        except Exception:
+            logger = logging.getLogger(__name__)
+
+            logger.exception(
+                "Failed to send push notification: %s",
+                title,
+            )
+
+        finally:
+            close_old_connections()
+
+    threading.Thread(
+        target=send,
+        daemon=True,
+    ).start()
 
 def send_bill_notification(bill):
 

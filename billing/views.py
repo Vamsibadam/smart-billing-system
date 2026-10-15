@@ -6,7 +6,15 @@ from .serializers import BillingSerializer,DiscountSerializer
 from .services import create_bill,create_pending_invoice_message
 
 from rest_framework import generics
-from .models import Transaction,Discount,Customer,WhatsAppMessage
+from .models import (
+    Transaction,
+    Discount,
+    Customer,
+    WhatsAppMessage,
+    Payment,
+    TransactionItem,
+    TransactionItemIngredient,
+)
 from .history_serializers import (
     TransactionHistorySerializer,
     TransactionDetailSerializer
@@ -19,7 +27,7 @@ from .whatsapp_serializers import (
 from .whatsapp_service import (
     send_invoice_whatsapp_message
 )
-from notifications.services import send_bill_notification
+from notifications.services import send_push_notification_in_background
 from django.db.models import Count
 from django.db import transaction,models
 
@@ -35,6 +43,7 @@ import json
 
 from django.conf import settings
 from django.http import HttpResponse
+
 
 class CreateBillAPIView(APIView):
 
@@ -69,8 +78,14 @@ class CreateBillAPIView(APIView):
             # ============================================================
 
             transaction.on_commit(
-                lambda: send_bill_notification(bill)
+            lambda bill=bill: send_push_notification_in_background(
+                title="New Bill Created",
+                body=(
+                    f"Bill #{bill.bill_number} • "
+                    f"₹{bill.total_amount}"
+                ),
             )
+        )
 
             return Response(
                 {
@@ -183,23 +198,81 @@ class TransactionDetailAPIView(
         TransactionDetailSerializer
     )
 
-class DeleteBillAPIView(
-    generics.DestroyAPIView
-):
 
-    queryset = (
-        Transaction.objects.all()
-    )
+class DeleteBillAPIView(generics.DestroyAPIView):
 
-    serializer_class = (
-        TransactionDetailSerializer
-    )
+    queryset = Transaction.objects.all()
+
+    serializer_class = TransactionDetailSerializer
 
     @transaction.atomic
+    def destroy(self, request, *args, **kwargs):
+
+        # Lock the bill row so concurrent deletion requests
+        # cannot both restore inventory and delete the same bill.
+        instance = (
+            self.get_queryset()
+            .select_for_update()
+            .get(pk=kwargs["pk"])
+        )
+
+        self.perform_destroy(instance)
+
+        return Response(
+            {
+                "message": "Bill deleted successfully.",
+                "id": instance.id,
+                "bill_number": instance.bill_number,
+            },
+            status=status.HTTP_200_OK,
+        )
+
     def perform_destroy(self, instance):
 
+        # ----------------------------------------------------
+        # 1. RESTORE INVENTORY
+        # ----------------------------------------------------
+        # Keep the existing inventory restoration service.
+        # It must execute before the bill's ingredient records
+        # are removed.
         restore_bill(instance)
 
+        # ----------------------------------------------------
+        # 2. REMOVE INGREDIENT USAGE RECORDS
+        # ----------------------------------------------------
+        # Delete ingredient snapshots before transaction items.
+        TransactionItemIngredient.objects.filter(
+            transaction_item__transaction=instance
+        ).delete()
+
+        # ----------------------------------------------------
+        # 3. REMOVE PAYMENTS
+        # ----------------------------------------------------
+        Payment.objects.filter(
+            transaction=instance
+        ).delete()
+
+        # ----------------------------------------------------
+        # 4. REMOVE BILL ITEMS
+        # ----------------------------------------------------
+        TransactionItem.objects.filter(
+            transaction=instance
+        ).delete()
+
+        # ----------------------------------------------------
+        # 5. PRESERVE WHATSAPP HISTORY
+        # ----------------------------------------------------
+        # WhatsApp messages use SET_NULL for transaction.
+        # Explicitly unlink them so message history remains.
+        WhatsAppMessage.objects.filter(
+            transaction=instance
+        ).update(
+            transaction=None
+        )
+
+        # ----------------------------------------------------
+        # 6. DELETE THE BILL
+        # ----------------------------------------------------
         instance.delete()
 
 class InvoicePDFAPIView(
